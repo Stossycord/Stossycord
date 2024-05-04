@@ -1,0 +1,593 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		387AD04A2BE5EBE10073CADF /* Stossy11DIscordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */; };
+		387AD04C2BE5EBE10073CADF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD04B2BE5EBE10073CADF /* ContentView.swift */; };
+		387AD04E2BE5EBE20073CADF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 387AD04D2BE5EBE20073CADF /* Assets.xcassets */; };
+		387AD0512BE5EBE20073CADF /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */; };
+		387AD05B2BE5EBE20073CADF /* Stossy11DIscordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD05A2BE5EBE20073CADF /* Stossy11DIscordTests.swift */; };
+		387AD0652BE5EBE20073CADF /* Stossy11DIscordUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0642BE5EBE20073CADF /* Stossy11DIscordUITests.swift */; };
+		387AD0672BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0662BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		387AD0572BE5EBE20073CADF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 387AD03E2BE5EBE10073CADF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 387AD0452BE5EBE10073CADF;
+			remoteInfo = Stossy11DIscord;
+		};
+		387AD0612BE5EBE20073CADF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 387AD03E2BE5EBE10073CADF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 387AD0452BE5EBE10073CADF;
+			remoteInfo = Stossy11DIscord;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossy11DIscord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordApp.swift; sourceTree = "<group>"; };
+		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		387AD04D2BE5EBE20073CADF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		387AD0562BE5EBE20073CADF /* Stossy11DIscordTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Stossy11DIscordTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		387AD05A2BE5EBE20073CADF /* Stossy11DIscordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordTests.swift; sourceTree = "<group>"; };
+		387AD0602BE5EBE20073CADF /* Stossy11DIscordUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Stossy11DIscordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		387AD0642BE5EBE20073CADF /* Stossy11DIscordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordUITests.swift; sourceTree = "<group>"; };
+		387AD0662BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordUITestsLaunchTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		387AD0432BE5EBE10073CADF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		387AD0532BE5EBE20073CADF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		387AD05D2BE5EBE20073CADF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		387AD03D2BE5EBE10073CADF = {
+			isa = PBXGroup;
+			children = (
+				387AD0482BE5EBE10073CADF /* Stossy11DIscord */,
+				387AD0592BE5EBE20073CADF /* Stossy11DIscordTests */,
+				387AD0632BE5EBE20073CADF /* Stossy11DIscordUITests */,
+				387AD0472BE5EBE10073CADF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		387AD0472BE5EBE10073CADF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */,
+				387AD0562BE5EBE20073CADF /* Stossy11DIscordTests.xctest */,
+				387AD0602BE5EBE20073CADF /* Stossy11DIscordUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		387AD0482BE5EBE10073CADF /* Stossy11DIscord */ = {
+			isa = PBXGroup;
+			children = (
+				387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */,
+				387AD04B2BE5EBE10073CADF /* ContentView.swift */,
+				387AD04D2BE5EBE20073CADF /* Assets.xcassets */,
+				387AD04F2BE5EBE20073CADF /* Preview Content */,
+			);
+			path = Stossy11DIscord;
+			sourceTree = "<group>";
+		};
+		387AD04F2BE5EBE20073CADF /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		387AD0592BE5EBE20073CADF /* Stossy11DIscordTests */ = {
+			isa = PBXGroup;
+			children = (
+				387AD05A2BE5EBE20073CADF /* Stossy11DIscordTests.swift */,
+			);
+			path = Stossy11DIscordTests;
+			sourceTree = "<group>";
+		};
+		387AD0632BE5EBE20073CADF /* Stossy11DIscordUITests */ = {
+			isa = PBXGroup;
+			children = (
+				387AD0642BE5EBE20073CADF /* Stossy11DIscordUITests.swift */,
+				387AD0662BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift */,
+			);
+			path = Stossy11DIscordUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		387AD0452BE5EBE10073CADF /* Stossy11DIscord */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 387AD06A2BE5EBE20073CADF /* Build configuration list for PBXNativeTarget "Stossy11DIscord" */;
+			buildPhases = (
+				387AD0422BE5EBE10073CADF /* Sources */,
+				387AD0432BE5EBE10073CADF /* Frameworks */,
+				387AD0442BE5EBE10073CADF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Stossy11DIscord;
+			productName = Stossy11DIscord;
+			productReference = 387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */;
+			productType = "com.apple.product-type.application";
+		};
+		387AD0552BE5EBE20073CADF /* Stossy11DIscordTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 387AD06D2BE5EBE20073CADF /* Build configuration list for PBXNativeTarget "Stossy11DIscordTests" */;
+			buildPhases = (
+				387AD0522BE5EBE20073CADF /* Sources */,
+				387AD0532BE5EBE20073CADF /* Frameworks */,
+				387AD0542BE5EBE20073CADF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				387AD0582BE5EBE20073CADF /* PBXTargetDependency */,
+			);
+			name = Stossy11DIscordTests;
+			productName = Stossy11DIscordTests;
+			productReference = 387AD0562BE5EBE20073CADF /* Stossy11DIscordTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		387AD05F2BE5EBE20073CADF /* Stossy11DIscordUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 387AD0702BE5EBE20073CADF /* Build configuration list for PBXNativeTarget "Stossy11DIscordUITests" */;
+			buildPhases = (
+				387AD05C2BE5EBE20073CADF /* Sources */,
+				387AD05D2BE5EBE20073CADF /* Frameworks */,
+				387AD05E2BE5EBE20073CADF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				387AD0622BE5EBE20073CADF /* PBXTargetDependency */,
+			);
+			name = Stossy11DIscordUITests;
+			productName = Stossy11DIscordUITests;
+			productReference = 387AD0602BE5EBE20073CADF /* Stossy11DIscordUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		387AD03E2BE5EBE10073CADF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1530;
+				LastUpgradeCheck = 1530;
+				TargetAttributes = {
+					387AD0452BE5EBE10073CADF = {
+						CreatedOnToolsVersion = 15.3;
+					};
+					387AD0552BE5EBE20073CADF = {
+						CreatedOnToolsVersion = 15.3;
+						TestTargetID = 387AD0452BE5EBE10073CADF;
+					};
+					387AD05F2BE5EBE20073CADF = {
+						CreatedOnToolsVersion = 15.3;
+						TestTargetID = 387AD0452BE5EBE10073CADF;
+					};
+				};
+			};
+			buildConfigurationList = 387AD0412BE5EBE10073CADF /* Build configuration list for PBXProject "Stossy11DIscord" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 387AD03D2BE5EBE10073CADF;
+			productRefGroup = 387AD0472BE5EBE10073CADF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				387AD0452BE5EBE10073CADF /* Stossy11DIscord */,
+				387AD0552BE5EBE20073CADF /* Stossy11DIscordTests */,
+				387AD05F2BE5EBE20073CADF /* Stossy11DIscordUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		387AD0442BE5EBE10073CADF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				387AD0512BE5EBE20073CADF /* Preview Assets.xcassets in Resources */,
+				387AD04E2BE5EBE20073CADF /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		387AD0542BE5EBE20073CADF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		387AD05E2BE5EBE20073CADF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		387AD0422BE5EBE10073CADF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				387AD04C2BE5EBE10073CADF /* ContentView.swift in Sources */,
+				387AD04A2BE5EBE10073CADF /* Stossy11DIscordApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		387AD0522BE5EBE20073CADF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				387AD05B2BE5EBE20073CADF /* Stossy11DIscordTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		387AD05C2BE5EBE20073CADF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				387AD0672BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift in Sources */,
+				387AD0652BE5EBE20073CADF /* Stossy11DIscordUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		387AD0582BE5EBE20073CADF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 387AD0452BE5EBE10073CADF /* Stossy11DIscord */;
+			targetProxy = 387AD0572BE5EBE20073CADF /* PBXContainerItemProxy */;
+		};
+		387AD0622BE5EBE20073CADF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 387AD0452BE5EBE10073CADF /* Stossy11DIscord */;
+			targetProxy = 387AD0612BE5EBE20073CADF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		387AD0682BE5EBE20073CADF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		387AD0692BE5EBE20073CADF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		387AD06B2BE5EBE20073CADF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DIscord/Preview Content\"";
+				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscord;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		387AD06C2BE5EBE20073CADF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DIscord/Preview Content\"";
+				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscord;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		387AD06E2BE5EBE20073CADF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscordTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stossy11DIscord.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stossy11DIscord";
+			};
+			name = Debug;
+		};
+		387AD06F2BE5EBE20073CADF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscordTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stossy11DIscord.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stossy11DIscord";
+			};
+			name = Release;
+		};
+		387AD0712BE5EBE20073CADF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscordUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Stossy11DIscord;
+			};
+			name = Debug;
+		};
+		387AD0722BE5EBE20073CADF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscordUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Stossy11DIscord;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		387AD0412BE5EBE10073CADF /* Build configuration list for PBXProject "Stossy11DIscord" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				387AD0682BE5EBE20073CADF /* Debug */,
+				387AD0692BE5EBE20073CADF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		387AD06A2BE5EBE20073CADF /* Build configuration list for PBXNativeTarget "Stossy11DIscord" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				387AD06B2BE5EBE20073CADF /* Debug */,
+				387AD06C2BE5EBE20073CADF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		387AD06D2BE5EBE20073CADF /* Build configuration list for PBXNativeTarget "Stossy11DIscordTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				387AD06E2BE5EBE20073CADF /* Debug */,
+				387AD06F2BE5EBE20073CADF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		387AD0702BE5EBE20073CADF /* Build configuration list for PBXNativeTarget "Stossy11DIscordUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				387AD0712BE5EBE20073CADF /* Debug */,
+				387AD0722BE5EBE20073CADF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 387AD03E2BE5EBE10073CADF /* Project object */;
+}
