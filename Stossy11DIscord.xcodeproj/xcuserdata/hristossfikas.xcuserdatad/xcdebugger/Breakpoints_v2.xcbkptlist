@@ -14,10 +14,10 @@
             filePath = "Stossy11DIscord/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "501"
-            endingLineNumber = "501"
-            landmarkName = "sendPostRequest(content:token:channel:)"
-            landmarkType = "9">
+            startingLineNumber = "504"
+            endingLineNumber = "504"
+            landmarkName = "ContentView"
+            landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -200,15 +200,18 @@ struct ContentView: View {
                             ServerView(webSocketClient: webSocketClient, token: token, serverId: guild.id)
                         } label: {
                             HStack {
-                                AsyncImage(url: URL(string: guild.icon!)) { image in
-                                    image.resizable()
-                                         .frame(width: 32, height: 32)
-                                         .clipShape(Circle())
-                                } placeholder: {
-                                    ProgressView()
+                                if guild.icon != nil {
+                                    AsyncImage(url: URL(string: guild.icon!)) { image in
+                                        image.resizable()
+                                            .frame(width: 32, height: 32)
+                                            .clipShape(Circle())
+                                    } placeholder: {
+                                        ProgressView()
+                                    }
                                 }
                                 // AsyncImage(url: URL(string: guild.icon!))
                                 Text(guild.name)
+                                    
                             }
                         }
                         .onAppear() {
