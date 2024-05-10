@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		38303C5E2BEC80BA0085D277 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38303C5D2BEC80BA0085D277 /* LoginView.swift */; };
+		38303C612BECA33E0085D277 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 38303C602BECA33E0085D277 /* KeychainSwift */; };
+		3869C20A2BED880B000F96AB /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 3869C2092BED880B000F96AB /* Giffy */; };
 		387AD04A2BE5EBE10073CADF /* Stossy11DIscordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */; };
 		387AD04C2BE5EBE10073CADF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD04B2BE5EBE10073CADF /* ContentView.swift */; };
 		387AD04E2BE5EBE20073CADF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 387AD04D2BE5EBE20073CADF /* Assets.xcassets */; };
@@ -14,6 +17,8 @@
 		387AD05B2BE5EBE20073CADF /* Stossy11DIscordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD05A2BE5EBE20073CADF /* Stossy11DIscordTests.swift */; };
 		387AD0652BE5EBE20073CADF /* Stossy11DIscordUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0642BE5EBE20073CADF /* Stossy11DIscordUITests.swift */; };
 		387AD0672BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0662BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift */; };
+		38AB136F2BE646BC002104B0 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 38AB136E2BE646BC002104B0 /* Starscream */; };
+		38B3A4352BEC44C700C27E1A /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B3A4342BEC44C700C27E1A /* WebView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,9 +39,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		38303C5D2BEC80BA0085D277 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossy11DIscord.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordApp.swift; sourceTree = "<group>"; };
-		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordApp.swift; sourceTree = "<group>"; wrapsLines = 0; };
+		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		387AD04D2BE5EBE20073CADF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		387AD0562BE5EBE20073CADF /* Stossy11DIscordTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Stossy11DIscordTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -44,6 +50,7 @@
 		387AD0602BE5EBE20073CADF /* Stossy11DIscordUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Stossy11DIscordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		387AD0642BE5EBE20073CADF /* Stossy11DIscordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordUITests.swift; sourceTree = "<group>"; };
 		387AD0662BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		38B3A4342BEC44C700C27E1A /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +58,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3869C20A2BED880B000F96AB /* Giffy in Frameworks */,
+				38303C612BECA33E0085D277 /* KeychainSwift in Frameworks */,
+				38AB136F2BE646BC002104B0 /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,8 +106,10 @@
 			children = (
 				387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */,
 				387AD04B2BE5EBE10073CADF /* ContentView.swift */,
+				38B3A4342BEC44C700C27E1A /* WebView.swift */,
 				387AD04D2BE5EBE20073CADF /* Assets.xcassets */,
 				387AD04F2BE5EBE20073CADF /* Preview Content */,
+				38303C5D2BEC80BA0085D277 /* LoginView.swift */,
 			);
 			path = Stossy11DIscord;
 			sourceTree = "<group>";
@@ -143,6 +155,11 @@
 			dependencies = (
 			);
 			name = Stossy11DIscord;
+			packageProductDependencies = (
+				38AB136E2BE646BC002104B0 /* Starscream */,
+				38303C602BECA33E0085D277 /* KeychainSwift */,
+				3869C2092BED880B000F96AB /* Giffy */,
+			);
 			productName = Stossy11DIscord;
 			productReference = 387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */;
 			productType = "com.apple.product-type.application";
@@ -215,6 +232,11 @@
 				Base,
 			);
 			mainGroup = 387AD03D2BE5EBE10073CADF;
+			packageReferences = (
+				38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */,
+				38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */,
+				3869C2082BED880B000F96AB /* XCRemoteSwiftPackageReference "giffy" */,
+			);
 			productRefGroup = 387AD0472BE5EBE10073CADF /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -257,7 +279,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38B3A4352BEC44C700C27E1A /* WebView.swift in Sources */,
 				387AD04C2BE5EBE10073CADF /* ContentView.swift in Sources */,
+				38303C5E2BEC80BA0085D277 /* LoginView.swift in Sources */,
 				387AD04A2BE5EBE10073CADF /* Stossy11DIscordApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -422,7 +446,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DIscord/Preview Content\"";
-				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -435,7 +459,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscord;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11Discord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -451,7 +475,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DIscord/Preview Content\"";
-				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -464,7 +488,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscord;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11Discord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -479,7 +503,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				DEVELOPMENT_TEAM = 6374GXLC2P;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				MARKETING_VERSION = 1.0;
@@ -499,7 +523,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				DEVELOPMENT_TEAM = 6374GXLC2P;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				MARKETING_VERSION = 1.0;
@@ -518,7 +542,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				DEVELOPMENT_TEAM = 6374GXLC2P;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscordUITests;
@@ -536,7 +560,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4D52P7Z7YN;
+				DEVELOPMENT_TEAM = 6374GXLC2P;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DIscordUITests;
@@ -588,6 +612,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/evgenyneu/keychain-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 24.0.0;
+			};
+		};
+		3869C2082BED880B000F96AB /* XCRemoteSwiftPackageReference "giffy" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tfmart/giffy";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/daltoniam/Starscream";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.8;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		38303C602BECA33E0085D277 /* KeychainSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */;
+			productName = KeychainSwift;
+		};
+		3869C2092BED880B000F96AB /* Giffy */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3869C2082BED880B000F96AB /* XCRemoteSwiftPackageReference "giffy" */;
+			productName = Giffy;
+		};
+		38AB136E2BE646BC002104B0 /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 387AD03E2BE5EBE10073CADF /* Project object */;
 }
