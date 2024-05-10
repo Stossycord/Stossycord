@@ -1,0 +1,24 @@
+//
+//  Build.xcconfig
+//  Stossy11DIscord
+//
+//  Created by nythepegasus on 5/10/24.
+//
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+
+PRODUCT_NAME = Stossy11Discord
+
+PROD_BUNDLE_IDENTIFIER = com.stossy11.Stossy11Discord
+
+WKC_BUNDLE_IDENTIFIER = $(PROD_BUNDLE_IDENTIFIER).watch
+
+WIDGET_BUNDLE_IDENTIFIER = $(PROD_BUNDLE_IDENTIFIER).widgets
+
+MARKETING_VERSION = 1.0
+
+CURRENT_PROJECT_VERSION = 0
+
+#include? "CodeSigning.xcconfig"
+

@@ -39,8 +39,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0E931E2F2BEE4A010091AA03 /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
+		0E931E302BEE4A0C0091AA03 /* CodeSigning.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CodeSigning.xcconfig; sourceTree = "<group>"; };
+		0E931E312BEE4C110091AA03 /* CodeSigning.xcconfig.sample */ = {isa = PBXFileReference; lastKnownFileType = text; path = CodeSigning.xcconfig.sample; sourceTree = "<group>"; };
 		38303C5D2BEC80BA0085D277 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossy11DIscord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		387AD0462BE5EBE10073CADF /* Stossy11Discord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossy11Discord.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordApp.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		387AD04D2BE5EBE20073CADF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -81,6 +84,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0E931E2E2BEE49AA0091AA03 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				0E931E2F2BEE4A010091AA03 /* Build.xcconfig */,
+				0E931E302BEE4A0C0091AA03 /* CodeSigning.xcconfig */,
+				0E931E312BEE4C110091AA03 /* CodeSigning.xcconfig.sample */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		387AD03D2BE5EBE10073CADF = {
 			isa = PBXGroup;
 			children = (
@@ -94,7 +107,7 @@
 		387AD0472BE5EBE10073CADF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */,
+				387AD0462BE5EBE10073CADF /* Stossy11Discord.app */,
 				387AD0562BE5EBE20073CADF /* Stossy11DIscordTests.xctest */,
 				387AD0602BE5EBE20073CADF /* Stossy11DIscordUITests.xctest */,
 			);
@@ -104,6 +117,7 @@
 		387AD0482BE5EBE10073CADF /* Stossy11DIscord */ = {
 			isa = PBXGroup;
 			children = (
+				0E931E2E2BEE49AA0091AA03 /* Config */,
 				387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */,
 				387AD04B2BE5EBE10073CADF /* ContentView.swift */,
 				38B3A4342BEC44C700C27E1A /* WebView.swift */,
@@ -161,7 +175,7 @@
 				3869C2092BED880B000F96AB /* Giffy */,
 			);
 			productName = Stossy11DIscord;
-			productReference = 387AD0462BE5EBE10073CADF /* Stossy11DIscord.app */;
+			productReference = 387AD0462BE5EBE10073CADF /* Stossy11Discord.app */;
 			productType = "com.apple.product-type.application";
 		};
 		387AD0552BE5EBE20073CADF /* Stossy11DIscordTests */ = {
@@ -440,13 +454,15 @@
 		};
 		387AD06B2BE5EBE20073CADF /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0E931E2F2BEE4A010091AA03 /* Build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY_IOS)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DIscord/Preview Content\"";
-				DEVELOPMENT_TEAM = 95J8WZ4TN8;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -454,13 +470,14 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11Discord;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MARKETING_VERSION = "$(MARKETING_VERSION)";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PROD_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "$(PRODUCT_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -469,13 +486,15 @@
 		};
 		387AD06C2BE5EBE20073CADF /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0E931E2F2BEE4A010091AA03 /* Build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY_IOS)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DIscord/Preview Content\"";
-				DEVELOPMENT_TEAM = 95J8WZ4TN8;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -483,13 +502,14 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11Discord;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MARKETING_VERSION = "$(MARKETING_VERSION)";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PROD_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "$(PRODUCT_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

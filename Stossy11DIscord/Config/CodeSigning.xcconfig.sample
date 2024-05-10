@@ -1,0 +1,29 @@
+//
+//  CodeSigning.xcconfig.example
+//  Stossy11DIscord
+//
+//  Created by nythepegasus on 5/10/24.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+DEVELOPMENT_TEAM = XYZ0123456
+
+PRODUCT_NAME = Stossy11Discord
+
+PROD_BUNDLE_IDENTIFIER = myuniquename.stossy11.Stossy11Discord
+
+PRODUCT_BUNDLE_IDENTIFIER_WATCH = $(PROD_BUNDLE_IDENTIFIER).watch
+
+PRODUCT_BUNDLE_IDENTIFIER_WIDGETS = $(PROD_BUNDLE_IDENTIFIER).widgets
+
+DEVELOPER_ACCOUNT_PAID = YES
+
+CODE_SIGN_IDENTITY_IOS = Apple Development
+
+CODE_SIGN_IDENTITY_TVOS = Apple Development
+
+CODE_SIGN_IDENTITY_MAC = Apple Development
+
+PROVISIONING_PROFILE_SPECIFIER_MAC = 84486942-2024-8888-4444-694208448001
