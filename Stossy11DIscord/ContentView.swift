@@ -175,6 +175,7 @@ struct ContentView: View {
     @AppStorage("ISOpened") var hasbeenopened = true
     @State private var guilds: [(name: String, id: String, icon: String?)] = []
     @State var token = ""
+    @State var searchTerm = ""
     let keychain = KeychainSwift()
 
     var body: some View {
@@ -194,7 +195,9 @@ struct ContentView: View {
                         }
                     }
                 List {
-                    ForEach(guilds, id: \.id) { guild in
+                    ForEach(guilds.filter { guild in
+                        searchTerm.isEmpty || guild.name.lowercased().contains(searchTerm.lowercased())
+                    }, id: \.id) { guild in
                         NavigationLink {
                             // ChannelView(webSocketClient: webSocketClient, token: token)
                             ServerView(webSocketClient: webSocketClient, token: token, serverId: guild.id)
@@ -226,6 +229,7 @@ struct ContentView: View {
                          */
                     }
                 }.navigationTitle("Servers:")
+                    .searchable(text: $searchTerm)
             }.onAppear {
                 token = keychain.get("token") ?? ""
                 if !token.isEmpty {

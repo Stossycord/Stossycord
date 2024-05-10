@@ -114,8 +114,9 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let avatarHash = author["avatar"] as? String,
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
+                            print("BeansManTest: \(self.currentchannel)")
                             if channelId == self.currentchannel {
-                                print("BeansManTest: \(self.currentchannel)")
+                                print("channelID: \(self.currentchannel)")
                                 self.icons.append(avatarURL)
                                 self.messages.append("\(globalname): " + "\(content)")
                                 self.usernames.append(username)
