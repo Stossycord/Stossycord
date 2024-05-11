@@ -4,12 +4,12 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>Stossy11DiscordAppleTV.xcscheme_^#shared#^_</key>
+		<key>Stossycord.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>0</integer>
 		</dict>
-		<key>Stossycord.xcscheme_^#shared#^_</key>
+		<key>StossycordWatchOS Watch App.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>2</integer>
@@ -28,6 +28,11 @@
 			<true/>
 		</dict>
 		<key>38403B4D2BEF09DC0037A8E2</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>3869C2162BEE4C5A000F96AB</key>
 		<dict>
 			<key>primary</key>
 			<true/>
