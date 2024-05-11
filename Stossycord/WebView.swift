@@ -7,6 +7,7 @@
 
 import SwiftUI
 import KeychainSwift
+#if canImport(WebKit)
 import WebKit
 
 struct WebView: UIViewRepresentable {
@@ -42,4 +43,4 @@ struct WebView: UIViewRepresentable {
         }
     }
 }
-
+#endif

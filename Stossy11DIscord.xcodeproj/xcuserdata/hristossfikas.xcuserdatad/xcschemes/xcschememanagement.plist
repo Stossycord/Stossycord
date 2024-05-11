@@ -4,10 +4,48 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>Stossy11DIscord.xcscheme_^#shared#^_</key>
+		<key>Stossy11DiscordAppleTV.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>0</integer>
+			<integer>1</integer>
+		</dict>
+		<key>Stossycord.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>38403B342BEF09DB0037A8E2</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>38403B432BEF09DC0037A8E2</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>38403B4D2BEF09DC0037A8E2</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>387AD0452BE5EBE10073CADF</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>387AD0552BE5EBE20073CADF</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>387AD05F2BE5EBE20073CADF</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

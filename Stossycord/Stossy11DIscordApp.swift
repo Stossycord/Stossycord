@@ -69,7 +69,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             // Handle reconnection if needed
             getTokenAndConnect()
         case .text(let string):
-            print("Received text: \(string)")
+            // print("Received text: \(string)")
             handleMessage(string)
         case .binary(let data):
             print("Received data: \(data.count)")
@@ -114,9 +114,9 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let avatarHash = author["avatar"] as? String,
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
-                            print("BeansManTest: \(self.currentchannel)")
+                            // print("BeansManTest: \(self.currentchannel)")
                             if channelId == self.currentchannel {
-                                print("channelID: \(self.currentchannel)")
+                                print("channelID: \(self.currentchannel) and Sent Message: \(string.data(using: .utf8))")
                                 self.icons.append(avatarURL)
                                 self.messages.append("\(globalname): " + "\(content)")
                                 self.usernames.append(username)
