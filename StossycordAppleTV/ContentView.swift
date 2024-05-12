@@ -33,7 +33,6 @@ struct ChannelView: View {
     @ObservedObject var webSocketClient: WebSocketClient
     let keychain = KeychainSwift()
     let token: String
-    let guild: String
     @State private var translation = ""
     var body: some View {
             VStack {
@@ -140,7 +139,7 @@ struct ChannelView: View {
                 )
             }
             .onAppear() {
-                webSocketClient.getcurrentchannel(input: channelid, guild: guild)
+                webSocketClient.getcurrentchannel(input: channelid)
                 webSocketClient.getTokenAndConnect()
             }
         }
@@ -198,7 +197,7 @@ struct ContentView: View {
                         if token == "" {
                             hasbeenopened = true
                         }
-                        webSocketClient.getcurrentchannel(input: "", guild: "")
+                        webSocketClient.getcurrentchannel(input: "")
                         webSocketClient.messages = []
                         webSocketClient.messageIDs = []
                         webSocketClient.usernames = []
@@ -228,7 +227,7 @@ struct ContentView: View {
                             }
                         }
                         .onAppear() {
-                            webSocketClient.getcurrentchannel(input: "", guild: "")
+                            webSocketClient.getcurrentchannel(input: "")
                         }
                         
                         /* Button(action: {
@@ -239,18 +238,6 @@ struct ContentView: View {
                          */
                     }
                 }.navigationTitle("Servers:")
-                    .toolbar {
-                        // Adds an item in the toolbar
-                        ToolbarItem {
-                            // Example with a button
-                            NavigationLink {
-                                DMa(webSocketClient: webSocketClient, token: token)
-                            } label: {
-                                Text("DMs")
-                            }
-
-                        }
-                    }
                     .searchable(text: $searchTerm)
             }.onAppear {
                 token = keychain.get("token") ?? ""
@@ -283,27 +270,22 @@ struct ServerView: View {
 
     var body: some View {
         VStack {
-            List {
-                ForEach(items) { item in
-                    if item.type == 4 { // This is a heading
+            List(items) { item in
+                if !item.name.starts(with: "#") {
+                    Text(item.name)
+                } else {
+                    NavigationLink {
+                        ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token)
+                    } label: {
                         Text(item.name)
-                            .font(.headline)
-                            .padding(.top)
-                    } else if item.name.starts(with: "#") { // This is a channel
-                        NavigationLink {
-                            ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: serverId)
-                        } label: {
-                            Text(item.name)
-                        }
                     }
                 }
             }
         }
         .onAppear() {
-            webSocketClient.getcurrentchannel(input: "", guild: "")
+            webSocketClient.getcurrentchannel(input: "")
             webSocketClient.messages = []
             webSocketClient.messageIDs = []
-            webSocketClient.icons = []
             webSocketClient.usernames = []
             webSocketClient.disconnect()
             getDiscordChannels(serverId: serverId, token: token) { items in
@@ -345,16 +327,12 @@ struct ServerView: View {
                         var currentHeading: String? = nil
                         for dict in jsonArray {
                             if let name = dict["name"] as? String, let type = dict["type"] as? Int, let id = dict["id"] as? String, let position = dict["position"] as? Int {
-                                if type == 4 { // This is a category
-                                    currentHeading = name
-                                } else { // This is a channel
-                                    let item = Item(id: id, name: type == 0 ? "# " + name : name, heading: currentHeading, type: type, position: position)
-                                    items.append(item)
-                                }
+                                let item = Item(id: id, name: type == 0 ? "# " + name : name, heading: currentHeading, position: position)
+                                items.append(item)
                             }
                         }
-                        // Sort the items first by type and then by position
-                        items.sort { $0.type != $1.type ? $0.type < $1.type : $0.position < $1.position }
+                        // Sort the items based on the position
+                        items.sort { $0.position < $1.position }
                         DispatchQueue.main.async {
                             completion(items)
                         }
@@ -369,112 +347,6 @@ struct ServerView: View {
     }
 
     struct Item: Identifiable {
-        let id: String
-        let name: String
-        let heading: String?
-        let type: Int
-        let position: Int
-    }
-}
-
-struct DMa: View {
-    @ObservedObject var webSocketClient: WebSocketClient
-    let token: String
-    @State private var items: [Item1] = []
-
-    var body: some View {
-        VStack {
-            List(items) { item in
-                if !item.name.starts(with: "DM with") {
-                    Text(item.name)
-                } else {
-                    NavigationLink {
-                        ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "")
-                    } label: {
-                        Text(item.name)
-                    }
-                }
-            }
-        }
-        .onAppear() {
-            webSocketClient.getcurrentchannel(input: "", guild: "")
-            webSocketClient.messages = []
-            webSocketClient.messageIDs = []
-            webSocketClient.icons = []
-            webSocketClient.icons = []
-            webSocketClient.usernames = []
-            webSocketClient.disconnect()
-            getDiscordDMs(token: token) { items in
-                self.items = items
-            }
-        }
-    }
-    func getDiscordDMs(token: String, completion: @escaping ([Item1]) -> Void) {
-        guard let url = URL(string: "https://discord.com/api/v9/users/@me/channels") else {
-            print("Invalid URL")
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue(token, forHTTPHeaderField: "Authorization")
-        request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
-        request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-        request.addValue("keep-alive", forHTTPHeaderField: "Connection")
-        request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
-        request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
-        request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
-        request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-        request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
-        request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-        request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
-        request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
-
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                print("Error: \(error)")
-            } else if let data = data {
-                do {
-                    if let jsonArray = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
-                        var items: [Item1] = []
-                        for dict in jsonArray {
-                            if let id = dict["id"] as? String, let type = dict["type"] as? Int {
-                                if type == 1, let recipients = dict["recipients"] as? [[String: Any]], let global_name = recipients.first?["global_name"] as? String, let username = recipients.first?["username"] as? String {
-                                    var name = ""
-                                    if global_name.isEmpty {
-                                        name = "DM with \(username)"
-                                    } else {
-                                        name = "DM with \(global_name)"
-                                    }
-                                    let lastMessageId = dict["last_message_id"] as? String
-                                    let item = Item1(id: id, name: name, heading: nil, position: Int(lastMessageId ?? "") ?? 0)
-                                    items.append(item)
-                                } else if type == 3 {
-                                    let name = "Group DM"
-                                    let lastMessageId = dict["last_message_id"] as? String
-                                    let item = Item1(id: id, name: name, heading: nil, position: Int(lastMessageId ?? "") ?? 0)
-                                    items.append(item)
-                                }
-                            }
-                        }
-                        // Sort the items based on the last message ID
-                        items.sort { $0.position > $1.position }
-                        DispatchQueue.main.async {
-                            completion(items)
-                        }
-                    }
-
-                } catch {
-                    print("Error: \(error)")
-                }
-            }
-        }
-
-        task.resume()
-    }
-
-    struct Item1: Identifiable {
         let id: String
         let name: String
         let heading: String?
@@ -677,7 +549,6 @@ func sendPostRequest(content: String, token: String, channel: String) {
 
     task.resume()
 }
-
 func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: String, icon: String?)]) -> Void) {
     let url = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
     var request = URLRequest(url: url)

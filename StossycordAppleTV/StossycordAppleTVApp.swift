@@ -1,8 +1,8 @@
 //
-//  Stossy11DiscordAppleTVApp.swift
-//  Stossy11DiscordAppleTV
+//  StossycordAppleTVApp.swift
+//  StossycordAppleTV
 //
-//  Created by Hristos Sfikas on 10/5/2024.
+//  Created by Hristos Sfikas on 11/5/2024.
 //
 
 import SwiftUI
@@ -14,14 +14,28 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     var socket: WebSocket!
     let keychain = KeychainSwift()
     var token = ""
-    @Published var currentchannel = ""
+    var currentchannel = ""
     @Published var messages: [String] = []
     @Published var icons: [String] = []
     @Published var usernames: [String] = []
     @Published var messageIDs: [String] = []
+    var didDisconnectIntentionally = false
+    var isconnected = false
+
+    func getcurrentchannel(input: String) {
+        currentchannel = input
+    }
+    
+    func disconnect() {
+        if isconnected {
+            didDisconnectIntentionally = true
+            socket.disconnect()
+            print("Sucsessfully disconnected")
+        }
+    }
     
     init() {
-        getTokenAndConnect()
+        isconnected = false
     }
     
     func getTokenAndConnect() {
@@ -57,6 +71,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     func didReceive(event: Starscream.WebSocketEvent, client: any Starscream.WebSocketClient) {
         switch event {
         case .connected(let headers):
+            isconnected = true
             print("WebSocket is connected: \(headers)")
             let payload: [String: Any] = [
                 "op": 2,
@@ -73,7 +88,6 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             sendJSONRequest(payload)
         case .disconnected(let reason, let code):
             print("WebSocket is disconnected: \(reason) with code: \(code)")
-            // Handle reconnection if needed
             getTokenAndConnect()
         case .text(let string):
             // print("Received text: \(string)")
@@ -91,14 +105,22 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
         case .viabilityChanged(_):
             break
         case .reconnectSuggested(_):
-            getTokenAndConnect()
+            if !didDisconnectIntentionally {
+                getTokenAndConnect()
+            }
         case .cancelled:
-            getTokenAndConnect()
+            if !didDisconnectIntentionally {
+                getTokenAndConnect()
+            }
         case .error(let error):
             print("Error: \(error?.localizedDescription ?? "Unknown error")")
-            getTokenAndConnect()
+            if !didDisconnectIntentionally {
+                getTokenAndConnect()
+            }
         case .peerClosed:
-            getTokenAndConnect()
+            if !didDisconnectIntentionally {
+                getTokenAndConnect()
+            }
             // Handle peer closed
             break
         }
@@ -122,13 +144,17 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
                             // print("BeansManTest: \(self.currentchannel)")
-                            if channelId == self.currentchannel {
-                                print("channelID: \(self.currentchannel) and Sent Message: \(string.data(using: .utf8))")
-                                self.icons.append(avatarURL)
-                                self.messages.append("\(globalname): " + "\(content)")
-                                self.usernames.append(username)
-                                self.messageIDs.append(messageid)
-                                print("\(avatarURL): \(id)")
+                            if self.currentchannel.isEmpty {
+                                print("currenct channel is empty: \(self.currentchannel)")
+                            } else {
+                                if channelId == self.currentchannel {
+                                    print("channelID: \(self.currentchannel) and Sent Message: \(string.data(using: .utf8))")
+                                    self.icons.append(avatarURL)
+                                    self.messages.append("\(globalname): " + "\(content)")
+                                    self.usernames.append(username)
+                                    self.messageIDs.append(messageid)
+                                    print("\(avatarURL): \(id)")
+                                }
                             }
                         }
                     }

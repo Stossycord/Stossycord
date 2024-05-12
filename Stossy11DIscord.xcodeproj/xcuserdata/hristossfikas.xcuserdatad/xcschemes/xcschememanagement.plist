@@ -9,7 +9,12 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>StossycordWatchOS Watch App.xcscheme_^#shared#^_</key>
+		<key>StossycordAppleTV.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+		<key>StossycordmacOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>2</integer>

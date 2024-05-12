@@ -13,18 +13,25 @@
 		38403B602BEF09E30037A8E2 /* Stossy11DIscordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */; };
 		38403B612BEF09E30037A8E2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD04B2BE5EBE10073CADF /* ContentView.swift */; };
 		38403B622BEF09E30037A8E2 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38303C5D2BEC80BA0085D277 /* LoginView.swift */; };
-		38403B642BEF0A390037A8E2 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38403B632BEF0A390037A8E2 /* LoginView.swift */; };
-		38403B672BEF0AE10037A8E2 /* FLAnimatedImage in Frameworks */ = {isa = PBXBuildFile; productRef = 38403B662BEF0AE10037A8E2 /* FLAnimatedImage */; };
-		38403B692BEF0AF30037A8E2 /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 38403B682BEF0AF30037A8E2 /* Giffy */; };
 		38403B6B2BEF0B2A0037A8E2 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 38403B6A2BEF0B2A0037A8E2 /* KeychainSwift */; };
 		38403B6D2BEF0B550037A8E2 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 38403B6C2BEF0B550037A8E2 /* Starscream */; };
-		3869C21A2BEE4C5A000F96AB /* Stossy11DiscordAppleTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3869C2192BEE4C5A000F96AB /* Stossy11DiscordAppleTVApp.swift */; };
-		3869C21C2BEE4C5A000F96AB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3869C21B2BEE4C5A000F96AB /* ContentView.swift */; };
-		3869C21E2BEE4C5B000F96AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3869C21D2BEE4C5B000F96AB /* Assets.xcassets */; };
-		3869C2212BEE4C5B000F96AB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3869C2202BEE4C5B000F96AB /* Preview Assets.xcassets */; };
-		3869C2422BEE4CB6000F96AB /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 3869C2412BEE4CB6000F96AB /* Giffy */; };
-		3869C2442BEE4CDA000F96AB /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 3869C2432BEE4CDA000F96AB /* Starscream */; };
-		3869C2482BEECE72000F96AB /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3869C2472BEECE72000F96AB /* KeychainSwift */; };
+		386B2EEE2BEF1EA600FCF947 /* StossycordAppleTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EED2BEF1EA600FCF947 /* StossycordAppleTVApp.swift */; };
+		386B2EF02BEF1EA600FCF947 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EEF2BEF1EA600FCF947 /* ContentView.swift */; };
+		386B2EF22BEF1EA700FCF947 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 386B2EF12BEF1EA700FCF947 /* Assets.xcassets */; };
+		386B2EF52BEF1EA700FCF947 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 386B2EF42BEF1EA700FCF947 /* Preview Assets.xcassets */; };
+		386B2EFA2BEF1ECE00FCF947 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EF92BEF1ECE00FCF947 /* LoginView.swift */; };
+		386B2EFC2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */; };
+		386B2F002BEF1FEB00FCF947 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 386B2EFF2BEF1FEB00FCF947 /* KeychainSwift */; };
+		386B2F022BEF1FFB00FCF947 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 386B2F012BEF1FFB00FCF947 /* Starscream */; };
+		38CDD4E02BF0C9DF005A03CA /* StossycordmacOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */; };
+		38CDD4E22BF0C9DF005A03CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4E12BF0C9DF005A03CA /* ContentView.swift */; };
+		38CDD4E42BF0C9E0005A03CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38CDD4E32BF0C9E0005A03CA /* Assets.xcassets */; };
+		38CDD4E72BF0C9E0005A03CA /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38CDD4E62BF0C9E0005A03CA /* Preview Assets.xcassets */; };
+		38CDD4ED2BF0CBB6005A03CA /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 38CDD4EC2BF0CBB6005A03CA /* Starscream */; };
+		38CDD4EF2BF0CBBF005A03CA /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 38CDD4EE2BF0CBBF005A03CA /* KeychainSwift */; };
+		38CDD4F32BF0CC23005A03CA /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4F22BF0CC23005A03CA /* LoginView.swift */; };
+		38CDD4F82BF0CD80005A03CA /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 38CDD4F72BF0CD80005A03CA /* Giffy */; };
+		38CDD4FA2BF0CD8A005A03CA /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 38CDD4F92BF0CD8A005A03CA /* Giffy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -48,23 +55,28 @@
 		38403B482BEF09DC0037A8E2 /* StossycordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordTests.swift; sourceTree = "<group>"; };
 		38403B522BEF09DC0037A8E2 /* StossycordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordUITests.swift; sourceTree = "<group>"; };
 		38403B542BEF09DC0037A8E2 /* StossycordUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		38403B632BEF0A390037A8E2 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		3869C2172BEE4C5A000F96AB /* Stossy11DiscordAppleTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossy11DiscordAppleTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3869C2192BEE4C5A000F96AB /* Stossy11DiscordAppleTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DiscordAppleTVApp.swift; sourceTree = "<group>"; };
-		3869C21B2BEE4C5A000F96AB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		3869C21D2BEE4C5B000F96AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		3869C2202BEE4C5B000F96AB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3869C22A2BEE4C5C000F96AB /* Stossy11DiscordAppleTVTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DiscordAppleTVTests.swift; sourceTree = "<group>"; };
 		3869C2342BEE4C5C000F96AB /* Stossy11DiscordAppleTVUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DiscordAppleTVUITests.swift; sourceTree = "<group>"; };
 		3869C2362BEE4C5C000F96AB /* Stossy11DiscordAppleTVUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DiscordAppleTVUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		386B2EEB2BEF1EA600FCF947 /* StossycordAppleTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StossycordAppleTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		386B2EED2BEF1EA600FCF947 /* StossycordAppleTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordAppleTVApp.swift; sourceTree = "<group>"; };
+		386B2EEF2BEF1EA600FCF947 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		386B2EF12BEF1EA700FCF947 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		386B2EF42BEF1EA700FCF947 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		386B2EF92BEF1ECE00FCF947 /* LoginView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stossy11DiscordAppleTVApp.swift; sourceTree = "<group>"; };
 		387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordApp.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = ../Stossy11DIscord/ContentView.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		387AD04D2BE5EBE20073CADF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ../Stossy11DIscord/Assets.xcassets; sourceTree = "<group>"; };
 		387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		387AD05A2BE5EBE20073CADF /* Stossy11DIscordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordTests.swift; sourceTree = "<group>"; };
-		387AD0642BE5EBE20073CADF /* Stossy11DIscordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordUITests.swift; sourceTree = "<group>"; };
-		387AD0662BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		38B3A4342BEC44C700C27E1A /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
+		38CDD4DD2BF0C9DF005A03CA /* StossycordmacOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StossycordmacOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordmacOSApp.swift; sourceTree = "<group>"; };
+		38CDD4E12BF0C9DF005A03CA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		38CDD4E32BF0C9E0005A03CA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		38CDD4E62BF0C9E0005A03CA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		38CDD4E82BF0C9E0005A03CA /* StossycordmacOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StossycordmacOS.entitlements; sourceTree = "<group>"; };
+		38CDD4F22BF0CC23005A03CA /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,20 +84,28 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38CDD4F82BF0CD80005A03CA /* Giffy in Frameworks */,
 				38403B6B2BEF0B2A0037A8E2 /* KeychainSwift in Frameworks */,
-				38403B692BEF0AF30037A8E2 /* Giffy in Frameworks */,
-				38403B672BEF0AE10037A8E2 /* FLAnimatedImage in Frameworks */,
 				38403B6D2BEF0B550037A8E2 /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3869C2142BEE4C5A000F96AB /* Frameworks */ = {
+		386B2EE82BEF1EA600FCF947 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3869C2482BEECE72000F96AB /* KeychainSwift in Frameworks */,
-				3869C2422BEE4CB6000F96AB /* Giffy in Frameworks */,
-				3869C2442BEE4CDA000F96AB /* Starscream in Frameworks */,
+				38CDD4FA2BF0CD8A005A03CA /* Giffy in Frameworks */,
+				386B2F002BEF1FEB00FCF947 /* KeychainSwift in Frameworks */,
+				386B2F022BEF1FFB00FCF947 /* Starscream in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		38CDD4DA2BF0C9DF005A03CA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				38CDD4EF2BF0CBBF005A03CA /* KeychainSwift in Frameworks */,
+				38CDD4ED2BF0CBB6005A03CA /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,26 +152,6 @@
 			path = StossycordUITests;
 			sourceTree = "<group>";
 		};
-		3869C2182BEE4C5A000F96AB /* Stossy11DiscordAppleTV */ = {
-			isa = PBXGroup;
-			children = (
-				3869C2192BEE4C5A000F96AB /* Stossy11DiscordAppleTVApp.swift */,
-				3869C21B2BEE4C5A000F96AB /* ContentView.swift */,
-				38403B632BEF0A390037A8E2 /* LoginView.swift */,
-				3869C21D2BEE4C5B000F96AB /* Assets.xcassets */,
-				3869C21F2BEE4C5B000F96AB /* Preview Content */,
-			);
-			path = Stossy11DiscordAppleTV;
-			sourceTree = "<group>";
-		};
-		3869C21F2BEE4C5B000F96AB /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				3869C2202BEE4C5B000F96AB /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
 		3869C2292BEE4C5C000F96AB /* Stossy11DiscordAppleTVTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -169,18 +169,37 @@
 			path = Stossy11DiscordAppleTVUITests;
 			sourceTree = "<group>";
 		};
+		386B2EEC2BEF1EA600FCF947 /* StossycordAppleTV */ = {
+			isa = PBXGroup;
+			children = (
+				386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */,
+				386B2EED2BEF1EA600FCF947 /* StossycordAppleTVApp.swift */,
+				386B2EEF2BEF1EA600FCF947 /* ContentView.swift */,
+				386B2EF92BEF1ECE00FCF947 /* LoginView.swift */,
+				386B2EF12BEF1EA700FCF947 /* Assets.xcassets */,
+				386B2EF32BEF1EA700FCF947 /* Preview Content */,
+			);
+			path = StossycordAppleTV;
+			sourceTree = "<group>";
+		};
+		386B2EF32BEF1EA700FCF947 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				386B2EF42BEF1EA700FCF947 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
 		387AD03D2BE5EBE10073CADF = {
 			isa = PBXGroup;
 			children = (
-				387AD0482BE5EBE10073CADF /* Stossy11DIscord */,
-				387AD0592BE5EBE20073CADF /* Stossy11DIscordTests */,
-				387AD0632BE5EBE20073CADF /* Stossy11DIscordUITests */,
-				3869C2182BEE4C5A000F96AB /* Stossy11DiscordAppleTV */,
 				3869C2292BEE4C5C000F96AB /* Stossy11DiscordAppleTVTests */,
 				3869C2332BEE4C5C000F96AB /* Stossy11DiscordAppleTVUITests */,
 				38403B362BEF09DB0037A8E2 /* Stossycord */,
 				38403B472BEF09DC0037A8E2 /* StossycordTests */,
 				38403B512BEF09DC0037A8E2 /* StossycordUITests */,
+				386B2EEC2BEF1EA600FCF947 /* StossycordAppleTV */,
+				38CDD4DE2BF0C9DF005A03CA /* StossycordmacOS */,
 				387AD0472BE5EBE10073CADF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -188,17 +207,11 @@
 		387AD0472BE5EBE10073CADF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3869C2172BEE4C5A000F96AB /* Stossy11DiscordAppleTV.app */,
 				38403B352BEF09DB0037A8E2 /* Stossycord.app */,
+				386B2EEB2BEF1EA600FCF947 /* StossycordAppleTV.app */,
+				38CDD4DD2BF0C9DF005A03CA /* StossycordmacOS.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		387AD0482BE5EBE10073CADF /* Stossy11DIscord */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Stossy11DIscord;
 			sourceTree = "<group>";
 		};
 		387AD04F2BE5EBE20073CADF /* Preview Content */ = {
@@ -210,21 +223,25 @@
 			path = "../Stossy11DIscord/Preview Content";
 			sourceTree = "<group>";
 		};
-		387AD0592BE5EBE20073CADF /* Stossy11DIscordTests */ = {
+		38CDD4DE2BF0C9DF005A03CA /* StossycordmacOS */ = {
 			isa = PBXGroup;
 			children = (
-				387AD05A2BE5EBE20073CADF /* Stossy11DIscordTests.swift */,
+				38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */,
+				38CDD4E12BF0C9DF005A03CA /* ContentView.swift */,
+				38CDD4E32BF0C9E0005A03CA /* Assets.xcassets */,
+				38CDD4E82BF0C9E0005A03CA /* StossycordmacOS.entitlements */,
+				38CDD4E52BF0C9E0005A03CA /* Preview Content */,
+				38CDD4F22BF0CC23005A03CA /* LoginView.swift */,
 			);
-			path = Stossy11DIscordTests;
+			path = StossycordmacOS;
 			sourceTree = "<group>";
 		};
-		387AD0632BE5EBE20073CADF /* Stossy11DIscordUITests */ = {
+		38CDD4E52BF0C9E0005A03CA /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
-				387AD0642BE5EBE20073CADF /* Stossy11DIscordUITests.swift */,
-				387AD0662BE5EBE20073CADF /* Stossy11DIscordUITestsLaunchTests.swift */,
+				38CDD4E62BF0C9E0005A03CA /* Preview Assets.xcassets */,
 			);
-			path = Stossy11DIscordUITests;
+			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -245,35 +262,55 @@
 			);
 			name = Stossycord;
 			packageProductDependencies = (
-				38403B662BEF0AE10037A8E2 /* FLAnimatedImage */,
-				38403B682BEF0AF30037A8E2 /* Giffy */,
 				38403B6A2BEF0B2A0037A8E2 /* KeychainSwift */,
 				38403B6C2BEF0B550037A8E2 /* Starscream */,
+				38CDD4F72BF0CD80005A03CA /* Giffy */,
 			);
 			productName = Stossycord;
 			productReference = 38403B352BEF09DB0037A8E2 /* Stossycord.app */;
 			productType = "com.apple.product-type.application";
 		};
-		3869C2162BEE4C5A000F96AB /* Stossy11DiscordAppleTV */ = {
+		386B2EEA2BEF1EA600FCF947 /* StossycordAppleTV */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3869C2382BEE4C5C000F96AB /* Build configuration list for PBXNativeTarget "Stossy11DiscordAppleTV" */;
+			buildConfigurationList = 386B2EF62BEF1EA700FCF947 /* Build configuration list for PBXNativeTarget "StossycordAppleTV" */;
 			buildPhases = (
-				3869C2132BEE4C5A000F96AB /* Sources */,
-				3869C2142BEE4C5A000F96AB /* Frameworks */,
-				3869C2152BEE4C5A000F96AB /* Resources */,
+				386B2EE72BEF1EA600FCF947 /* Sources */,
+				386B2EE82BEF1EA600FCF947 /* Frameworks */,
+				386B2EE92BEF1EA600FCF947 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = Stossy11DiscordAppleTV;
+			name = StossycordAppleTV;
 			packageProductDependencies = (
-				3869C2412BEE4CB6000F96AB /* Giffy */,
-				3869C2432BEE4CDA000F96AB /* Starscream */,
-				3869C2472BEECE72000F96AB /* KeychainSwift */,
+				386B2EFF2BEF1FEB00FCF947 /* KeychainSwift */,
+				386B2F012BEF1FFB00FCF947 /* Starscream */,
+				38CDD4F92BF0CD8A005A03CA /* Giffy */,
 			);
-			productName = Stossy11DiscordAppleTV;
-			productReference = 3869C2172BEE4C5A000F96AB /* Stossy11DiscordAppleTV.app */;
+			productName = StossycordAppleTV;
+			productReference = 386B2EEB2BEF1EA600FCF947 /* StossycordAppleTV.app */;
+			productType = "com.apple.product-type.application";
+		};
+		38CDD4DC2BF0C9DF005A03CA /* StossycordmacOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 38CDD4EB2BF0C9E0005A03CA /* Build configuration list for PBXNativeTarget "StossycordmacOS" */;
+			buildPhases = (
+				38CDD4D92BF0C9DF005A03CA /* Sources */,
+				38CDD4DA2BF0C9DF005A03CA /* Frameworks */,
+				38CDD4DB2BF0C9DF005A03CA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StossycordmacOS;
+			packageProductDependencies = (
+				38CDD4EC2BF0CBB6005A03CA /* Starscream */,
+				38CDD4EE2BF0CBBF005A03CA /* KeychainSwift */,
+			);
+			productName = StossycordmacOS;
+			productReference = 38CDD4DD2BF0C9DF005A03CA /* StossycordmacOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -289,7 +326,10 @@
 					38403B342BEF09DB0037A8E2 = {
 						CreatedOnToolsVersion = 15.3;
 					};
-					3869C2162BEE4C5A000F96AB = {
+					386B2EEA2BEF1EA600FCF947 = {
+						CreatedOnToolsVersion = 15.3;
+					};
+					38CDD4DC2BF0C9DF005A03CA = {
 						CreatedOnToolsVersion = 15.3;
 					};
 				};
@@ -306,15 +346,15 @@
 			packageReferences = (
 				38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */,
 				38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */,
-				3869C2082BED880B000F96AB /* XCRemoteSwiftPackageReference "giffy" */,
-				38403B652BEF0AE10037A8E2 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
+				38CDD4F62BF0CD7F005A03CA /* XCRemoteSwiftPackageReference "giffy" */,
 			);
 			productRefGroup = 387AD0472BE5EBE10073CADF /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3869C2162BEE4C5A000F96AB /* Stossy11DiscordAppleTV */,
 				38403B342BEF09DB0037A8E2 /* Stossycord */,
+				386B2EEA2BEF1EA600FCF947 /* StossycordAppleTV */,
+				38CDD4DC2BF0C9DF005A03CA /* StossycordmacOS */,
 			);
 		};
 /* End PBXProject section */
@@ -329,12 +369,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3869C2152BEE4C5A000F96AB /* Resources */ = {
+		386B2EE92BEF1EA600FCF947 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3869C2212BEE4C5B000F96AB /* Preview Assets.xcassets in Resources */,
-				3869C21E2BEE4C5B000F96AB /* Assets.xcassets in Resources */,
+				386B2EF52BEF1EA700FCF947 /* Preview Assets.xcassets in Resources */,
+				386B2EF22BEF1EA700FCF947 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		38CDD4DB2BF0C9DF005A03CA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				38CDD4E72BF0C9E0005A03CA /* Preview Assets.xcassets in Resources */,
+				38CDD4E42BF0C9E0005A03CA /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -352,13 +401,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3869C2132BEE4C5A000F96AB /* Sources */ = {
+		386B2EE72BEF1EA600FCF947 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3869C21C2BEE4C5A000F96AB /* ContentView.swift in Sources */,
-				38403B642BEF0A390037A8E2 /* LoginView.swift in Sources */,
-				3869C21A2BEE4C5A000F96AB /* Stossy11DiscordAppleTVApp.swift in Sources */,
+				386B2EFA2BEF1ECE00FCF947 /* LoginView.swift in Sources */,
+				386B2EF02BEF1EA600FCF947 /* ContentView.swift in Sources */,
+				386B2EFC2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift in Sources */,
+				386B2EEE2BEF1EA600FCF947 /* StossycordAppleTVApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		38CDD4D92BF0C9DF005A03CA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				38CDD4F32BF0CC23005A03CA /* LoginView.swift in Sources */,
+				38CDD4E22BF0C9DF005A03CA /* ContentView.swift in Sources */,
+				38CDD4E02BF0C9DF005A03CA /* StossycordmacOSApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,11 +438,13 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = stossycord;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -410,11 +472,13 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = stossycord;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -429,17 +493,18 @@
 			};
 			name = Release;
 		};
-		3869C2392BEE4C5C000F96AB /* Debug */ = {
+		386B2EF72BEF1EA700FCF947 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DiscordAppleTV/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"StossycordAppleTV/Preview Content\"";
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stossycord;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -447,7 +512,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DiscordAppleTV;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.StossycordAppleTV;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -457,17 +522,18 @@
 			};
 			name = Debug;
 		};
-		3869C23A2BEE4C5C000F96AB /* Release */ = {
+		386B2EF82BEF1EA700FCF947 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Stossy11DiscordAppleTV/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"StossycordAppleTV/Preview Content\"";
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stossycord;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -475,7 +541,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossy11DiscordAppleTV;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.StossycordAppleTV;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -604,6 +670,66 @@
 			};
 			name = Release;
 		};
+		38CDD4E92BF0C9E0005A03CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = StossycordmacOS/StossycordmacOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"StossycordmacOS/Preview Content\"";
+				DEVELOPMENT_TEAM = 95J8WZ4TN8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stossycord;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.stossy11.Stossycord-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		38CDD4EA2BF0C9E0005A03CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = StossycordmacOS/StossycordmacOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"StossycordmacOS/Preview Content\"";
+				DEVELOPMENT_TEAM = 95J8WZ4TN8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stossycord;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.stossy11.Stossycord-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -616,11 +742,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3869C2382BEE4C5C000F96AB /* Build configuration list for PBXNativeTarget "Stossy11DiscordAppleTV" */ = {
+		386B2EF62BEF1EA700FCF947 /* Build configuration list for PBXNativeTarget "StossycordAppleTV" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				3869C2392BEE4C5C000F96AB /* Debug */,
-				3869C23A2BEE4C5C000F96AB /* Release */,
+				386B2EF72BEF1EA700FCF947 /* Debug */,
+				386B2EF82BEF1EA700FCF947 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -630,6 +756,15 @@
 			buildConfigurations = (
 				387AD0682BE5EBE20073CADF /* Debug */,
 				387AD0692BE5EBE20073CADF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		38CDD4EB2BF0C9E0005A03CA /* Build configuration list for PBXNativeTarget "StossycordmacOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				38CDD4E92BF0C9E0005A03CA /* Debug */,
+				38CDD4EA2BF0C9E0005A03CA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -645,22 +780,6 @@
 				minimumVersion = 24.0.0;
 			};
 		};
-		38403B652BEF0AE10037A8E2 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Flipboard/FLAnimatedImage";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.17;
-			};
-		};
-		3869C2082BED880B000F96AB /* XCRemoteSwiftPackageReference "giffy" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/tfmart/giffy";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/daltoniam/Starscream";
@@ -669,19 +788,17 @@
 				minimumVersion = 4.0.8;
 			};
 		};
+		38CDD4F62BF0CD7F005A03CA /* XCRemoteSwiftPackageReference "giffy" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tfmart/giffy";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		38403B662BEF0AE10037A8E2 /* FLAnimatedImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 38403B652BEF0AE10037A8E2 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */;
-			productName = FLAnimatedImage;
-		};
-		38403B682BEF0AF30037A8E2 /* Giffy */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3869C2082BED880B000F96AB /* XCRemoteSwiftPackageReference "giffy" */;
-			productName = Giffy;
-		};
 		38403B6A2BEF0B2A0037A8E2 /* KeychainSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */;
@@ -692,20 +809,35 @@
 			package = 38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */;
 			productName = Starscream;
 		};
-		3869C2412BEE4CB6000F96AB /* Giffy */ = {
+		386B2EFF2BEF1FEB00FCF947 /* KeychainSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 3869C2082BED880B000F96AB /* XCRemoteSwiftPackageReference "giffy" */;
-			productName = Giffy;
+			package = 38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */;
+			productName = KeychainSwift;
 		};
-		3869C2432BEE4CDA000F96AB /* Starscream */ = {
+		386B2F012BEF1FFB00FCF947 /* Starscream */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */;
 			productName = Starscream;
 		};
-		3869C2472BEECE72000F96AB /* KeychainSwift */ = {
+		38CDD4EC2BF0CBB6005A03CA /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+		38CDD4EE2BF0CBBF005A03CA /* KeychainSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */;
 			productName = KeychainSwift;
+		};
+		38CDD4F72BF0CD80005A03CA /* Giffy */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 38CDD4F62BF0CD7F005A03CA /* XCRemoteSwiftPackageReference "giffy" */;
+			productName = Giffy;
+		};
+		38CDD4F92BF0CD8A005A03CA /* Giffy */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 38CDD4F62BF0CD7F005A03CA /* XCRemoteSwiftPackageReference "giffy" */;
+			productName = Giffy;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,3 +1,4 @@
+/*
 import SwiftUI
 import Foundation
 import Starscream
@@ -8,24 +9,22 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     let keychain = KeychainSwift()
     var token = ""
     var currentchannel = ""
-    var currentguild = ""
     @Published var messages: [String] = []
     @Published var icons: [String] = []
     @Published var usernames: [String] = []
     @Published var messageIDs: [String] = []
     var didDisconnectIntentionally = false
     var isconnected = false
-    
-    func getcurrentchannel(input: String, guild: String) {
+
+    func getcurrentchannel(input: String) {
         currentchannel = input
-        currentguild = guild
     }
     
     func disconnect() {
         if isconnected {
             didDisconnectIntentionally = true
             socket.disconnect()
-            print("Successfully disconnected")
+            print("Sucsessfully disconnected")
         }
     }
     
@@ -43,7 +42,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
         
         // Set up WebSocket connection
         var request = URLRequest(url: URL(string: "wss://gateway.discord.gg/?v=9&encoding=json")!)
-        request.timeoutInterval = 10
+        request.timeoutInterval = 1
         request.setValue("https://discord.com", forHTTPHeaderField: "Origin")
         request.setValue("websocket", forHTTPHeaderField: "Upgrade")
         request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
@@ -63,42 +62,20 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
         return try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
     }
     
-    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
+    func didReceive(event: Starscream.WebSocketEvent, client: any Starscream.WebSocketClient) {
         switch event {
         case .connected(let headers):
             isconnected = true
-            print("WebSocket is connected:")
+            print("WebSocket is connected: \(headers)")
             let payload: [String: Any] = [
                 "op": 2,
                 "d": [
                     "token": self.token,
-                    "capabilities": 16381, // This is the bitmask for all intents
+                    "intents": 33280, // This is the bitmask for all intents
                     "properties": [
-                        "os": "Mac OS X",
-                        "browser": "Firefox",
-                        "device": "",
-                        "system_locale": "en-US",
-                        "browser_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0",
-                        "browser_version": "125.0",
-                        "os_version": "10.15",
-                        "referrer": "",
-                        "referring_domain": "",
-                        "referrer_current": "https://discord.com/",
-                        "referring_domain_current": "discord.com",
-                        "release_channel": "stable",
-                        "client_build_number": 291963,
-                        "client_event_source": nil,
-                        "design_id": 0
-                    ],
-                    "presence": [
-                        "status": "unknown",
-                        "since": 0,
-                        "activities": [],
-                        "afk": false
-                    ],
-                    "compress": false,
-                    "client_state": [
-                        "guild_versions": [:]
+                        "$os": "linux",
+                        "$browser": "chrome",
+                        "$device": "pc"
                     ]
                 ]
             ]
@@ -107,15 +84,18 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             print("WebSocket is disconnected: \(reason) with code: \(code)")
             getTokenAndConnect()
         case .text(let string):
+            // print("Received text: \(string)")
             handleMessage(string)
         case .binary(let data):
             print("Received data: \(data.count)")
         case .ping(_):
+            // Respond to ping
             socket.write(ping: Data())
             print("ping")
         case .pong(_):
             socket.write(pong: Data())
             print("pong")
+            break
         case .viabilityChanged(_):
             break
         case .reconnectSuggested(_):
@@ -135,16 +115,17 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             if !didDisconnectIntentionally {
                 getTokenAndConnect()
             }
+            // Handle peer closed
+            break
         }
     }
     
     func handleMessage(_ string: String) {
         if let data = string.data(using: .utf8),
            let json = receiveJSONResponse(data: data) {
-            print("Received JSON: \(json)") // Debug log
+            // Handle received messages here
             if let t = json["t"] as? String {
-                print("Event type: \(t)") // Debug log
-                if t == "MESSAGE_CREATE" || t == "MESSAGE_UPDATE" {
+                if t == "MESSAGE_CREATE" {
                     DispatchQueue.main.async {
                         if let d = json["d"] as? [String: Any],
                            let channelId = d["channel_id"] as? String,
@@ -156,22 +137,17 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let avatarHash = author["avatar"] as? String,
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
+                            // print("BeansManTest: \(self.currentchannel)")
                             if self.currentchannel.isEmpty {
-                                print("current channel is empty: \(self.currentchannel)")
+                                print("currenct channel is empty: \(self.currentchannel)")
                             } else {
                                 if channelId == self.currentchannel {
                                     print("channelID: \(self.currentchannel) and Sent Message: \(string.data(using: .utf8))")
-                                    if t == "MESSAGE_CREATE" {
-                                        self.icons.append(avatarURL)
-                                        self.messages.append("\(globalname): " + "\(content)")
-                                        self.usernames.append(username)
-                                        self.messageIDs.append(messageid)
-                                        print("\(avatarURL): \(id)")
-                                    } else if t == "MESSAGE_UPDATE" {
-                                        if let index = self.messageIDs.firstIndex(of: messageid) {
-                                            self.messages[index] = "\(globalname): " + "\(content)"
-                                        }
-                                    }
+                                    self.icons.append(avatarURL)
+                                    self.messages.append("\(globalname): " + "\(content)")
+                                    self.usernames.append(username)
+                                    self.messageIDs.append(messageid)
+                                    print("\(avatarURL): \(id)")
                                 }
                             }
                         }
@@ -205,3 +181,4 @@ struct YourApp: App {
         }
     }
 }
+*/

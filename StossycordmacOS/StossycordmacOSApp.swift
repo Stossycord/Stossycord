@@ -1,3 +1,10 @@
+//
+//  StossycordmacOSApp.swift
+//  StossycordmacOS
+//
+//  Created by Hristos Sfikas on 12/5/2024.
+//
+
 import SwiftUI
 import Foundation
 import Starscream
@@ -195,13 +202,11 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
 
 
 @main
-struct YourApp: App {
+struct StossycordmacOSApp: App {
     @StateObject var webSocketClient = WebSocketClient()
-
     var body: some Scene {
         WindowGroup {
-            ContentView(webSocketClient: webSocketClient)
-            // ChannelView(webSocketClient: webSocketClient)
+            SidebarView(webSocketClient: webSocketClient)
         }
     }
 }

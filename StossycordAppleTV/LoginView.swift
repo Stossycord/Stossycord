@@ -34,7 +34,7 @@ struct LoginView: View {
                 Button("Login") {
                     sendPostRequest2(username: Username, password: Password) { user in
                         print("\(user.totp)" + " " + user.ticket)
-                        self.showingPopover = user.totp
+                        self.showingPopover = user.mfa
                         self.ticket = user.ticket
                     }
                 }
