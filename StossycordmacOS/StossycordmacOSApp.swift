@@ -79,7 +79,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                 "op": 2,
                 "d": [
                     "token": self.token,
-                    "capabilities": 16381, // This is the bitmask for all intents
+                    "capabilities": 33280, // This is the bitmask for all intents
                     "properties": [
                         "os": "Mac OS X",
                         "browser": "Firefox",

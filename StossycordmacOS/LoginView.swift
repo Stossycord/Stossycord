@@ -33,8 +33,8 @@ struct LoginView: View {
                         .padding()
             Button("Login") {
                 sendPostRequest2(username: Username, password: Password) { user in
-                    print("\(user.totp)" + " " + user.ticket)
-                    self.showingPopover = user.totp
+                    print("\(user.mfa)" + " " + user.ticket)
+                    self.showingPopover = user.mfa
                     self.ticket = user.ticket
                 }
             }

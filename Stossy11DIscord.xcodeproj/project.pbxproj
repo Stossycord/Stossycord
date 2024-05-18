@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		38368C6F2BF1B0EF00B666B2 /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 38368C6E2BF1B0EF00B666B2 /* SDWebImageSwiftUI */; };
+		38368C702BF1B44D00B666B2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD04B2BE5EBE10073CADF /* ContentView.swift */; };
 		38403B3C2BEF09DC0037A8E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38403B3B2BEF09DC0037A8E2 /* Assets.xcassets */; };
 		38403B3F2BEF09DC0037A8E2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38403B3E2BEF09DC0037A8E2 /* Preview Assets.xcassets */; };
 		38403B5F2BEF09E30037A8E2 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B3A4342BEC44C700C27E1A /* WebView.swift */; };
@@ -23,6 +25,8 @@
 		386B2EFC2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */; };
 		386B2F002BEF1FEB00FCF947 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 386B2EFF2BEF1FEB00FCF947 /* KeychainSwift */; };
 		386B2F022BEF1FFB00FCF947 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 386B2F012BEF1FFB00FCF947 /* Starscream */; };
+		38C119DF2BF842B800D66F59 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E6E1422BF716AF00FC575A /* MessageView.swift */; };
+		38C119E12BF8688500D66F59 /* MediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C119E02BF8688500D66F59 /* MediaView.swift */; };
 		38CDD4E02BF0C9DF005A03CA /* StossycordmacOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */; };
 		38CDD4E22BF0C9DF005A03CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4E12BF0C9DF005A03CA /* ContentView.swift */; };
 		38CDD4E42BF0C9E0005A03CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38CDD4E32BF0C9E0005A03CA /* Assets.xcassets */; };
@@ -32,6 +36,7 @@
 		38CDD4F32BF0CC23005A03CA /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4F22BF0CC23005A03CA /* LoginView.swift */; };
 		38CDD4F82BF0CD80005A03CA /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 38CDD4F72BF0CD80005A03CA /* Giffy */; };
 		38CDD4FA2BF0CD8A005A03CA /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 38CDD4F92BF0CD8A005A03CA /* Giffy */; };
+		38E6E1432BF716AF00FC575A /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E6E1422BF716AF00FC575A /* MessageView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -66,10 +71,11 @@
 		386B2EF92BEF1ECE00FCF947 /* LoginView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stossy11DiscordAppleTVApp.swift; sourceTree = "<group>"; };
 		387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordApp.swift; sourceTree = "<group>"; wrapsLines = 0; };
-		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = ../Stossy11DIscord/ContentView.swift; sourceTree = "<group>"; wrapsLines = 0; };
+		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = ../Stossy11DIscord/ContentView.swift; sourceTree = "<group>"; wrapsLines = 1; };
 		387AD04D2BE5EBE20073CADF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ../Stossy11DIscord/Assets.xcassets; sourceTree = "<group>"; };
 		387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		38B3A4342BEC44C700C27E1A /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
+		38C119E02BF8688500D66F59 /* MediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; };
 		38CDD4DD2BF0C9DF005A03CA /* StossycordmacOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StossycordmacOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordmacOSApp.swift; sourceTree = "<group>"; };
 		38CDD4E12BF0C9DF005A03CA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -77,6 +83,7 @@
 		38CDD4E62BF0C9E0005A03CA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		38CDD4E82BF0C9E0005A03CA /* StossycordmacOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StossycordmacOS.entitlements; sourceTree = "<group>"; };
 		38CDD4F22BF0CC23005A03CA /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		38E6E1422BF716AF00FC575A /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; wrapsLines = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +111,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38368C6F2BF1B0EF00B666B2 /* SDWebImageSwiftUI in Frameworks */,
 				38CDD4EF2BF0CBBF005A03CA /* KeychainSwift in Frameworks */,
 				38CDD4ED2BF0CBB6005A03CA /* Starscream in Frameworks */,
 			);
@@ -115,6 +123,7 @@
 		38403B362BEF09DB0037A8E2 /* Stossycord */ = {
 			isa = PBXGroup;
 			children = (
+				38E6E1412BF7162B00FC575A /* Shared */,
 				387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */,
 				387AD04B2BE5EBE10073CADF /* ContentView.swift */,
 				38B3A4342BEC44C700C27E1A /* WebView.swift */,
@@ -244,6 +253,15 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		38E6E1412BF7162B00FC575A /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				38E6E1422BF716AF00FC575A /* MessageView.swift */,
+				38C119E02BF8688500D66F59 /* MediaView.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -308,6 +326,7 @@
 			packageProductDependencies = (
 				38CDD4EC2BF0CBB6005A03CA /* Starscream */,
 				38CDD4EE2BF0CBBF005A03CA /* KeychainSwift */,
+				38368C6E2BF1B0EF00B666B2 /* SDWebImageSwiftUI */,
 			);
 			productName = StossycordmacOS;
 			productReference = 38CDD4DD2BF0C9DF005A03CA /* StossycordmacOS.app */;
@@ -347,6 +366,7 @@
 				38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */,
 				38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */,
 				38CDD4F62BF0CD7F005A03CA /* XCRemoteSwiftPackageReference "giffy" */,
+				38368C6D2BF1B0EF00B666B2 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 			);
 			productRefGroup = 387AD0472BE5EBE10073CADF /* Products */;
 			projectDirPath = "";
@@ -394,10 +414,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38E6E1432BF716AF00FC575A /* MessageView.swift in Sources */,
 				38403B622BEF09E30037A8E2 /* LoginView.swift in Sources */,
 				38403B5F2BEF09E30037A8E2 /* WebView.swift in Sources */,
 				38403B612BEF09E30037A8E2 /* ContentView.swift in Sources */,
 				38403B602BEF09E30037A8E2 /* Stossy11DIscordApp.swift in Sources */,
+				38C119E12BF8688500D66F59 /* MediaView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -405,7 +427,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38C119DF2BF842B800D66F59 /* MessageView.swift in Sources */,
 				386B2EFA2BEF1ECE00FCF947 /* LoginView.swift in Sources */,
+				38368C702BF1B44D00B666B2 /* ContentView.swift in Sources */,
 				386B2EF02BEF1EA600FCF947 /* ContentView.swift in Sources */,
 				386B2EFC2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift in Sources */,
 				386B2EEE2BEF1EA600FCF947 /* StossycordAppleTVApp.swift in Sources */,
@@ -442,8 +466,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -476,8 +499,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -695,6 +717,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.stossy11.Stossycord-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -725,6 +749,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.stossy11.Stossycord-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -780,6 +806,14 @@
 				minimumVersion = 24.0.0;
 			};
 		};
+		38368C6D2BF1B0EF00B666B2 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageSwiftUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.4;
+			};
+		};
 		38AB136D2BE646BC002104B0 /* XCRemoteSwiftPackageReference "Starscream" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/daltoniam/Starscream";
@@ -799,6 +833,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		38368C6E2BF1B0EF00B666B2 /* SDWebImageSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 38368C6D2BF1B0EF00B666B2 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
+			productName = SDWebImageSwiftUI;
+		};
 		38403B6A2BEF0B2A0037A8E2 /* KeychainSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 38303C5F2BECA33E0085D277 /* XCRemoteSwiftPackageReference "keychain-swift" */;

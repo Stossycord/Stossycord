@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 import KeychainSwift
+import SDWebImage
+import SDWebImageSwiftUI // <-- Automatic infer this
 
 struct SidebarView: View {
     @ObservedObject var webSocketClient: WebSocketClient
@@ -20,6 +22,19 @@ struct SidebarView: View {
     var body: some View {
         NavigationView {
             List {
+                NavigationLink {
+                    DMa(webSocketClient: webSocketClient, token: token)
+                } label: {
+                    Label("DMs", systemImage: "arrow.backward")
+                }
+                .onTapGesture {
+                    webSocketClient.getcurrentchannel(input: "", guild: "")
+                    webSocketClient.messages = []
+                    webSocketClient.messageIDs = []
+                    webSocketClient.usernames = []
+                    webSocketClient.disconnect()
+                }
+                Divider()
                 ForEach(guilds.filter { guild in
                     searchTerm.isEmpty || guild.name.lowercased().contains(searchTerm.lowercased())
                 }, id: \.id) { guild in
@@ -53,8 +68,6 @@ struct SidebarView: View {
                      }
                      */
                 }
-                
-                Spacer()
                 
                 Divider()
                 Label("Sign Out", systemImage: "arrow.backward")
@@ -95,6 +108,14 @@ struct SidebarView: View {
                 webSocketClient.usernames = []
                 webSocketClient.disconnect()
             }
+            DMa(webSocketClient: webSocketClient, token: token)
+                .onAppear() {
+                    webSocketClient.getcurrentchannel(input: "", guild: "")
+                    webSocketClient.messages = []
+                    webSocketClient.messageIDs = []
+                    webSocketClient.usernames = []
+                    webSocketClient.disconnect()
+                }
             // ContentView()
         }
         .sheet(isPresented: $hasbeenopened) {
@@ -221,6 +242,8 @@ struct ContentView1: View {
 }
 struct Message: Identifiable {
     let id: String
+    let content: String
+    let username: String
 }
 
 struct Guild {
@@ -241,8 +264,11 @@ struct ChannelView: View {
     let keychain = KeychainSwift()
     let token: String
     let guild: String
+    let channelname: String
     @State private var translation = ""
-    var body: some View {
+    @State var replyMessage: Message? = nil
+
+        var body: some View {
             VStack {
                 ScrollView {
                     ForEach(Array(zip(zip(webSocketClient.icons, webSocketClient.messages), zip(webSocketClient.usernames, webSocketClient.messageIDs))), id: \.0.1) { iconMessage, usernameMessageId in
@@ -254,12 +280,15 @@ struct ChannelView: View {
                                     .frame(width: 32, height: 32)
                                     .clipShape(Circle())
                                     .contextMenu {
-                                        if username == "someonethatexists1234567890" {
-                                            Button(action: {
-                                                self.selectedMessage = Message(id: messageId)
-                                            }) {
-                                                Text("Delete")
-                                            }
+                                        Button(action: {
+                                            self.selectedMessage = Message(id: messageId, content: message, username: username)
+                                        }) {
+                                            Text("Delete")
+                                        }
+                                        Button(action: {
+                                            self.replyMessage = Message(id: messageId, content: message, username: username)
+                                        }) {
+                                            Text("Reply")
                                         }
                                     }
                             } placeholder: {
@@ -323,16 +352,38 @@ struct ChannelView: View {
                         
                     }
                 }
+                if let replyMessage = replyMessage {
+                    HStack {
+                        Text("Replying to \(replyMessage.username):")
+                            .font(.headline)
+                        Text(replyMessage.content)
+                            .font(.subheadline)
+                        Spacer()
+                        Button(action: {
+                            self.replyMessage = nil
+                        }) {
+                            Image(systemName: "xmark.circle")
+                        }
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                }
                 HStack {
-                    TextField("Message #off-topic", text: $text)
+                    TextField("Message \(channelname)", text: $text)
                         .onSubmit {
-                            sendPostRequest(content: text, token: token, channel: channelid)
+                            if let replyMessage = replyMessage {
+                                sendPostRequest(content: text, token: token, channel: channelid, messageReference: ["message_id": replyMessage.id])
+                                self.replyMessage = nil
+                            } else {
+                                sendPostRequest(content: text, token: token, channel: channelid, messageReference: nil)
+                            }
                             text = ""
                         }
-                    Button("relogin") {
+                    /* Button("relogin") {
                         keychain.set("", forKey: "token")
                         hasbeenopened = true
                     }
+                     */
                 }
             }
             .padding()
@@ -341,6 +392,8 @@ struct ChannelView: View {
                     title: Text("Delete Message"),
                     message: Text("Are you sure you want to delete this message?"),
                     primaryButton: .destructive(Text("Delete")) {
+                        deleteDiscordMessage(token: token, serverID: "", channelID: channelid, messageID: message.id)
+                        print("deleted i think")
                         // Call your DELETE request method here with message.id
                     },
                     secondaryButton: .cancel()
@@ -351,13 +404,47 @@ struct ChannelView: View {
                 webSocketClient.messageIDs = []
                 webSocketClient.icons = []
                 webSocketClient.usernames = []
-                webSocketClient.disconnect()
+                // webSocketClient.disconnect()
                 getDiscordMessages(token: token, channelID: channelid, webSocketClient: webSocketClient)
                 webSocketClient.getcurrentchannel(input: channelid, guild: guild)
                 webSocketClient.getTokenAndConnect()
             }
         }
 }
+
+func deleteDiscordMessage(token: String, serverID: String, channelID: String, messageID: String) {
+    let url = URL(string: "https://discord.com/api/channels/\(channelID)/messages/\(messageID)")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "DELETE"
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.addValue(token, forHTTPHeaderField: "Authorization")
+    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
+    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
+    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
+    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
+    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
+    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
+    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
+    request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
+    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
+    request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
+    request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
+    request.addValue("eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IlNhZmFyaSIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1BVSIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwXzE1XzcpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNy40IFNhZmFyaS82MDUuMS4xNSIsImJyb3dzZXJfdmVyc2lvbiI6IjE3LjQiLCJvc192ZXJzaW9uIjoiMTAuMTUuNyIsInJlZmVycmVyIjoiIiwicmVmZXJyaW5nX2RvbWFpbiI6IiIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoyOTE1MDcsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImRlc2lnbl9pZCI6MH0=", forHTTPHeaderField: "X-Super-Properties")
+
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let data = data, error == nil else {
+            print(error?.localizedDescription ?? "No data")
+            return
+        }
+        let responseJSON = try? JSONSerialization.jsonObject(with: data, options: [])
+        if let responseJSON = responseJSON as? [String: Any] {
+            print(responseJSON)
+        }
+    }
+
+    task.resume()
+}
+
 
 struct ServerView: View {
     @ObservedObject var webSocketClient: WebSocketClient
@@ -376,7 +463,7 @@ struct ServerView: View {
                                 .padding(.top)
                         } else if item.name.starts(with: "#") { // This is a channel
                             NavigationLink {
-                                ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: serverId)
+                                ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: serverId, channelname: item.name)
                             } label: {
                                 Text(item.name)
                             }
@@ -469,15 +556,17 @@ struct DMa: View {
     @State private var items: [Item1] = []
 
     var body: some View {
-        VStack {
-            List(items) { item in
-                if !item.name.starts(with: "DM with") {
-                    Text(item.name)
-                } else {
-                    NavigationLink {
-                        ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "")
-                    } label: {
+        NavigationView {
+            VStack {
+                List(items) { item in
+                    if item.name.starts(with: "Group DM") {
                         Text(item.name)
+                    } else {
+                        NavigationLink {
+                            ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "", channelname: item.name)
+                        } label: {
+                            Text(item.name)
+                        }
                     }
                 }
             }
@@ -489,7 +578,6 @@ struct DMa: View {
             webSocketClient.icons = []
             webSocketClient.icons = []
             webSocketClient.usernames = []
-            webSocketClient.disconnect()
             getDiscordDMs(token: token) { items in
                 self.items = items
             }
@@ -529,9 +617,9 @@ struct DMa: View {
                                 if type == 1, let recipients = dict["recipients"] as? [[String: Any]], let global_name = recipients.first?["global_name"] as? String, let username = recipients.first?["username"] as? String {
                                     var name = ""
                                     if global_name.isEmpty {
-                                        name = "DM with \(username)"
+                                        name = "@ \(username)"
                                     } else {
-                                        name = "DM with \(global_name)"
+                                        name = "@ \(global_name)"
                                     }
                                     let lastMessageId = dict["last_message_id"] as? String
                                     let item = Item1(id: id, name: name, heading: nil, position: Int(lastMessageId ?? "") ?? 0)
@@ -619,7 +707,30 @@ struct MessageView: View {
                 lastEnd = range.upperBound
             }
         case "no":
-            Text("Animated emojis are not currently supported")
+            for match in GifemojiMatches {
+                let range = Range(match.range, in: message)!
+                let textRange = lastEnd..<range.lowerBound
+                let text = String(message[textRange])
+                var emojiId = String(message[range]).components(separatedBy: ":").last ?? ""
+                emojiId = String(emojiId.dropLast())
+                let imageUrl = "https://cdn.discordapp.com/emojis/\(emojiId).png?size=96"
+                
+                views.append(AnyView(Text(text)))
+                views.append(AnyView(WebImage(url: URL(string: imageUrl)) { image in
+                    image.resizable()
+                         .frame(width: 32, height: 32)
+                         .clipShape(Circle())
+                         .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                         .scaledToFit()
+                } placeholder: {
+                    ProgressView()
+                        .onAppear() {
+                            print(emojiId)
+                            print(imageUrl)
+                        }
+                }))
+                lastEnd = range.upperBound
+            }
         case "userid":
             for match in userIdMatches {
                 print("test123456789")
@@ -630,7 +741,9 @@ struct MessageView: View {
                     getUsernameFromDiscord(userId: String(userId), token: token) { result in
                         DispatchQueue.main.async {
                             print("JSON EEEE: \(result ?? "")")
-                            self.username = "@" + result! ?? ""
+                            if (result ?? "") != "" {
+                                self.username = "@" + (result ?? "")
+                            }
                         }
                     }
                 
@@ -699,7 +812,7 @@ struct MessageView: View {
 
 // https://discord.com/api/v9/channels/1119174763651272786/messages?limit=50
 
-func sendPostRequest(content: String, token: String, channel: String) {
+func sendPostRequest(content: String, token: String, channel: String, messageReference: [String: String]?) {
     let url = URL(string: "https://discord.com/api/v9/channels/\(channel)/messages")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -721,9 +834,11 @@ func sendPostRequest(content: String, token: String, channel: String) {
     request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
     request.addValue("eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IlNhZmFyaSIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1BVSIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwXzE1XzcpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNy40IFNhZmFyaS82MDUuMS4xNSIsImJyb3dzZXJfdmVyc2lvbiI6IjE3LjQiLCJvc192ZXJzaW9uIjoiMTAuMTUuNyIsInJlZmVycmVyIjoiIiwicmVmZXJyaW5nX2RvbWFpbiI6IiIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoyOTE1MDcsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImRlc2lnbl9pZCI6MH0=", forHTTPHeaderField: "X-Super-Properties")
 
-
     // JSON Body
-    let bodyObject: [String: Any] = ["content": content]
+    var bodyObject: [String: Any] = ["content": content]
+    if let messageReference = messageReference {
+        bodyObject["message_reference"] = messageReference
+    }
     request.httpBody = try? JSONSerialization.data(withJSONObject: bodyObject)
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
@@ -737,6 +852,7 @@ func sendPostRequest(content: String, token: String, channel: String) {
 
     task.resume()
 }
+
 
 func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: String, icon: String?)]) -> Void) {
     let url = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
@@ -829,7 +945,7 @@ func getDiscordGuildsold(token: String, completion: @escaping ([(name: String, i
 }
 
 func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSocketClient) {
-    let url = URL(string: "https://discord.com/api/channels/\(channelID)/messages?limit=100")!
+    let url = URL(string: "https://discord.com/api/channels/\(channelID)/messages?limit=25")!
     
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
@@ -863,10 +979,10 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                        let id = message["id"] as? String,
                        let user = message["author"] as? [String: Any],
                        let username = user["username"] as? String,
-                       let avatar = user["avatar"] as? String,
-                       !uniqueMessages.contains(id) {
+                       let globalname = user["global_name"] as? String,
+                       let avatar = user["avatar"] as? String {
                         DispatchQueue.main.async {
-                            webSocketClient.messages.append(content)
+                            webSocketClient.messages.append("\(globalname): " + "\(content)")
                             webSocketClient.messageIDs.append(id)
                             webSocketClient.usernames.append(username)
                             webSocketClient.icons.append("https://cdn.discordapp.com/avatars/\(user["id"] ?? "")/\(avatar).png")
@@ -875,6 +991,7 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                     }
                 }
                 // Sort the messages by their IDs (which are timestamps)
+                
                 DispatchQueue.main.async {
                     let sortedIndices = webSocketClient.messageIDs.indices.sorted { webSocketClient.messageIDs[$0] < webSocketClient.messageIDs[$1] }
                     webSocketClient.messages = sortedIndices.map { webSocketClient.messages[$0] }
