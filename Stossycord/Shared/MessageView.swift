@@ -7,7 +7,6 @@
 import Foundation
 import SwiftUI
 import KeychainSwift
-import Giffy
 
 struct MessageView: View {
     let message: String
@@ -77,7 +76,7 @@ struct MessageView: View {
                 }
             }
         case "no":
-            for match in GifemojiMatches {
+            /* for match in GifemojiMatches {
                 let range = Range(match.range, in: message)!
                 let textRange = lastEnd..<range.lowerBound
                 let text = String(message[textRange])
@@ -111,6 +110,8 @@ struct MessageView: View {
                 let remainingText = String(message[remainingTextRange])
                 views.append(AnyView(Text(remainingText)))
             }
+             */
+            print("shrek")
         case "userid":
             let group = DispatchGroup()
             modifiedMessage = message

@@ -10,6 +10,14 @@ import Foundation
 import Starscream
 import KeychainSwift
 
+struct MessageData {
+    let icon: String
+    let message: String
+    let attachment: String
+    let username: String
+    let messageId: String
+}
+
 class WebSocketClient: WebSocketDelegate, ObservableObject {
     var socket: WebSocket!
     let keychain = KeychainSwift()
@@ -17,9 +25,11 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     var currentchannel = ""
     var currentguild = ""
     @Published var messages: [String] = []
+    @Published var data: [MessageData] = []
     @Published var icons: [String] = []
     @Published var usernames: [String] = []
     @Published var messageIDs: [String] = []
+    @Published var attachments: [String] = []
     var didDisconnectIntentionally = false
     var isconnected = false
     
@@ -170,28 +180,42 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                     print("channelID: \(self.currentchannel) and Sent Message: \(string.data(using: .utf8))")
                                     if t == "MESSAGE_CREATE" {
                                         self.icons.append(avatarURL)
-                                        self.messages.append("\(globalname): " + "\(content)")
                                         self.usernames.append(username)
                                         self.messageIDs.append(messageid)
                                         print("\(avatarURL): \(id)")
+                                        
+                                        // Handle attachments
+                                        var attachmentURL = ""
+                                        if let attachments = d["attachments"] as? [[String: Any]] {
+                                            for attachment in attachments {
+                                                if let url = attachment["url"] as? String {
+                                                    attachmentURL = url
+                                                }
+                                            }
+                                        }
+                                        let beans = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
+                                        self.data.append(beans)
+                                        self.messages.append(content)
                                     } else if t == "MESSAGE_UPDATE" {
                                         if let index = self.messageIDs.firstIndex(of: messageid) {
                                             self.messages[index] = "\(globalname): " + "\(content)"
                                         }
+                                    } else if t == "MESSAGE_DELETE" {
+                                        DispatchQueue.main.async {
+                                            if let d = json["d"] as? [String: Any],
+                                               let messageid = d["id"] as? String,
+                                               let index = self.messageIDs.firstIndex(of: messageid) {
+                                                self.messageIDs.remove(at: index)
+                                                self.messages.remove(at: index)
+                                                self.usernames.remove(at: index)
+                                                self.icons.remove(at: index)
+                                                print(self.data)
+                                                self.data.remove(at: index)
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
-                } else if t == "MESSAGE_DELETE" {
-                    DispatchQueue.main.async {
-                        if let d = json["d"] as? [String: Any],
-                           let messageid = d["id"] as? String,
-                           let index = self.messageIDs.firstIndex(of: messageid) {
-                            self.messageIDs.remove(at: index)
-                            self.messages.remove(at: index)
-                            self.usernames.remove(at: index)
-                            self.icons.remove(at: index)
                         }
                     }
                 }

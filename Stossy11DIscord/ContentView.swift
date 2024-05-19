@@ -680,43 +680,43 @@ struct ChannelView: View {
                                         print(previousDate)
                                     }
                             }
-                            
-                            HStack {
-                                AsyncImage(url: URL(string: messageData.icon)) { image in
-                                    image.resizable()
-                                        .frame(width: 32, height: 32)
-                                        .clipShape(Circle())
-                                        .onAppear() {
-                                            previousMessageDate = messageDate
-                                        }
-                                        .contextMenu {
-                                            // Show the message date when holding the message
-                                            Text("Message Date: \(messageDate)")
-                                            Button(action: {
-                                                self.selectedMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
-                                            }) {
-                                                Text("Delete")
+                            VStack {
+                                HStack {
+                                    AsyncImage(url: URL(string: messageData.icon)) { image in
+                                        image.resizable()
+                                            .frame(width: 32, height: 32)
+                                            .clipShape(Circle())
+                                            .onAppear() {
+                                                previousMessageDate = messageDate
                                             }
-                                            Button(action: {
-                                                self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
-                                            }) {
-                                                Text("Reply")
+                                            .contextMenu {
+                                                // Show the message date when holding the message
+                                                Text("Message Date: \(messageDate)")
+                                                Button(action: {
+                                                    self.selectedMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                }) {
+                                                    Text("Delete")
+                                                }
+                                                Button(action: {
+                                                    self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                }) {
+                                                    Text("Reply")
+                                                }
                                             }
-                                        }
-                                } placeholder: {
-                                    ProgressView()
-                                        .onAppear() {
-                                            previousMessageDate = messageDate
-                                        }
-                                }
-                                
-                                MessageChannelView(token: token, message: messageData.message)
-                                    .onAppear() {
-                                        print(messageDate)
+                                    } placeholder: {
+                                        ProgressView()
+                                            .onAppear() {
+                                                previousMessageDate = messageDate
+                                            }
                                     }
-                                if !messageData.attachment.isEmpty {
-                                    MediaView(url: messageData.attachment)
+                                    MessageChannelView(token: token, message: messageData.message)
+                                        .onAppear() {
+                                            print(messageDate)
+                                        }
                                 }
+                                    if !messageData.attachment.isEmpty {
+                                        MediaView(url: messageData.attachment)
+                                    }
                                 
                                 /* AsyncImage(url: URL(string: imageurl2)) { image in
                                  image.resizable()

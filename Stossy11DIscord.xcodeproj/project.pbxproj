@@ -25,8 +25,11 @@
 		386B2EFC2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */; };
 		386B2F002BEF1FEB00FCF947 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 386B2EFF2BEF1FEB00FCF947 /* KeychainSwift */; };
 		386B2F022BEF1FFB00FCF947 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 386B2F012BEF1FFB00FCF947 /* Starscream */; };
-		38C119DF2BF842B800D66F59 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E6E1422BF716AF00FC575A /* MessageView.swift */; };
 		38C119E12BF8688500D66F59 /* MediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C119E02BF8688500D66F59 /* MediaView.swift */; };
+		38C119E32BF88E2F00D66F59 /* MediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C119E02BF8688500D66F59 /* MediaView.swift */; };
+		38C119E42BF88E3600D66F59 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E6E1422BF716AF00FC575A /* MessageView.swift */; };
+		38C119E62BF88E5200D66F59 /* MediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C119E52BF88E5200D66F59 /* MediaView.swift */; };
+		38C119E82BF88E5800D66F59 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C119E72BF88E5800D66F59 /* MessageView.swift */; };
 		38CDD4E02BF0C9DF005A03CA /* StossycordmacOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */; };
 		38CDD4E22BF0C9DF005A03CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4E12BF0C9DF005A03CA /* ContentView.swift */; };
 		38CDD4E42BF0C9E0005A03CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38CDD4E32BF0C9E0005A03CA /* Assets.xcassets */; };
@@ -76,6 +79,8 @@
 		387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		38B3A4342BEC44C700C27E1A /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 		38C119E02BF8688500D66F59 /* MediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; };
+		38C119E52BF88E5200D66F59 /* MediaView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaView.swift; path = Stossycord/Shared/MediaView.swift; sourceTree = SOURCE_ROOT; };
+		38C119E72BF88E5800D66F59 /* MessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MessageView.swift; path = Stossycord/Shared/MessageView.swift; sourceTree = SOURCE_ROOT; };
 		38CDD4DD2BF0C9DF005A03CA /* StossycordmacOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StossycordmacOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordmacOSApp.swift; sourceTree = "<group>"; };
 		38CDD4E12BF0C9DF005A03CA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -232,9 +237,19 @@
 			path = "../Stossy11DIscord/Preview Content";
 			sourceTree = "<group>";
 		};
+		38C119E22BF88E2700D66F59 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				38C119E52BF88E5200D66F59 /* MediaView.swift */,
+				38C119E72BF88E5800D66F59 /* MessageView.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		38CDD4DE2BF0C9DF005A03CA /* StossycordmacOS */ = {
 			isa = PBXGroup;
 			children = (
+				38C119E22BF88E2700D66F59 /* Shared */,
 				38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */,
 				38CDD4E12BF0C9DF005A03CA /* ContentView.swift */,
 				38CDD4E32BF0C9E0005A03CA /* Assets.xcassets */,
@@ -427,7 +442,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				38C119DF2BF842B800D66F59 /* MessageView.swift in Sources */,
 				386B2EFA2BEF1ECE00FCF947 /* LoginView.swift in Sources */,
 				38368C702BF1B44D00B666B2 /* ContentView.swift in Sources */,
 				386B2EF02BEF1EA600FCF947 /* ContentView.swift in Sources */,
@@ -441,8 +455,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				38CDD4F32BF0CC23005A03CA /* LoginView.swift in Sources */,
+				38C119E32BF88E2F00D66F59 /* MediaView.swift in Sources */,
 				38CDD4E22BF0C9DF005A03CA /* ContentView.swift in Sources */,
 				38CDD4E02BF0C9DF005A03CA /* StossycordmacOSApp.swift in Sources */,
+				38C119E42BF88E3600D66F59 /* MessageView.swift in Sources */,
+				38C119E82BF88E5800D66F59 /* MessageView.swift in Sources */,
+				38C119E62BF88E5200D66F59 /* MediaView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

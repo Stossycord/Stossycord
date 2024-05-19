@@ -193,6 +193,19 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                         if let index = self.messageIDs.firstIndex(of: messageid) {
                                             self.messages[index] = "\(globalname): " + "\(content)"
                                         }
+                                    } else if t == "MESSAGE_DELETE" {
+                                        DispatchQueue.main.async {
+                                            if let d = json["d"] as? [String: Any],
+                                               let messageid = d["id"] as? String,
+                                               let index = self.messageIDs.firstIndex(of: messageid) {
+                                                self.messageIDs.remove(at: index)
+                                                self.messages.remove(at: index)
+                                                self.usernames.remove(at: index)
+                                                self.icons.remove(at: index)
+                                                print(self.data)
+                                                self.data.remove(at: index)
+                                            }
+                                        }
                                     }
                                 }
                             }
