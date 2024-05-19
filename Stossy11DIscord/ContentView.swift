@@ -99,7 +99,7 @@ struct ContentView: View {
                         }
                         
                         /* Button(action: {
-                         print("Guild ID: \(guild.id)")
+                         // print("Guild ID: \(guild.id)")
                          }) {
                          Text(guild.name)
                          }
@@ -168,7 +168,7 @@ func getDiscordUsername(token: String, completion: @escaping (String) -> Void) {
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
-            print("Error: \(error)")
+            // print("Error: \(error)")
         } else if let data = data {
             do {
                 if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
@@ -177,7 +177,7 @@ func getDiscordUsername(token: String, completion: @escaping (String) -> Void) {
                     }
                 }
             } catch {
-                print("Error: \(error)")
+                // print("Error: \(error)")
             }
         }
     }
@@ -228,7 +228,7 @@ struct ServerView: View {
     }
     func getDiscordChannels(serverId: String, token: String, completion: @escaping ([Item]) -> Void) {
         guard let url = URL(string: "https://discord.com/api/v9/guilds/\(serverId)/channels?channel_limit=100") else {
-            print("Invalid URL")
+            // print("Invalid URL")
             return
         }
 
@@ -251,10 +251,10 @@ struct ServerView: View {
 
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                print("Error: \(error)")
+                // print("Error: \(error)")
             } else if let data = data {
                 do {
-                    print("MAYO BEANS: aaaa\(String(data: data, encoding: .utf8) ?? ""))aaaa")
+                    // print("MAYO BEANS: aaaa\(String(data: data, encoding: .utf8) ?? ""))aaaa")
                     if let jsonArray = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
                         var items: [Item] = []
                         var currentHeading: String? = nil
@@ -275,7 +275,7 @@ struct ServerView: View {
                         }
                     }
                 } catch {
-                    print("Error: \(error)")
+                    // print("Error: \(error)")
                 }
             }
         }
@@ -327,7 +327,7 @@ struct DMa: View {
     }
     func getDiscordDMs(token: String, completion: @escaping ([Item1]) -> Void) {
         guard let url = URL(string: "https://discord.com/api/v9/users/@me/channels") else {
-            print("Invalid URL")
+            // print("Invalid URL")
             return
         }
 
@@ -349,7 +349,7 @@ struct DMa: View {
 
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                print("Error: \(error)")
+                // print("Error: \(error)")
             } else if let data = data {
                 do {
                     if let jsonArray = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
@@ -382,7 +382,7 @@ struct DMa: View {
                     }
 
                 } catch {
-                    print("Error: \(error)")
+                    // print("Error: \(error)")
                 }
             }
         }
@@ -436,10 +436,10 @@ func sendPostRequest(content: String, token: String, channel: String) {
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
-            print("Error: \(error)")
+            // print("Error: \(error)")
         } else if let data = data {
             let str = String(data: data, encoding: .utf8)
-            print("Received data:\n\(str ?? "")")
+            // print("Received data:\n\(str ?? "")")
         }
     }
 
@@ -469,7 +469,7 @@ func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: 
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
-            print("Error: \(error)")
+            // print("Error: \(error)")
         } else if let data = data {
             do {
                 if let jsonArray = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
@@ -484,7 +484,7 @@ func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: 
                     completion(guilds)
                 }
             } catch {
-                print("Error: \(error)")
+                // print("Error: \(error)")
             }
         }
     }
@@ -515,7 +515,7 @@ func getDiscordGuildsold(token: String, completion: @escaping ([(name: String, i
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
-            print("Error: \(error)")
+            // print("Error: \(error)")
         } else if let data = data {
             do {
                 if let jsonArray = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
@@ -528,7 +528,7 @@ func getDiscordGuildsold(token: String, completion: @escaping ([(name: String, i
                     completion(guilds)
                 }
             } catch {
-                print("Error: \(error)")
+                // print("Error: \(error)")
             }
         }
     }
@@ -567,10 +567,10 @@ func sendPostRequest1(content: String, token: String, channel: String, messageRe
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
-            print("Error: \(error)")
+            // print("Error: \(error)")
         } else if let data = data {
             let str = String(data: data, encoding: .utf8)
-            print("Received data:\n\(str ?? "")")
+            // print("Received data:\n\(str ?? "")")
         }
     }
 
@@ -601,7 +601,7 @@ func getDiscordGuilds1(token: String, completion: @escaping ([(name: String, id:
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
-            print("Error: \(error)")
+            // print("Error: \(error)")
         } else if let data = data {
             do {
                 if let jsonArray = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
@@ -616,7 +616,7 @@ func getDiscordGuilds1(token: String, completion: @escaping ([(name: String, id:
                     completion(guilds)
                 }
             } catch {
-                print("Error: \(error)")
+                // print("Error: \(error)")
             }
         }
     }
@@ -655,11 +655,7 @@ struct ChannelView: View {
     @State var replyMessage: Message? = nil
     
     @State var ispickedauto = false
-    @State var showEmojiPicker = false {
-        didSet {
-            print("Emoji Picker State has changed to: \(showEmojiPicker)")
-        }
-    }
+    @State var showEmojiPicker = false
     @State var previousMessageDate: Date? = nil
     @State var emojis: [Emoji] = []
 
@@ -677,7 +673,7 @@ struct ChannelView: View {
                                 Divider()
                                     .padding(.vertical)
                                     .onAppear() {
-                                        print(previousDate)
+                                        // print(previousDate)
                                     }
                             }
                             VStack {
@@ -711,7 +707,7 @@ struct ChannelView: View {
                                     }
                                     MessageChannelView(token: token, message: messageData.message)
                                         .onAppear() {
-                                            print(messageDate)
+                                            // print(messageDate)
                                         }
                                 }
                                     if !messageData.attachment.isEmpty {
@@ -1008,7 +1004,7 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data else {
-            print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
+            // print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
             return
         }
         
@@ -1034,8 +1030,13 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                                 }
                             }
                             
-                            let messageData = MessageData(icon: avatarURL, message: content, attachment: attachmentURL, username: username, messageId: id)
-                            webSocketClient.data.append(messageData)
+                            if let globalname = user["global_name"] as? String {
+                                let messageData = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                webSocketClient.data.append(messageData)
+                            } else {
+                                let messageData = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                webSocketClient.data.append(messageData)
+                            }
                             uniqueMessages.insert(id)
                         }
                     }
@@ -1048,7 +1049,7 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                 }
             }
         } catch {
-            print("Error parsing JSON: \(error)")
+            // print("Error parsing JSON: \(error)")
         }
     }
     
@@ -1078,12 +1079,12 @@ func deleteDiscordMessage(token: String, serverID: String, channelID: String, me
 
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data, error == nil else {
-            print(error?.localizedDescription ?? "No data")
+            // print(error?.localizedDescription ?? "No data")
             return
         }
         let responseJSON = try? JSONSerialization.jsonObject(with: data, options: [])
         if let responseJSON = responseJSON as? [String: Any] {
-            print(responseJSON)
+            // print(responseJSON)
         }
     }
 

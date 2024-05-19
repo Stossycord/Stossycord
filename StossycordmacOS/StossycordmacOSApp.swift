@@ -84,44 +84,22 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
         switch event {
         case .connected(let headers):
             isconnected = true
-            print("WebSocket is connected:")
             let payload: [String: Any] = [
                 "op": 2,
                 "d": [
                     "token": self.token,
-                    "capabilities": 33280, // This is the bitmask for all intents
+                    "capabilities": 33280,
                     "properties": [
                         "os": "Mac OS X",
-                        "browser": "Firefox",
                         "device": "",
-                        "system_locale": "en-US",
-                        "browser_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0",
                         "browser_version": "125.0",
                         "os_version": "10.15",
-                        "referrer": "",
-                        "referring_domain": "",
-                        "referrer_current": "https://discord.com/",
-                        "referring_domain_current": "discord.com",
-                        "release_channel": "stable",
-                        "client_build_number": 291963,
-                        "client_event_source": nil,
-                        "design_id": 0
-                    ],
-                    "presence": [
-                        "status": "unknown",
-                        "since": 0,
-                        "activities": [],
-                        "afk": false
-                    ],
-                    "compress": false,
-                    "client_state": [
-                        "guild_versions": [:]
                     ]
                 ]
             ]
             sendJSONRequest(payload)
         case .disconnected(let reason, let code):
-            print("WebSocket is disconnected: \(reason) with code: \(code)")
+            // print("WebSocket is disconnected: \(reason) with code: \(code)")
             getTokenAndConnect()
         case .text(let string):
             handleMessage(string)
@@ -129,10 +107,10 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             print("Received data: \(data.count)")
         case .ping(_):
             socket.write(ping: Data())
-            print("ping")
+            // print("ping")
         case .pong(_):
             socket.write(pong: Data())
-            print("pong")
+            // print("pong")
         case .viabilityChanged(_):
             break
         case .reconnectSuggested(_):
@@ -158,9 +136,9 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     func handleMessage(_ string: String) {
         if let data = string.data(using: .utf8),
            let json = receiveJSONResponse(data: data) {
-            print("Received JSON: \(json)") // Debug log
+            // print("Received JSON: \(json)") // Debug log
             if let t = json["t"] as? String {
-                print("Event type: \(t)") // Debug log
+                // print("Event type: \(t)") // Debug log
                 if t == "MESSAGE_CREATE" || t == "MESSAGE_UPDATE" {
                     DispatchQueue.main.async {
                         if let d = json["d"] as? [String: Any],
@@ -174,7 +152,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
                             if self.currentchannel.isEmpty {
-                                print("current channel is empty: \(self.currentchannel)")
+                                // print("current channel is empty: \(self.currentchannel)")
                             } else {
                                 if channelId == self.currentchannel {
                                     print("channelID: \(self.currentchannel) and Sent Message: \(string.data(using: .utf8))")
