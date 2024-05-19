@@ -10,6 +10,7 @@ import Foundation
 import SwiftUI
 import KeychainSwift
 import Giffy
+import UniformTypeIdentifiers
 
 // let user = DiscordREST()
 
@@ -658,6 +659,8 @@ struct ChannelView: View {
     @State var showEmojiPicker = false
     @State var previousMessageDate: Date? = nil
     @State var emojis: [Emoji] = []
+    @State var importing = false
+    @State var showprompt: Bool? = nil
 
         var body: some View {
             VStack {
@@ -743,6 +746,33 @@ struct ChannelView: View {
                     .padding()
                     .background(Color.gray.opacity(0.2))
                 }
+                if let showprompt = showprompt {
+                    VStack {
+                        Text("Upload Photo or Upload Video")
+                            .font(.headline)
+                        Divider()
+                        HStack {
+                            Button(action: {
+                                self.showprompt = nil
+                            }) {
+                                Text("Photo (doesnt work rn)")
+                            }
+                            Button(action: {
+                                self.showprompt = nil
+                                self.importing = true
+                            }) {
+                                Text("Files")
+                            }
+                            Button(action: {
+                                self.showprompt = nil
+                            }) {
+                                Text("Cancel")
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                }
                 if showEmojiPicker {
                     EmojiPicker(text: $text, pickauto: $ispickedauto, currentsearch: $currentsearch, emojis: emojis)
                 }
@@ -792,21 +822,33 @@ struct ChannelView: View {
                                 showEmojiPicker.toggle()
                             }
                         }
-
+                    Button {
+                        if showprompt == true {
+                            showprompt = nil
+                        } else  {
+                            showprompt = true
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
                         .onAppear() {
                             fetchEmojis(token: token, guildID: guild) { fetchedEmojis in
                                 emojis = fetchedEmojis ?? []
                             }
                         }
-                        
-                        
-                    Button("emoji") {
-                        // keychain.set("", forKey: "token")
-                        // hasbeenopened = true
-                        if !emojis.isEmpty {
-                            showEmojiPicker.toggle()
-                        }
-                    }
+                }
+                
+            }
+            .fileImporter(
+                isPresented: $importing,
+                allowedContentTypes: [.image, .audio, .archive, .text, .video]
+            ) { result in
+                switch result {
+                case .success(let file):
+                    print(file.absoluteString)
+                    uploadFileToDiscord(fileUrl: file, token: token, channelid: channelid, message: text)
+                case .failure(let error):
+                    print(error.localizedDescription)
                 }
             }
             .padding()
@@ -835,6 +877,46 @@ struct ChannelView: View {
             }
         }
 }
+
+
+func uploadFileToDiscord(fileUrl: URL, token: String, channelid: String, message: String) {
+    let url = URL(string: "https://discord.com/api/channels/\(channelid)/messages")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.addValue(token, forHTTPHeaderField: "Authorization")
+    request.addValue("multipart/form-data;boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW", forHTTPHeaderField: "Content-Type")
+    
+    var data = Data()
+    data.append("\r\n--WebKitFormBoundary7MA4YWxkTrZu0gW\r\n".data(using: .utf8)!)
+    data.append("Content-Disposition:form-data; name=\"content\"\r\n\r\n".data(using: .utf8)!)
+    if !message.isEmpty {
+        data.append("\(message)".data(using: .utf8)!)
+    } else {
+        data.append("_ _".data(using: .utf8)!)
+    }
+    data.append("\r\n--WebKitFormBoundary7MA4YWxkTrZu0gW\r\n".data(using: .utf8)!)
+    data.append("Content-Disposition:form-data; name=\"file\"; filename=\"\(fileUrl.lastPathComponent)\"\r\n".data(using: .utf8)!)
+    data.append("Content-Type: text/plain\r\n\r\n".data(using: .utf8)!)
+    do {
+        let fileData = try Data(contentsOf: fileUrl)
+        data.append(fileData)
+    } catch {
+        print("Failed to read file data")
+        return
+    }
+    data.append("\r\n--WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n".data(using: .utf8)!)
+    
+    let task = URLSession.shared.uploadTask(with: request, from: data) { (data, response, error) in
+        if let error = error {
+            print("Failed to upload file: \(error)")
+        } else if let data = data {
+            print("Response: \(String(data: data, encoding: .utf8) ?? "")")
+        }
+    }
+    task.resume()
+}
+
+
 
 struct EmojiPicker: View {
     @Binding var text: String
@@ -1030,15 +1112,31 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                                 }
                             }
                             
-                            if let globalname = user["global_name"] as? String {
-                                let messageData = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: id)
-                                webSocketClient.data.append(messageData)
+                            // Handle nickname
+                            if let member = message["member"] as? [String: Any] {
+                                if let nickname = member["nick"] as? String {
+                                    let messageData = MessageData(icon: avatarURL, message: "\(nickname): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                    webSocketClient.data.append(messageData)
+                                    if let globalname = user["global_name"] as? String {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    } else {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    }
+                                    uniqueMessages.insert(id)
+                                }
                             } else {
-                                let messageData = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: id)
-                                webSocketClient.data.append(messageData)
+                                    if let globalname = user["global_name"] as? String {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    } else {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    }
+                                    uniqueMessages.insert(id)
+                                }
                             }
-                            uniqueMessages.insert(id)
-                        }
                     }
                 }
                 // Sort the messages by their IDs (which are timestamps)

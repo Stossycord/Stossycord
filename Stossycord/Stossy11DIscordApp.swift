@@ -3,9 +3,11 @@ import Foundation
 import Starscream
 import KeychainSwift
 
+
+
 struct MessageData {
     let icon: String
-    let message: String
+    var message: String
     let attachment: String
     let username: String
     let messageId: String
@@ -82,33 +84,12 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                 "op": 2,
                 "d": [
                     "token": self.token,
-                    "capabilities": 33280, // This is the bitmask for all intents
+                    "capabilities": 33280,
                     "properties": [
                         "os": "Mac OS X",
-                        "browser": "Firefox",
                         "device": "",
-                        "system_locale": "en-US",
-                        "browser_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0",
                         "browser_version": "125.0",
                         "os_version": "10.15",
-                        "referrer": "",
-                        "referring_domain": "",
-                        "referrer_current": "https://discord.com/",
-                        "referring_domain_current": "discord.com",
-                        "release_channel": "stable",
-                        "client_build_number": 291963,
-                        "client_event_source": nil,
-                        "design_id": 0
-                    ],
-                    "presence": [
-                        "status": "unknown",
-                        "since": 0,
-                        "activities": [],
-                        "afk": false
-                    ],
-                    "compress": false,
-                    "client_state": [
-                        "guild_versions": [:]
                     ]
                 ]
             ]
@@ -164,6 +145,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let author = d["author"] as? [String: Any],
                            let username = author["username"] as? String,
                            let avatarHash = author["avatar"] as? String,
+                           let member = d["member"] as? [String: Any],
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
                             print("username: \(username)")
@@ -189,7 +171,10 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                                 }
                                             }
                                         }
-                                        if let globalname = author["global_name"] as? String {
+                                        if let nickname = member["nick"] as? String {
+                                            let beans = MessageData(icon: avatarURL, message: "\(nickname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
+                                            self.data.append(beans)
+                                        } else if let globalname = author["global_name"] as? String {
                                             let beans = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
                                             self.data.append(beans)
                                         } else {
@@ -204,6 +189,10 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                             } else {
                                                 self.messages[index] = "\(username ): " + "\(content)"
                                             }
+                                            // Find the index in the data array
+                                            if let dataIndex = self.data.firstIndex(where: { $0.messageId == messageid }) {
+                                                self.data[dataIndex].message = self.messages[index]
+                                            }
                                         }
                                     } else if t == "MESSAGE_DELETE" {
                                         DispatchQueue.main.async {
@@ -214,8 +203,10 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                                 self.messages.remove(at: index)
                                                 self.usernames.remove(at: index)
                                                 self.icons.remove(at: index)
-                                                // print(self.data)
-                                                self.data.remove(at: index)
+                                                // Find the index in the data array
+                                                if let dataIndex = self.data.firstIndex(where: { $0.messageId == messageid }) {
+                                                    self.data.remove(at: dataIndex)
+                                                }
                                             }
                                         }
                                     }

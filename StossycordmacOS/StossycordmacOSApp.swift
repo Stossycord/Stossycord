@@ -10,9 +10,11 @@ import Foundation
 import Starscream
 import KeychainSwift
 
+
+
 struct MessageData {
     let icon: String
-    let message: String
+    var message: String
     let attachment: String
     let username: String
     let messageId: String
@@ -84,6 +86,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
         switch event {
         case .connected(let headers):
             isconnected = true
+            // print("WebSocket is connected:")
             let payload: [String: Any] = [
                 "op": 2,
                 "d": [
@@ -110,7 +113,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             // print("ping")
         case .pong(_):
             socket.write(pong: Data())
-            // print("pong")
+            //print("pong")
         case .viabilityChanged(_):
             break
         case .reconnectSuggested(_):
@@ -122,7 +125,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                 getTokenAndConnect()
             }
         case .error(let error):
-            print("Error: \(error?.localizedDescription ?? "Unknown error")")
+            // print("Error: \(error?.localizedDescription ?? "Unknown error")")
             if !didDisconnectIntentionally {
                 getTokenAndConnect()
             }
@@ -134,9 +137,10 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     }
     
     func handleMessage(_ string: String) {
+        print("event recieved")
         if let data = string.data(using: .utf8),
            let json = receiveJSONResponse(data: data) {
-            // print("Received JSON: \(json)") // Debug log
+            print("Recieved JSON") // Debug log
             if let t = json["t"] as? String {
                 // print("Event type: \(t)") // Debug log
                 if t == "MESSAGE_CREATE" || t == "MESSAGE_UPDATE" {
@@ -147,10 +151,11 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let messageid = d["id"] as? String,
                            let author = d["author"] as? [String: Any],
                            let username = author["username"] as? String,
-                           let globalname = author["global_name"] as? String,
                            let avatarHash = author["avatar"] as? String,
+                           let member = d["member"] as? [String: Any],
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
+                            print("username: \(username)")
                             if self.currentchannel.isEmpty {
                                 // print("current channel is empty: \(self.currentchannel)")
                             } else {
@@ -162,6 +167,8 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                         self.messageIDs.append(messageid)
                                         print("\(avatarURL): \(id)")
                                         
+                                        
+                                        
                                         // Handle attachments
                                         var attachmentURL = ""
                                         if let attachments = d["attachments"] as? [[String: Any]] {
@@ -171,12 +178,28 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                                 }
                                             }
                                         }
-                                        let beans = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
-                                        self.data.append(beans)
+                                        if let nickname = member["nick"] as? String {
+                                            let beans = MessageData(icon: avatarURL, message: "\(nickname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
+                                            self.data.append(beans)
+                                        } else if let globalname = author["global_name"] as? String {
+                                            let beans = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
+                                            self.data.append(beans)
+                                        } else {
+                                            let beans = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
+                                            self.data.append(beans)
+                                        }
                                         self.messages.append(content)
                                     } else if t == "MESSAGE_UPDATE" {
                                         if let index = self.messageIDs.firstIndex(of: messageid) {
-                                            self.messages[index] = "\(globalname): " + "\(content)"
+                                            if let globalname = author["global_name"] as? String {
+                                                self.messages[index] = "\(globalname): " + "\(content)"
+                                            } else {
+                                                self.messages[index] = "\(username ): " + "\(content)"
+                                            }
+                                            // Find the index in the data array
+                                            if let dataIndex = self.data.firstIndex(where: { $0.messageId == messageid }) {
+                                                self.data[dataIndex].message = self.messages[index]
+                                            }
                                         }
                                     } else if t == "MESSAGE_DELETE" {
                                         DispatchQueue.main.async {
@@ -187,13 +210,17 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                                 self.messages.remove(at: index)
                                                 self.usernames.remove(at: index)
                                                 self.icons.remove(at: index)
-                                                print(self.data)
-                                                self.data.remove(at: index)
+                                                // Find the index in the data array
+                                                if let dataIndex = self.data.firstIndex(where: { $0.messageId == messageid }) {
+                                                    self.data.remove(at: dataIndex)
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
+                        } else {
+                            print("unable to decode stuffs \(string)")
                         }
                     }
                 }
@@ -201,7 +228,6 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
         }
     }
 }
-
 
 @main
 struct StossycordmacOSApp: App {
