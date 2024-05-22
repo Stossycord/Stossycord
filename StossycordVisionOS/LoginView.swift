@@ -9,30 +9,8 @@ import Foundation
 import SwiftUI
 import KeychainSwift
 
-struct LoginViewold: View {
-    @State var Username = ""
-    @State var Password = ""
-    @State var showingPopover = false
-    @State private var token: String = ""
-    @State private var ticket = ""
-    @State private var code = ""
-    @Environment(\.dismiss) var dismiss
-    let keychain = KeychainSwift()
-    
-    var body: some View {
-        VStack {
-            Text("")
-            Text("Welcome to StossyCord it is a custom Discord Client")
-                .font(.title)
-            Text("Login to Discord")
-                .padding()
-            WebView(url: "https://discord.com/login")
-        }
-    }
-}
-
-
 struct LoginView: View {
+    @ObservedObject var webSocketClient: WebSocketClient
     @State var Username = ""
     @State var Password = ""
     @State var showingPopover = false
@@ -55,8 +33,8 @@ struct LoginView: View {
                         .padding()
             Button("Login") {
                 sendPostRequest2(username: Username, password: Password) { user in
-                    print("\(user.totp)" + " " + user.ticket)
-                    self.showingPopover = user.totp
+                    print("\(user.mfa)" + " " + user.ticket)
+                    self.showingPopover = user.mfa
                     self.ticket = user.ticket
                 }
             }
@@ -70,6 +48,7 @@ struct LoginView: View {
                         self.token = user.token
                         self.keychain.set(self.token, forKey: "token")
                         dismiss()
+                        webSocketClient.getcurrentchannel(input: "", guild: "")
                     }
                 }
             }

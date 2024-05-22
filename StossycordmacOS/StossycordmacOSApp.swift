@@ -26,6 +26,8 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     var token = ""
     var currentchannel = ""
     var currentguild = ""
+    @Published var guilds: [(name: String, id: String, icon: String?)] = []
+    @Published var hasnitro: Bool = false
     @Published var messages: [String] = []
     @Published var data: [MessageData] = []
     @Published var icons: [String] = []

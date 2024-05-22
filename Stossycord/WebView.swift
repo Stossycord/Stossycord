@@ -6,13 +6,10 @@
 //
 
 import SwiftUI
-import KeychainSwift
-#if canImport(WebKit)
 import WebKit
 
 struct WebView: UIViewRepresentable {
-    let url: URL
-    public var loggedin = false
+    let url: String
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
@@ -21,26 +18,37 @@ struct WebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
+        let request = URLRequest(url: URL(string: self.url)!)
         webView.load(request)
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(self)
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {
-        public var loggedin = false
+        var parent: WebView
+
+        init(_ parent: WebView) {
+            self.parent = parent
+        }
+
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-            if let url = navigationAction.request.url, url.absoluteString == "https://discord.com/api/v9/auth/mfa/totp" {
-                let headers = navigationAction.request.allHTTPHeaderFields
-                let token = headers?["Authorization"]
-                print("Headers: \(headers)")
-                print("Token: \(token ?? "none")")
-                self.loggedin = true
+            if navigationAction.request.httpMethod == "POST" {
+                if let httpBody = navigationAction.request.httpBody {
+                    do {
+                        if let json = try JSONSerialization.jsonObject(with: httpBody, options: []) as? [String: Any] {
+                            if let token = json["token"] as? String {
+                                print("Token: \(token)")
+                                // Save the token as needed
+                            }
+                        }
+                    } catch {
+                        print("Error parsing JSON: \(error)")
+                    }
+                }
             }
             decisionHandler(.allow)
         }
     }
 }
-#endif

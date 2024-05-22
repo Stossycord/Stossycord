@@ -5,7 +5,6 @@
 //  Created by Hristos Sfikas on 18/5/2024.
 //
 
-import Giffy
 import AVKit
 import Foundation
 import SwiftUI
@@ -30,22 +29,6 @@ struct MediaView: View {
                             DownloadView(url: url2)
                         @unknown default:
                             EmptyView()
-                        }
-                    }
-                } else if url2.pathExtension.lowercased() == "gif"  {
-                    AsyncGiffy(url: URL(string: url)!) { phase in
-                        switch phase {
-                        case .loading:
-                            ProgressView()
-                        case .error:
-                            DownloadView(url: url2)
-                        case .success(let giffy):
-                            giffy
-                                .frame(width: 32, height: 32)
-                                .clipShape(Circle())
-                                .onAppear() {
-                                    print("giffff")
-                                }
                         }
                     }
                 } else {

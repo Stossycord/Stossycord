@@ -19,9 +19,6 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     var token = ""
     var currentchannel = ""
     var currentguild = ""
-    @Published var guilds: [(name: String, id: String, icon: String?)] = []
-    @Published var hasnitro: Bool = false
-    @Published var currentuserid = ""
     @Published var messages: [String] = []
     @Published var data: [MessageData] = []
     @Published var icons: [String] = []
@@ -133,7 +130,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     }
     
     func handleMessage(_ string: String) {
-        print("event recieved \(self.currentuserid), \(self.hasnitro)")
+        print("event recieved")
         if let data = string.data(using: .utf8),
            let json = receiveJSONResponse(data: data) {
             print("Recieved JSON") // Debug log

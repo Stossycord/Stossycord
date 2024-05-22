@@ -45,9 +45,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @ObservedObject var webSocketClient: WebSocketClient
     @AppStorage("ISOpened") var hasbeenopened = true
-    @State var guilds: [(name: String, id: String, icon: String?)] = []
-    @State var user = ""
-    @State var hasnitro = false
+    @State private var guilds: [(name: String, id: String, icon: String?)] = []
     @State var token = ""
     @State var username = ""
     @State var searchTerm = ""
@@ -111,13 +109,6 @@ struct ContentView: View {
                 }.navigationTitle("Servers:")
                     .toolbar {
                         // Adds an item in the toolbar
-                        ToolbarItem(placement: .topBarLeading) {
-                            NavigationLink {
-                                SettingsView(webSocketClient: webSocketClient)
-                            } label: {
-                                Image(systemName: "gearshape.fill")
-                            }
-                        }
                         ToolbarItem {
                             // Example with a button
                             NavigationLink {
@@ -132,19 +123,16 @@ struct ContentView: View {
             }.onAppear {
                 token = keychain.get("token") ?? ""
                 if !token.isEmpty {
-                    getDiscordUsername(token: token) { fetchedUsername, coolid  in
+                    getDiscordUsername(token: token) { fetchedUsername in
                         self.username = fetchedUsername
-                        self.webSocketClient.currentuserid = coolid
-                        self.user = coolid
                     }
                     getDiscordGuilds(token: token) { fetchedGuilds in
                         self.guilds = fetchedGuilds
                     }
                 }
-                print("test: \(self.webSocketClient.currentuserid)")
             }
             .sheet(isPresented: $hasbeenopened) {
-                LoginView()
+                LoginView(webSocketClient: webSocketClient)
             }
         }
         .navigationViewStyle(.stack)
@@ -153,23 +141,13 @@ struct ContentView: View {
         token = keychain.get("token") ?? ""
         if !token.isEmpty {
             getDiscordGuilds(token: token) { fetchedGuilds in
-                self.webSocketClient.guilds = fetchedGuilds
+                self.guilds = fetchedGuilds
             }
         }
     }
 }
 
-struct SettingsView: View {
-    @ObservedObject var webSocketClient: WebSocketClient
-    
-    var body: some View {
-        List {
-            Toggle("Show All Server Emojis (most will not work unless you have nitro)", isOn: $webSocketClient.hasnitro)
-        }
-    }
-}
-
-func getDiscordUsername(token: String, completion: @escaping (String, String) -> Void) {
+func getDiscordUsername(token: String, completion: @escaping (String) -> Void) {
     let url = URL(string: "https://discord.com/api/v9/users/@me")!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
@@ -195,8 +173,8 @@ func getDiscordUsername(token: String, completion: @escaping (String, String) ->
         } else if let data = data {
             do {
                 if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                    if let username = json["username"] as? String, let id = json["id"] as? String {
-                        completion(username, id)
+                    if let username = json["username"] as? String {
+                        completion(username)
                     }
                 }
             } catch {
@@ -208,50 +186,6 @@ func getDiscordUsername(token: String, completion: @escaping (String, String) ->
     task.resume()
 }
 
-func getDiscordisnitro(token: String, userid: String, completion: @escaping (Bool) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/users/\(userid)")!
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
-    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
-    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
-    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
-    request.addValue("https://discord.com/channels/949183273383395328/958116619706564668", forHTTPHeaderField: "Referer")
-    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
-    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
-    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-    request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
-    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
-    request.addValue("eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IlNhZmFyaSIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1BVSIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwXzE1XzcpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNy40IFNhZmFyaS82MDUuMS4xNSIsImJyb3dzZXJfdmVyc2lvbiI6IjE3LjQiLCJvc192ZXJzaW9uIjoiMTAuMTUuNyIsInJlZmVycmVyIjoiIiwicmVmZXJyaW5nX2RvbWFpbiI6IiIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoyOTE1MDcsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImRlc2lnbl9pZCI6MH0=", forHTTPHeaderField: "X-Super-Properties")
-
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let error = error {
-            print("Error: \(error)")
-        } else if let data = data {
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                    if let premiumtype = json["premium_type"] as? String {
-                        if premiumtype >= "0" {
-                            completion(true)
-                            print("test: ", premiumtype)
-                        } else {
-                            completion(false)
-                            print("test: ", premiumtype)
-                        }
-                    }
-                }
-            } catch {
-                print("Error: \(error)")
-            }
-        }
-    }
-
-    task.resume()
-}
 
 
 struct ServerView: View {
@@ -282,11 +216,6 @@ struct ServerView: View {
             }
         }
         .onAppear() {
-            getDiscordisnitro(token: token, userid: self.webSocketClient.currentuserid) { cool in
-                if cool {
-                    self.webSocketClient.hasnitro = cool
-                }
-            }
             webSocketClient.getcurrentchannel(input: "", guild: "")
             webSocketClient.data = []
             webSocketClient.messageIDs = []
@@ -362,6 +291,40 @@ struct ServerView: View {
         let type: Int
         let position: Int
     }
+}
+
+func addReaction(token: String, channel: String, message: String, emojiId: String, emojiName: String) {
+   let emoji = "\(emojiName):\(emojiId)"
+   let urlString = "https://discord.com/api/v9/channels/\(channel)/messages/\(message)/reactions/\(emoji)/%40me"
+   guard let url = URL(string: urlString) else {
+       print("Invalid URL")
+       return
+   }
+
+   var request = URLRequest(url: url)
+   request.httpMethod = "PUT"
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.addValue(token, forHTTPHeaderField: "Authorization")
+    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
+    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
+    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
+    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
+    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
+    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
+    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
+    request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
+    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
+    request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
+    request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
+
+   let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+       if let error = error {
+           print("Error: \(error)")
+       } else if let response = response as? HTTPURLResponse {
+           print("Status code: \(response.statusCode)")
+       }
+   }
+   task.resume()
 }
 
 struct DMa: View {
@@ -528,6 +491,7 @@ func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: 
     request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
     request.addValue("keep-alive", forHTTPHeaderField: "Connection")
     request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
+    request.addValue("https://discord.com/channels/949183273383395328/958116619706564668", forHTTPHeaderField: "Referer")
     request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
     request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
     request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
@@ -701,7 +665,7 @@ struct Message: Identifiable {
     let username: String
 }
 
-struct Guild: Decodable {
+struct Guild {
     let id: String
     let name: String
 }
@@ -710,7 +674,6 @@ struct Guild: Decodable {
 
 struct ChannelView: View {
     @AppStorage("ISOpened") var hasbeenopened = true
-    @State private var image: UIImage?
     @State var text = ""
     // @State var token = ""
     @State var imageurl2 = ""
@@ -725,15 +688,12 @@ struct ChannelView: View {
     let username: String
     @State private var translation = ""
     @State var replyMessage: Message? = nil
-    @State var reactionMessage: Message? = nil
     
     @State var ispickedauto = false
     @State var showEmojiPicker = false
     @State var previousMessageDate: Date? = nil
     @State var emojis: [Emoji] = []
     @State var importing = false
-    @State var importingimages = false
-    @State var reactons = false
     @State var showprompt: Bool? = nil
 
         var body: some View {
@@ -774,12 +734,6 @@ struct ChannelView: View {
                                                     self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
                                                 }) {
                                                     Text("Reply")
-                                                }
-                                                Button(action: {
-                                                    self.reactionMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
-                                                    self.reactons = true
-                                                }) {
-                                                    Text("React")
                                                 }
                                             }
                                     } placeholder: {
@@ -834,7 +788,6 @@ struct ChannelView: View {
                         HStack {
                             Button(action: {
                                 self.showprompt = nil
-                                self.importingimages = true
                             }) {
                                 Text("Photo (doesnt work rn)")
                             }
@@ -856,9 +809,6 @@ struct ChannelView: View {
                 }
                 if showEmojiPicker {
                     EmojiPicker(text: $text, pickauto: $ispickedauto, currentsearch: $currentsearch, emojis: emojis)
-                }
-                if reactons {
-                    reactionpicker(token: token, messageid: reactionMessage?.id ?? "", channelid: channelid, shown: $reactons, emojis: emojis)
                 }
                 HStack {
                     TextField("Message \(channelname)", text: $text)
@@ -915,23 +865,11 @@ struct ChannelView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .onAppear() {
-                        /* fetchEmojis(token: token, guildID: guild) { fetchedEmojis in
-                         emojis = fetchedEmojis ?? []
-                         }
-                         */
-                        if webSocketClient.hasnitro {
-                            fetchAllEmojis(token: token) { fetchedEmojis in
-                                if fetchedEmojis != nil {
-                                    emojis = fetchedEmojis!
-                                }
-                            }
-                        } else {
+                        .onAppear() {
                             fetchEmojis(token: token, guildID: guild) { fetchedEmojis in
                                 emojis = fetchedEmojis ?? []
                             }
                         }
-                    }
                 }
                 
             }
@@ -947,9 +885,6 @@ struct ChannelView: View {
                     print(error.localizedDescription)
                 }
             }
-            .popover(isPresented: $importingimages, content: {
-                ImagePicker(image: $image, token: token, channelid: channelid, message: text)
-            })
             .padding()
             .alert(item: $selectedMessage) { message in
                 Alert(
@@ -962,15 +897,9 @@ struct ChannelView: View {
                 )
             }
             .onAppear() {
-                if webSocketClient.hasnitro {
-                    fetchAllEmojis(token: token) { fetchedEmojis in
-                        if fetchedEmojis != nil {
-                            emojis = fetchedEmojis!
-                        }
-                    }
-                } else {
-                    fetchEmojis(token: token, guildID: guild) { fetchedEmojis in
-                        emojis = fetchedEmojis ?? []
+                fetchEmojis(token: token, guildID: guild) { fetchedEmojis in
+                    if fetchedEmojis != nil {
+                        emojis = fetchedEmojis!
                     }
                 }
                 webSocketClient.data = []
@@ -982,46 +911,6 @@ struct ChannelView: View {
             }
         }
 }
-
-func fetchAllEmojis(token: String, completion: @escaping ([Emoji]?) -> Void) {
-    // First, fetch all guilds the bot is in
-    let guildsUrl = URL(string: "https://discord.com/api/users/@me/guilds")!
-    var request = URLRequest(url: guildsUrl)
-    request.httpMethod = "GET"
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
-    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
-    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
-    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
-    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
-    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
-    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-    request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
-    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
-    
-    let guildsTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let data = data {
-            let decoder = JSONDecoder()
-            if let guilds = try? decoder.decode([Guild].self, from: data) {
-                // Then, fetch emojis for each guild
-                for guild in guilds {
-                    fetchEmojis(token: token, guildID: guild.id, completion: completion)
-                }
-            
-            } else {
-                completion(nil)
-            }
-        } else {
-            completion(nil)
-        }
-    }
-    
-    guildsTask.resume()
-}
-
 
 
 func uploadFileToDiscord(fileUrl: URL, token: String, channelid: String, message: String) {
@@ -1059,46 +948,11 @@ func uploadFileToDiscord(fileUrl: URL, token: String, channelid: String, message
     task.resume()
 }
 
-func addReaction(token: String, channel: String, message: String, emojiId: String, emojiName: String) {
-   let emoji = "\(emojiName):\(emojiId)"
-   let urlString = "https://discord.com/api/v9/channels/\(channel)/messages/\(message)/reactions/\(emoji)/%40me"
-   guard let url = URL(string: urlString) else {
-       print("Invalid URL")
-       return
-   }
-
-   var request = URLRequest(url: url)
-   request.httpMethod = "PUT"
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
-    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
-    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
-    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
-    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
-    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
-    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-    request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
-    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
-
-   let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-       if let error = error {
-           print("Error: \(error)")
-       } else if let response = response as? HTTPURLResponse {
-           print("Status code: \(response.statusCode)")
-       }
-   }
-   task.resume()
-}
-
 struct reactionpicker: View {
     let token: String
     let messageid: String
     let channelid: String
-    @Binding var shown: Bool
-    @State var currentsearch = ""
+    @Binding var currentsearch: String
     var emojis: [Emoji] // Your Emoji model here
 
     var firstMatchingEmoji: Emoji? {
@@ -1108,12 +962,6 @@ struct reactionpicker: View {
     }
 
     var body: some View {
-        HStack {
-            Spacer()
-            Text("Reacting:")
-                .font(.title)
-            Spacer()
-        }
         ScrollView {
             ForEach(emojis.filter { emoji in
                 currentsearch.isEmpty || emoji.name.lowercased().contains(currentsearch.lowercased())
@@ -1121,7 +969,6 @@ struct reactionpicker: View {
                 let imageUrl = "https://cdn.discordapp.com/emojis/\(emoji.id).png?size=96"
                 Button {
                     addReaction(token: token, channel: channelid, message: messageid, emojiId: emoji.id, emojiName: emoji.name)
-                    shown = false
                 } label: {
                     HStack {
                         AsyncImage(url: URL(string: imageUrl)) { image in
@@ -1138,6 +985,7 @@ struct reactionpicker: View {
         }
     }
 }
+
 
 
 struct EmojiPicker: View {
@@ -1190,35 +1038,6 @@ struct Emoji: Codable {
     let id: String
     let name: String
 }
-
-// https://discord.com/api/v9/users/@me/guilds
-
-func retrieveAllEmojis(userToken: String, completion: @escaping ([Emoji]?) -> Void) {
-    // First, fetch all guilds the bot is in
-    let guildsUrl = URL(string: "https://discord.com/api/users/@me/guilds")!
-    var guildsRequest = URLRequest(url: guildsUrl)
-    guildsRequest.addValue(userToken, forHTTPHeaderField: "Authorization")
-    
-    let guildsTask = URLSession.shared.dataTask(with: guildsRequest) { (data, response, error) in
-        if let data = data {
-            let decoder = JSONDecoder()
-            if let guilds = try? decoder.decode([Guild].self, from: data) {
-                // Then, fetch emojis for each guild
-                for guild in guilds {
-                    fetchEmojis(token: userToken, guildID: guild.id, completion: completion)
-                }
-            } else {
-                completion(nil)
-            }
-        } else {
-            completion(nil)
-        }
-    }
-    
-    guildsTask.resume()
-}
-
-
 
 func fetchEmojis(token: String, guildID: String, completion: @escaping ([Emoji]?) -> Void) {
     let url = URL(string: "https://discord.com/api/guilds/\(guildID)/emojis")!
