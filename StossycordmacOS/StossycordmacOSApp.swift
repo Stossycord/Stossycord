@@ -2,7 +2,7 @@
 //  StossycordmacOSApp.swift
 //  StossycordmacOS
 //
-//  Created by Hristos Sfikas on 12/5/2024.
+//  Created by Hristos on 12/5/2024.
 //
 
 import SwiftUI

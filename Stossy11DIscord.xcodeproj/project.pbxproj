@@ -44,6 +44,7 @@
 		38C11A0A2BFA0E4300D66F59 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C11A092BFA0E4300D66F59 /* LoginView.swift */; };
 		38C11A0C2BFA0E7C00D66F59 /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 38C11A0B2BFA0E7C00D66F59 /* Giffy */; };
 		38C11A0F2BFA0EAE00D66F59 /* FLAnimatedImage in Frameworks */ = {isa = PBXBuildFile; productRef = 38C11A0E2BFA0EAE00D66F59 /* FLAnimatedImage */; };
+		38C243E22C0075820082CEB6 /* OggDecoder in Frameworks */ = {isa = PBXBuildFile; productRef = 38C243E12C0075820082CEB6 /* OggDecoder */; };
 		38CDD4E02BF0C9DF005A03CA /* StossycordmacOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */; };
 		38CDD4E22BF0C9DF005A03CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CDD4E12BF0C9DF005A03CA /* ContentView.swift */; };
 		38CDD4E42BF0C9E0005A03CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38CDD4E32BF0C9E0005A03CA /* Assets.xcassets */; };
@@ -94,7 +95,7 @@
 		38A117DE2BFD8E1800846218 /* MediaView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; };
 		38AD93F22BFB6DC900FE2A0E /* ImageSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSelectorView.swift; sourceTree = "<group>"; };
 		38B3A4342BEC44C700C27E1A /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
-		38C119E02BF8688500D66F59 /* MediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; };
+		38C119E02BF8688500D66F59 /* MediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; wrapsLines = 1; };
 		38C119E52BF88E5200D66F59 /* MediaView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaView.swift; path = Stossycord/Shared/MediaView.swift; sourceTree = SOURCE_ROOT; };
 		38C119E72BF88E5800D66F59 /* MessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MessageView.swift; path = Stossycord/Shared/MessageView.swift; sourceTree = SOURCE_ROOT; };
 		38C119ED2BFA0D1F00D66F59 /* StossycordVisionOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StossycordVisionOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -107,6 +108,30 @@
 		38C11A052BFA0DF700D66F59 /* MediaView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; };
 		38C11A062BFA0DF700D66F59 /* MessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		38C11A092BFA0E4300D66F59 /* LoginView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		38C243B12C0072890082CEB6 /* libavdevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavdevice.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libavdevice.framework"; sourceTree = "<group>"; };
+		38C243B22C0072890082CEB6 /* libilbc.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libilbc.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libilbc.framework"; sourceTree = "<group>"; };
+		38C243B32C0072890082CEB6 /* libavutil.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavutil.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libavutil.framework"; sourceTree = "<group>"; };
+		38C243B42C0072890082CEB6 /* libvorbis.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libvorbis.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libvorbis.framework"; sourceTree = "<group>"; };
+		38C243B52C0072890082CEB6 /* libswresample.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libswresample.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libswresample.framework"; sourceTree = "<group>"; };
+		38C243B62C0072890082CEB6 /* libswscale.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libswscale.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libswscale.framework"; sourceTree = "<group>"; };
+		38C243B72C0072890082CEB6 /* libvorbisenc.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libvorbisenc.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libvorbisenc.framework"; sourceTree = "<group>"; };
+		38C243B82C0072890082CEB6 /* lame.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = lame.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/lame.framework"; sourceTree = "<group>"; };
+		38C243B92C0072890082CEB6 /* shine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = shine.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/shine.framework"; sourceTree = "<group>"; };
+		38C243BA2C0072890082CEB6 /* soxr.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = soxr.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/soxr.framework"; sourceTree = "<group>"; };
+		38C243BB2C0072890082CEB6 /* libavformat.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavformat.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libavformat.framework"; sourceTree = "<group>"; };
+		38C243BC2C0072890082CEB6 /* mobileffmpeg.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mobileffmpeg.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/mobileffmpeg.framework"; sourceTree = "<group>"; };
+		38C243BD2C0072890082CEB6 /* opus.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opus.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/opus.framework"; sourceTree = "<group>"; };
+		38C243BE2C0072890082CEB6 /* speex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = speex.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/speex.framework"; sourceTree = "<group>"; };
+		38C243BF2C0072890082CEB6 /* wavpack.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = wavpack.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/wavpack.framework"; sourceTree = "<group>"; };
+		38C243C02C0072890082CEB6 /* libopencore-amrnb.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "libopencore-amrnb.framework"; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libopencore-amrnb.framework"; sourceTree = "<group>"; };
+		38C243C12C0072890082CEB6 /* libogg.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libogg.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libogg.framework"; sourceTree = "<group>"; };
+		38C243C22C0072890082CEB6 /* libavcodec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavcodec.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libavcodec.framework"; sourceTree = "<group>"; };
+		38C243C32C0072890082CEB6 /* libavfilter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavfilter.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libavfilter.framework"; sourceTree = "<group>"; };
+		38C243C42C00728A0082CEB6 /* libvorbisfile.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libvorbisfile.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libvorbisfile.framework"; sourceTree = "<group>"; };
+		38C243C52C00728A0082CEB6 /* vo-amrwbenc.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "vo-amrwbenc.framework"; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/vo-amrwbenc.framework"; sourceTree = "<group>"; };
+		38C243C62C00728A0082CEB6 /* libsndfile.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libsndfile.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/libsndfile.framework"; sourceTree = "<group>"; };
+		38C243C72C00728A0082CEB6 /* twolame.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = twolame.framework; path = "../../../Downloads/mobile-ffmpeg-audio-4.4.LTS-ios-framework/twolame.framework"; sourceTree = "<group>"; };
+		38C243E32C0084C80082CEB6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		38CDD4DD2BF0C9DF005A03CA /* StossycordmacOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StossycordmacOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		38CDD4DF2BF0C9DF005A03CA /* StossycordmacOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordmacOSApp.swift; sourceTree = "<group>"; };
 		38CDD4E12BF0C9DF005A03CA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -122,6 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38C243E22C0075820082CEB6 /* OggDecoder in Frameworks */,
 				38CDD4F82BF0CD80005A03CA /* Giffy in Frameworks */,
 				38403B6B2BEF0B2A0037A8E2 /* KeychainSwift in Frameworks */,
 				38403B6D2BEF0B550037A8E2 /* Starscream in Frameworks */,
@@ -166,6 +192,7 @@
 		38403B362BEF09DB0037A8E2 /* Stossycord */ = {
 			isa = PBXGroup;
 			children = (
+				38C243E32C0084C80082CEB6 /* Info.plist */,
 				38E6E1412BF7162B00FC575A /* Shared */,
 				387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */,
 				387AD04B2BE5EBE10073CADF /* ContentView.swift */,
@@ -255,6 +282,7 @@
 				38C119EE2BFA0D1F00D66F59 /* StossycordVisionOS */,
 				38C119EF2BFA0D1F00D66F59 /* Packages */,
 				387AD0472BE5EBE10073CADF /* Products */,
+				38C243B02C0072890082CEB6 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 			wrapsLines = 0;
@@ -328,6 +356,36 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		38C243B02C0072890082CEB6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				38C243B82C0072890082CEB6 /* lame.framework */,
+				38C243C22C0072890082CEB6 /* libavcodec.framework */,
+				38C243B12C0072890082CEB6 /* libavdevice.framework */,
+				38C243C32C0072890082CEB6 /* libavfilter.framework */,
+				38C243BB2C0072890082CEB6 /* libavformat.framework */,
+				38C243B32C0072890082CEB6 /* libavutil.framework */,
+				38C243B22C0072890082CEB6 /* libilbc.framework */,
+				38C243C12C0072890082CEB6 /* libogg.framework */,
+				38C243C02C0072890082CEB6 /* libopencore-amrnb.framework */,
+				38C243C62C00728A0082CEB6 /* libsndfile.framework */,
+				38C243B52C0072890082CEB6 /* libswresample.framework */,
+				38C243B62C0072890082CEB6 /* libswscale.framework */,
+				38C243B42C0072890082CEB6 /* libvorbis.framework */,
+				38C243B72C0072890082CEB6 /* libvorbisenc.framework */,
+				38C243C42C00728A0082CEB6 /* libvorbisfile.framework */,
+				38C243BC2C0072890082CEB6 /* mobileffmpeg.framework */,
+				38C243BD2C0072890082CEB6 /* opus.framework */,
+				38C243B92C0072890082CEB6 /* shine.framework */,
+				38C243BA2C0072890082CEB6 /* soxr.framework */,
+				38C243BE2C0072890082CEB6 /* speex.framework */,
+				38C243C72C00728A0082CEB6 /* twolame.framework */,
+				38C243C52C00728A0082CEB6 /* vo-amrwbenc.framework */,
+				38C243BF2C0072890082CEB6 /* wavpack.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		38CDD4DE2BF0C9DF005A03CA /* StossycordmacOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -381,6 +439,7 @@
 				38403B6A2BEF0B2A0037A8E2 /* KeychainSwift */,
 				38403B6C2BEF0B550037A8E2 /* Starscream */,
 				38CDD4F72BF0CD80005A03CA /* Giffy */,
+				38C243E12C0075820082CEB6 /* OggDecoder */,
 			);
 			productName = Stossycord;
 			productReference = 38403B352BEF09DB0037A8E2 /* Stossycord.app */;
@@ -493,6 +552,7 @@
 				38CDD4F62BF0CD7F005A03CA /* XCRemoteSwiftPackageReference "giffy" */,
 				38368C6D2BF1B0EF00B666B2 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 				38C11A0D2BFA0EAE00D66F59 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
+				38C243E02C0075820082CEB6 /* XCRemoteSwiftPackageReference "OggDecoder" */,
 			);
 			productRefGroup = 387AD0472BE5EBE10073CADF /* Products */;
 			projectDirPath = "";
@@ -615,12 +675,15 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stossycord/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = stossycord;
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
+				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -648,12 +711,15 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stossycord/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = stossycord;
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
+				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1050,6 +1116,14 @@
 				minimumVersion = 1.0.17;
 			};
 		};
+		38C243E02C0075820082CEB6 /* XCRemoteSwiftPackageReference "OggDecoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/arkasas/OggDecoder.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		38CDD4F62BF0CD7F005A03CA /* XCRemoteSwiftPackageReference "giffy" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tfmart/giffy";
@@ -1109,6 +1183,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 38C11A0D2BFA0EAE00D66F59 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */;
 			productName = FLAnimatedImage;
+		};
+		38C243E12C0075820082CEB6 /* OggDecoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 38C243E02C0075820082CEB6 /* XCRemoteSwiftPackageReference "OggDecoder" */;
+			productName = OggDecoder;
 		};
 		38CDD4EC2BF0CBB6005A03CA /* Starscream */ = {
 			isa = XCSwiftPackageProductDependency;

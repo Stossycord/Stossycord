@@ -2,7 +2,7 @@
 //  LoginView.swift
 //  Stossy11DIscord
 //
-//  Created by Hristos Sfikas on 9/5/2024.
+//  Created by Hristos on 9/5/2024.
 //
 
 import Foundation
@@ -31,8 +31,63 @@ struct LoginViewold: View {
     }
 }
 
-
 struct LoginView: View {
+    @State var showingPopover = false
+    @State var showingPopover2 = false
+    var body: some View {
+        VStack {
+            Text("Welcome to StossyCord a custom Discord Client")
+                .font(.title)
+            Text("Use:")
+                .padding()
+        }
+        HStack {
+            Button("Username and Password") {
+                showingPopover = true
+            }
+            .padding()
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(8.0)
+            
+            Button("Token") {
+                showingPopover2 = true
+            }
+            .padding()
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(8.0)
+        }
+        .popover(isPresented: $showingPopover) {
+            LoginView1()
+        }
+        .popover(isPresented: $showingPopover2) {
+            tokenview()
+        }
+    }
+}
+
+struct tokenview: View {
+    @State private var token: String = ""
+    @State private var ticket = ""
+    @State private var code = ""
+    @Environment(\.dismiss) var dismiss
+    let keychain = KeychainSwift()
+    
+    var body: some View {
+        VStack {
+            Text("Login to Discord")
+                .padding()
+            TextField("token", text: $token)
+                .padding()
+            Button("Login") {
+                keychain.set(token, forKey: "token")
+                dismiss()
+            }
+        }
+    }
+}
+
+
+struct LoginView1: View {
     @State var Username = ""
     @State var Password = ""
     @State var showingPopover = false
@@ -44,9 +99,6 @@ struct LoginView: View {
     
     var body: some View {
         VStack {
-            Text("")
-            Text("Welcome to StossyCord it is a custom Discord Client")
-                .font(.title)
             Text("Login to Discord")
                 .padding()
             TextField("Email", text: $Username)

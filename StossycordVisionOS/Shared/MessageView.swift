@@ -2,7 +2,7 @@
 //  MessageView.swift
 //  Stossycord
 //
-//  Created by Hristos Sfikas on 17/5/2024.
+//  Created by Hristos on 17/5/2024.
 //
 import Foundation
 import SwiftUI

@@ -1,5 +1,4 @@
 {
-  "originHash" : "c0b1be4a587a24cda5b4f200fbdf3f0d8ed7901503872585ea931ddf027d126c",
   "pins" : [
     {
       "identity" : "flanimatedimage",
@@ -26,6 +25,15 @@
       "state" : {
         "revision" : "5e1b02b6a9dac2a759a1d5dbc175c86bd192a608",
         "version" : "24.0.0"
+      }
+    },
+    {
+      "identity" : "oggdecoder",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/arkasas/OggDecoder.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "65e1465e593d2b0be6ac12256f2866a18d26e211"
       }
     },
     {
@@ -56,5 +64,5 @@
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }

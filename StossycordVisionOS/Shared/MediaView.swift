@@ -2,7 +2,7 @@
 //  MediaView.swift
 //  Stossycord
 //
-//  Created by Hristos Sfikas on 18/5/2024.
+//  Created by Hristos on 18/5/2024.
 //
 
 import SwiftUI

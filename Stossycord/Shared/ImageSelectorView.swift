@@ -2,20 +2,21 @@
 //  ImageSelectorView.swift
 //  Stossy11DIscord
 //
-//  Created by Hristos Sfikas on 20/5/2024.
+//  Created by Hristos on 20/5/2024.
 //
 import PhotosUI
 import SwiftUI
+import AVFoundation
 
-struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var image: UIImage?
+struct VideoPicker: UIViewControllerRepresentable {
+    @Binding var videoURL: URL?
     var token: String
     var channelid: String
     var message: String
 
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var config = PHPickerConfiguration()
-        config.filter = .images
+        config.filter = .any(of: [.images, .videos])
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = context.coordinator
         return picker
@@ -30,9 +31,9 @@ struct ImagePicker: UIViewControllerRepresentable {
     }
 
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
-        let parent: ImagePicker
+        let parent: VideoPicker
 
-        init(_ parent: ImagePicker) {
+        init(_ parent: VideoPicker) {
             self.parent = parent
         }
 
@@ -41,20 +42,45 @@ struct ImagePicker: UIViewControllerRepresentable {
 
             guard let provider = results.first?.itemProvider else { return }
 
-            if provider.canLoadObject(ofClass: UIImage.self) {
-                provider.loadObject(ofClass: UIImage.self) { image, _ in
-                    self.parent.image = image as? UIImage
+            if provider.hasItemConformingToTypeIdentifier("public.movie") {
+                provider.loadFileRepresentation(forTypeIdentifier: "public.movie") { url, error in
+                    guard let url = url else { return }
                     
-                    // Save the image to a temporary directory
-                    let fileUrl = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("png")
-                    if let image = self.parent.image, let data = image.pngData() {
-                        try? data.write(to: fileUrl)
-                        
-                        // Call the upload function
-                        uploadFileToDiscord2(fileUrl: fileUrl, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
+                    // If the video is not in mp4 format, convert it
+                    if url.pathExtension.lowercased() != "mp4" {
+                        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
+                        convertVideoToMP4(inputURL: url, outputURL: outputURL) { success in
+                            if success {
+                                self.parent.videoURL = outputURL
+                                uploadFileToDiscord2(fileUrl: outputURL, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
+                            }
+                        }
+                    } else {
+                        self.parent.videoURL = url
+                        uploadFileToDiscord2(fileUrl: url, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
                     }
                 }
             }
+        }
+    }
+}
+
+func convertVideoToMP4(inputURL: URL, outputURL: URL, completion: @escaping (Bool) -> Void) {
+    let asset = AVURLAsset(url: inputURL)
+    guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else {
+        completion(false)
+        return
+    }
+
+    exportSession.outputURL = outputURL
+    exportSession.outputFileType = .mp4
+
+    exportSession.exportAsynchronously {
+        switch exportSession.status {
+        case .completed:
+            completion(true)
+        default:
+            completion(false)
         }
     }
 }
@@ -76,13 +102,21 @@ func uploadFileToDiscord2(fileUrl: URL, token: String, channelid: String, messag
     data.append("--\(boundary)\r\n".data(using: .utf8)!)
     data.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileUrl.lastPathComponent)\"\r\n".data(using: .utf8)!)
     data.append("Content-Type: text/plain\r\n\r\n".data(using: .utf8)!)
-    do {
-        let fileData = try Data(contentsOf: fileUrl)
-        data.append(fileData)
-    } catch {
-        print("Failed to read file data")
+    
+    let fileManager = FileManager.default
+    if fileManager.fileExists(atPath: fileUrl.path) {
+        do {
+            let fileData = try Data(contentsOf: fileUrl)
+            data.append(fileData)
+        } catch {
+            print("Failed to read file data")
+            return
+        }
+    } else {
+        print("File Doesnt Exist")
         return
     }
+    
     data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
     
     let task = URLSession.shared.uploadTask(with: request, from: data) { (data, response, error) in

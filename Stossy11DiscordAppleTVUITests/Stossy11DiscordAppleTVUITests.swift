@@ -2,7 +2,7 @@
 //  Stossy11DiscordAppleTVUITests.swift
 //  Stossy11DiscordAppleTVUITests
 //
-//  Created by Hristos Sfikas on 10/5/2024.
+//  Created by Hristos on 10/5/2024.
 //
 
 import XCTest

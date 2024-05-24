@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Stossy11DIscord
 //
-//  Created by Hristos Sfikas on 4/5/2024.
+//  Created by Hristos on 4/5/2024.
 //
 
 
@@ -113,7 +113,7 @@ struct ContentView: View {
                         // Adds an item in the toolbar
                         ToolbarItem(placement: .topBarLeading) {
                             NavigationLink {
-                                SettingsView(webSocketClient: webSocketClient)
+                                SettingsView(webSocketClient: webSocketClient, token: $token)
                             } label: {
                                 Image(systemName: "gearshape.fill")
                             }
@@ -161,10 +161,20 @@ struct ContentView: View {
 
 struct SettingsView: View {
     @ObservedObject var webSocketClient: WebSocketClient
+    @AppStorage("ISOpened") var hasbeenopened = true
+    let keychain = KeychainSwift()
+    @Binding var token: String
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         List {
             Toggle("Show All Server Emojis (most will not work unless you have nitro)", isOn: $webSocketClient.hasnitro)
+            Button("Log Out") {
+                keychain.set("", forKey: "token")
+                token = ""
+                hasbeenopened = true
+                self.presentationMode.wrappedValue.dismiss()
+            }
         }
     }
 }
@@ -282,16 +292,6 @@ struct ServerView: View {
             }
         }
         .onAppear() {
-            getDiscordisnitro(token: token, userid: self.webSocketClient.currentuserid) { cool in
-                if cool {
-                    self.webSocketClient.hasnitro = cool
-                }
-            }
-            webSocketClient.getcurrentchannel(input: "", guild: "")
-            webSocketClient.data = []
-            webSocketClient.messageIDs = []
-            webSocketClient.icons = []
-            webSocketClient.usernames = []
             webSocketClient.disconnect()
             getDiscordChannels(serverId: serverId, token: token) { items in
                 self.items = items
@@ -710,7 +710,7 @@ struct Guild: Decodable {
 
 struct ChannelView: View {
     @AppStorage("ISOpened") var hasbeenopened = true
-    @State private var image: UIImage?
+    @State private var image: URL?
     @State var text = ""
     // @State var token = ""
     @State var imageurl2 = ""
@@ -836,7 +836,7 @@ struct ChannelView: View {
                                 self.showprompt = nil
                                 self.importingimages = true
                             }) {
-                                Text("Photo (doesnt work rn)")
+                                Text("Photo")
                             }
                             Button(action: {
                                 self.showprompt = nil
@@ -942,13 +942,23 @@ struct ChannelView: View {
                 switch result {
                 case .success(let file):
                     print(file.absoluteString)
-                    uploadFileToDiscord(fileUrl: file, token: token, channelid: channelid, message: text)
+                    let fileManager = FileManager.default
+                    if file.startAccessingSecurityScopedResource() {
+                        if fileManager.fileExists(atPath: file.path) {
+                            uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text)
+                            } else {
+                                print("File Doesnt Exist 1")
+                            }
+                        file.stopAccessingSecurityScopedResource()
+                    } else {
+                        print("Failed to access the file")
+                    }
                 case .failure(let error):
                     print(error.localizedDescription)
                 }
             }
             .popover(isPresented: $importingimages, content: {
-                ImagePicker(image: $image, token: token, channelid: channelid, message: text)
+                VideoPicker(videoURL: $image, token: token, channelid: channelid, message: text)
             })
             .padding()
             .alert(item: $selectedMessage) { message in
@@ -973,6 +983,10 @@ struct ChannelView: View {
                         emojis = fetchedEmojis ?? []
                     }
                 }
+                
+                webSocketClient.messageIDs = []
+                webSocketClient.icons = []
+                webSocketClient.usernames = []
                 webSocketClient.data = []
                 webSocketClient.disconnect()
                 getDiscordMessages(token: token, channelID: channelid, webSocketClient: webSocketClient)
@@ -1023,41 +1037,6 @@ func fetchAllEmojis(token: String, completion: @escaping ([Emoji]?) -> Void) {
 }
 
 
-
-func uploadFileToDiscord(fileUrl: URL, token: String, channelid: String, message: String) {
-    let url = URL(string: "https://discord.com/api/channels/\(channelid)/messages")!
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.addValue(token, forHTTPHeaderField: "Authorization")
-    
-    let boundary = "Boundary-\(UUID().uuidString)"
-    request.addValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-    
-    var data = Data()
-    data.append("--\(boundary)\r\n".data(using: .utf8)!)
-    data.append("Content-Disposition: form-data; name=\"content\"\r\n\r\n".data(using: .utf8)!)
-    data.append("\(message)\r\n".data(using: .utf8)!)
-    data.append("--\(boundary)\r\n".data(using: .utf8)!)
-    data.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileUrl.lastPathComponent)\"\r\n".data(using: .utf8)!)
-    data.append("Content-Type: text/plain\r\n\r\n".data(using: .utf8)!)
-    do {
-        let fileData = try Data(contentsOf: fileUrl)
-        data.append(fileData)
-    } catch {
-        print("Failed to read file data")
-        return
-    }
-    data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-    
-    let task = URLSession.shared.uploadTask(with: request, from: data) { (data, response, error) in
-        if let error = error {
-            print("Failed to upload file: \(error)")
-        } else if let data = data {
-            print("Response: \(String(data: data, encoding: .utf8) ?? "")")
-        }
-    }
-    task.resume()
-}
 
 func addReaction(token: String, channel: String, message: String, emojiId: String, emojiName: String) {
    let emoji = "\(emojiName):\(emojiId)"

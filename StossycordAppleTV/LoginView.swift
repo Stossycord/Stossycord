@@ -2,7 +2,7 @@
 //  LoginView.swift
 //  Stossy11DiscordAppleTV
 //
-//  Created by Hristos Sfikas on 11/5/2024.
+//  Created by Hristos on 11/5/2024.
 //
 
 import Foundation

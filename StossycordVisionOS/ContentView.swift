@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Stossy11DIscord
 //
-//  Created by Hristos Sfikas on 4/5/2024.
+//  Created by Hristos on 4/5/2024.
 //
 
 
@@ -789,7 +789,7 @@ struct ChannelView: View {
                             Button(action: {
                                 self.showprompt = nil
                             }) {
-                                Text("Photo (doesnt work rn)")
+                                Text("Photo")
                             }
                             Button(action: {
                                 self.showprompt = nil

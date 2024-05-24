@@ -2,17 +2,33 @@
 //  MessageView.swift
 //  Stossycord
 //
-//  Created by Hristos Sfikas on 17/5/2024.
+//  Created by Hristos on 17/5/2024.
 //
+
 import Giffy
 import Foundation
 import SwiftUI
 import KeychainSwift
 
+extension UIImage {
+    func resized(toWidth width: CGFloat) -> UIImage? {
+        let scale = width / size.width
+        let newHeight = size.height * scale
+        let newSize = CGSize(width: width, height: newHeight)
+
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+        defer { UIGraphicsEndImageContext() }
+
+        draw(in: CGRect(origin: .zero, size: newSize))
+        return UIGraphicsGetImageFromCurrentImageContext()
+    }
+}
+
 struct MessageView: View {
     let message: String
     let isEmoji: String
     let token: String
+    @State private var downloadedImage: UIImage? = nil
     @State private var username: String = ""
     @State private var modifiedMessage = ""
     let keychain = KeychainSwift()
@@ -43,24 +59,56 @@ struct MessageView: View {
                 emojiId = String(emojiId.dropLast())
                 let imageUrl = "https://cdn.discordapp.com/emojis/\(emojiId).png?size=96"
                 
-                views.append(AnyView(Text(text)))
-                views.append(AnyView(AsyncImage(url: URL(string: imageUrl)) { image in
-                    image.resizable()
-                         .frame(width: 32, height: 32)
-                         .clipShape(Circle())
-                } placeholder: {
-                    ProgressView()
-                        .onAppear() {
-                            print(emojiId)
-                            print(imageUrl)
-                        }
-                }))
                 lastEnd = range.upperBound
                 
                 let remainingTextRange = lastEnd..<message.endIndex
                 let remainingText = String(message[remainingTextRange])
+                
+                if !text.isEmpty {
+                    if let image = downloadedImage {
+                        let resizedImage = image.resized(toWidth: 18)
+                        views.append(
+                            AnyView(
+                                (Text(text) +
+                                Text(Image(uiImage: resizedImage!)
+                                    .resizable()
+                                )
+                                +
+                                Text(remainingText))
+                                .font(.system(size: 18))
+                            )
+                        )
+                    } else {
+                        views.append(AnyView(ProgressView()
+                            .onAppear {
+                                downloadImage(from: imageUrl)
+                            }
+                        ))
+                    }
+                } else if text.isEmpty && remainingText.isEmpty {
+                    views.append(AnyView(AsyncImage(url: URL(string: imageUrl)) { image in
+                        image.resizable()
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
+                    } placeholder: {
+                        ProgressView()
+                            .onAppear() {
+                                print(emojiId)
+                                print(imageUrl)
+                            }
+                    }))
+                }
+                
+                lastEnd = range.upperBound
+            }
+
+            
+            /* if (!remainingText.isEmpty) {
                 views.append(AnyView(Text(remainingText)))
             }
+             */
+            
+            
             for match in userIdMatches {
                 modifiedMessage = message
                 let range = Range(match.range, in: message)!
@@ -88,6 +136,7 @@ struct MessageView: View {
                 
                 views.append(AnyView(Text(text)
                     .multilineTextAlignment(.leading)
+                    .font(.system(size: 18))
 ))
                 
                 views.append(AnyView(AsyncGiffy(url: url!) { phase in
@@ -109,33 +158,33 @@ struct MessageView: View {
                 
                 let remainingTextRange = lastEnd..<message.endIndex
                 let remainingText = String(message[remainingTextRange])
-                views.append(AnyView(Text(remainingText)))
+                views.append(AnyView(Text(remainingText)
+                    .font(.system(size: 18))
+                ))
             }
             
         case "userid":
-            let group = DispatchGroup()
-            modifiedMessage = message
             for match in userIdMatches {
                 let range = Range(match.range, in: message)!
-                var userId = String(message[range]).dropFirst(2).dropLast()
-                group.enter()
+                let userId = String(message[range]).dropFirst(2).dropLast() // No need for var here
                 getUsernameFromDiscord(userId: String(userId), token: token) { result in
-                    DispatchQueue.main.async {
-                        if let username = result {
-                            self.username = "@" + username
-                            print("<@\(userId)>")
-                            self.modifiedMessage = modifiedMessage.replacingOccurrences(of: "<@\(userId)>", with: self.username)
-                            print(self.modifiedMessage)
-                        }
-                        group.leave()
+                    if let username = result {
+                        let usernameWithSymbol = "@" + username
+                        print("<@\(userId)>")
+                        modifiedMessage = message.replacingOccurrences(of: "<@\(userId)>", with: usernameWithSymbol)
+                        print(modifiedMessage)
                     }
                 }
             }
-            group.notify(queue: .main) {
-                views.append(AnyView(Text(modifiedMessage)))
-            }
+            
+            views.append(AnyView(Text(modifiedMessage)
+                .font(.system(size: 18))
+            ))
+
         default:
-            views.append(AnyView(Text(message)))
+            views.append(AnyView(Text(message)
+                .font(.system(size: 18))
+            ))
         }
         
         return HStack {
@@ -144,6 +193,24 @@ struct MessageView: View {
             }
         }
     }
+    
+    private func downloadImage(from urlString: String) {
+            guard let url = URL(string: urlString) else {
+                return
+            }
+
+            URLSession.shared.dataTask(with: url) { data, response, error in
+                guard let data = data, error == nil else {
+                    return
+                }
+
+                if let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        downloadedImage = image
+                    }
+                }
+            }.resume()
+        }
     
     func getUsernameFromDiscord(userId: String, token: String, completion: @escaping (String?) -> Void) {
         let url = URL(string: "https://discord.com/api/v9/users/\(userId)")!
@@ -171,10 +238,14 @@ struct MessageView: View {
                 completion(nil)
             } else if let data = data {
                 do {
-                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                       let username = json["username"] as? String {
-                        completion(username)
-                        print("Username Aquired: " + username)
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        if let username = json["global_name"] as? String {
+                            completion(username)
+                            print("Username Aquired: " + username)
+                        } else if let username = json["username"] as? String {
+                            completion(username)
+                            print("Username Aquired: " + username)
+                        }
                     } else {
                         print("Invalid JSON")
                         completion(nil)
@@ -188,4 +259,5 @@ struct MessageView: View {
         task.resume()
     }
 }
+
 
