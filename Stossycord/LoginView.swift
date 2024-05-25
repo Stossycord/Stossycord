@@ -36,26 +36,37 @@ struct LoginView: View {
     @State var showingPopover2 = false
     var body: some View {
         VStack {
-            Text("Welcome to StossyCord a custom Discord Client")
+            Text("StossyCord - a custom Discord Client")
                 .font(.title)
-            Text("Use:")
-                .padding()
+                .fontWeight(.bold)
+                .padding(.bottom, 20)
+                .foregroundColor(.primary)
+            Text("Login Options:")
+                .fontWeight(.bold)
+                .padding(.bottom, 20)
+                .foregroundColor(.primary)
         }
-        HStack {
             Button("Username and Password") {
                 showingPopover = true
             }
-            .padding()
-            .background(Color.gray.opacity(0.2))
-            .cornerRadius(8.0)
+            .font(.headline)
+            .foregroundColor(.white)
+            .padding(.vertical, 10)
+            .frame(width: 340, height: 60)
+            .background(Color.blue)
+            .cornerRadius(10)
+            .padding(.horizontal)
             
             Button("Token") {
                 showingPopover2 = true
             }
-            .padding()
-            .background(Color.gray.opacity(0.2))
-            .cornerRadius(8.0)
-        }
+            .font(.headline)
+            .foregroundColor(.white)
+            .padding(.vertical, 10)
+            .frame(width: 340, height: 60)
+            .background(Color.blue)
+            .cornerRadius(10)
+            .padding(.horizontal)
         .popover(isPresented: $showingPopover) {
             LoginView1()
         }
@@ -75,13 +86,34 @@ struct tokenview: View {
     var body: some View {
         VStack {
             Text("Login to Discord")
-                .padding()
-            TextField("token", text: $token)
-                .padding()
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.bottom, 20)
+                .foregroundColor(.primary)
+            HStack {
+                Image(systemName: "gear.circle.fill")
+                    .foregroundColor(Color.gray.opacity(0.5))
+                    .frame(width: 44, height: 44)
+
+                TextField("Token", text: $token)
+                    .font(.headline)
+                    .foregroundColor(.black)
+            }
+            .padding(.horizontal)
+            .frame(width: 340, height: 60)
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(10)
             Button("Login") {
                 keychain.set(token, forKey: "token")
                 dismiss()
             }
+            .font(.headline)
+            .foregroundColor(.white)
+            .padding(.vertical, 10)
+            .frame(width: 340, height: 45)
+            .background(Color.blue)
+            .cornerRadius(10)
+            .padding(.horizontal)
         }
     }
 }
@@ -100,11 +132,36 @@ struct LoginView1: View {
     var body: some View {
         VStack {
             Text("Login to Discord")
-                .padding()
-            TextField("Email", text: $Username)
-                        .padding()
-            SecureField("Password", text: $Password)
-                        .padding()
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.bottom, 20)
+                .foregroundColor(.primary)
+            HStack {
+                Image(systemName: "person.circle.fill")
+                    .foregroundColor(Color.gray.opacity(0.5))
+                    .frame(width: 44, height: 44)
+
+                TextField("Username", text: $Username)
+                    .font(.headline)
+                    .foregroundColor(.black)
+            }
+            .padding(.horizontal)
+            .frame(width: 340, height: 60)
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(10)
+            HStack {
+                Image(systemName: "lock.fill")
+                    .foregroundColor(Color.gray.opacity(0.5))
+                    .frame(width: 44, height: 44)
+
+                SecureField("Password", text: $Password)
+                    .font(.headline)
+                    .foregroundColor(.black)
+            }
+            .padding(.horizontal)
+            .frame(width: 340, height: 60)
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(10)
             Button("Login") {
                 sendPostRequest2(username: Username, password: Password) { user in
                     print("\(user.totp)" + " " + user.ticket)
@@ -112,6 +169,13 @@ struct LoginView1: View {
                     self.ticket = user.ticket
                 }
             }
+            .font(.headline)
+            .foregroundColor(.white)
+            .padding(.vertical, 10)
+            .frame(width: 340, height: 45)
+            .background(Color.blue)
+            .cornerRadius(10)
+            .padding(.horizontal)
         }
         .popover(isPresented: $showingPopover) {
             TextField("Authentication Code", text: $code)

@@ -853,6 +853,7 @@ struct ChannelView: View {
                     }
                     .padding()
                     .background(Color.gray.opacity(0.2))
+                    .cornerRadius(10)
                 }
                 if showEmojiPicker {
                     EmojiPicker(text: $text, pickauto: $ispickedauto, currentsearch: $currentsearch, emojis: emojis)
@@ -882,6 +883,10 @@ struct ChannelView: View {
                                 ispickedauto = false
                             }
                         }
+                        .padding(.horizontal)
+                        .frame(width: 340, height: 45)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
                         .onSubmit {
                             let patternDoubleColon = "^(.*\\S)?:(.*):\\s*(\\S*)$"
                             let regexDoubleColon = try? NSRegularExpression(pattern: patternDoubleColon)
@@ -915,6 +920,10 @@ struct ChannelView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .padding(.horizontal)
+                    .frame(width: 45, height: 45)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(45)
                     .onAppear() {
                         /* fetchEmojis(token: token, guildID: guild) { fetchedEmojis in
                          emojis = fetchedEmojis ?? []

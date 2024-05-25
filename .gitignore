@@ -1,0 +1,58 @@
+# Xcode
+.DS_Store
+*/.DS_Store
+*.xcuserstate
+*.xcworkspace
+xcuserdata/
+DerivedData/
+.idea/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xccheckout
+*.xcscmblueprint
+
+# Swift Package Manager
+# Add this line if you're using Swift Package Manager in your project
+# .swiftpm/
+
+# Carthage
+# Add this line if you're using Carthage in your project
+# Carthage/Checkouts
+
+# CocoaPods
+# Add this line if you're using CocoaPods in your project
+# Podfile.lock
+
+# Compiled Source
+*.rbc
+*.suo
+*.o
+*.pyc
+
+# Build products
+build/
+*.build/
+
+# Dependency directories
+# Add this line if you're using Cocoapods in your project
+# Pods/
+# Add this line if you're using Carthage in your project
+# Carthage/Build
+
+# Remove CocoaPods artifacts and settings
+# Add this line if you're using CocoaPods in your project
+# pod install creates a 'Pods' directory in your project root, so remove it if it's created
+# /Pods
+# Add this line if you're using CocoaPods in your project
+# *.lock
+# Add this line if you're using CocoaPods in your project
+# /Podfile.user*
+
+
+# Remove SPM artifacts and settings
+# Add this line if you're using Swift Package Manager in your project
+# .swiftpm/
+# Add this line if you're using Swift Package Manager in your project
+# Package.resolved
