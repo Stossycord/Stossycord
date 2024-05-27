@@ -1,8 +1,5 @@
 name: Beta Stossycord build
-on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+' # example: 1.0.0-beta.1
+on: [push, pull_request]
 
 jobs:
   build:
