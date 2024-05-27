@@ -43,17 +43,6 @@ jobs:
         id: date_altstore
         run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-      - name: Upload to new beta release
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ github.ref_name }}
-          draft: true
-          prerelease: true
-          files: Stossycord.ipa
-          body: |
-
       - name: Add version to IPA file name
         run: mv SideStore.ipa SideStore-${{ steps.version.outputs.version }}.ipa
 
