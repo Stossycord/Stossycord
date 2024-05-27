@@ -51,7 +51,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: true
           prerelease: true
-          files: SideStore.ipa
+          files: Stossycord.ipa
           body: |
 
       - name: Add version to IPA file name
