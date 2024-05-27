@@ -2,7 +2,7 @@
 //  StossycordAppleTVApp.swift
 //  StossycordAppleTV
 //
-//  Created by Stossy11 on 11/5/2024.
+//  Created by Hristos on 11/5/2024.
 //
 
 import SwiftUI

@@ -2,14 +2,14 @@
 //  ImageSelectorView.swift
 //  Stossy11DIscord
 //
-//  Created by Stossy11 on 20/5/2024.
+//  Created by Hristos on 20/5/2024.
 //
 import PhotosUI
 import SwiftUI
 import AVFoundation
 
 struct VideoPicker: UIViewControllerRepresentable {
-    @Binding var fileURL: URL?
+    @Binding var videoURL: URL?
     var token: String
     var channelid: String
     var message: String
@@ -51,20 +51,14 @@ struct VideoPicker: UIViewControllerRepresentable {
                         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
                         convertVideoToMP4(inputURL: url, outputURL: outputURL) { success in
                             if success {
-                                self.parent.fileURL = outputURL
+                                self.parent.videoURL = outputURL
                                 uploadFileToDiscord2(fileUrl: outputURL, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
                             }
                         }
                     } else {
-                        self.parent.fileURL = url
+                        self.parent.videoURL = url
                         uploadFileToDiscord2(fileUrl: url, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
                     }
-                }
-            } else if provider.hasItemConformingToTypeIdentifier("public.image") {
-                provider.loadFileRepresentation(forTypeIdentifier: "public.image") { url, error in
-                    guard let url = url else { return }
-                    self.parent.fileURL = url
-                    uploadFileToDiscord2(fileUrl: url, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
                 }
             }
         }

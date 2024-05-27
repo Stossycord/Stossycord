@@ -2,7 +2,7 @@
 //  StossycordmacOSApp.swift
 //  StossycordmacOS
 //
-//  Created by Stossy11 on 26/5/2024.
+//  Created by Hristos on 12/5/2024.
 //
 
 import SwiftUI
@@ -26,6 +26,8 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     var token = ""
     var currentchannel = ""
     var currentguild = ""
+    @Published var guilds: [(name: String, id: String, icon: String?)] = []
+    @Published var hasnitro: Bool = false
     @Published var messages: [String] = []
     @Published var data: [MessageData] = []
     @Published var icons: [String] = []
@@ -169,7 +171,6 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                         
                                         
                                         
-                                        
                                         // Handle attachments
                                         var attachmentURL = ""
                                         if let attachments = d["attachments"] as? [[String: Any]] {
@@ -230,16 +231,12 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     }
 }
 
-
 @main
-struct YourApp: App {
-    // @StateObject var webSocketClient = WebSocketClient()
-
+struct StossycordmacOSApp: App {
+    @StateObject var webSocketClient = WebSocketClient()
     var body: some Scene {
         WindowGroup {
-            // ContentView(webSocketClient: webSocketClient)
-            ContentView()
-            // ContentSource(webSocketClient: webSocketClient)
+            SidebarView(webSocketClient: webSocketClient)
         }
     }
 }

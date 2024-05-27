@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Stossy11DIscord
 //
-//  Created by Stossy11 on 4/5/2024.
+//  Created by Hristos on 4/5/2024.
 //
 
 
@@ -40,8 +40,6 @@ import UniformTypeIdentifiers
     }
 }
 */
-
-
 struct ContentView: View {
     @ObservedObject var webSocketClient: WebSocketClient
     @AppStorage("ISOpened") var hasbeenopened = true
@@ -54,7 +52,6 @@ struct ContentView: View {
     let keychain = KeychainSwift()
 
     var body: some View {
-        let keychain = KeychainSwift()
         NavigationView {
             VStack {
                 Text("")
@@ -63,7 +60,6 @@ struct ContentView: View {
                         hasbeenopened = true
                     }
                     .onAppear() {
-                        // let keychain = KeychainSwift()
                         token = keychain.get("token") ?? ""
                         if token == "" {
                             hasbeenopened = true
@@ -78,13 +74,10 @@ struct ContentView: View {
                     ForEach(guilds.filter { guild in
                         searchTerm.isEmpty || guild.name.lowercased().contains(searchTerm.lowercased())
                     }, id: \.id) { guild in
-                        NavigationLink {
-                            // ChannelView(webSocketClient: webSocketClient, token: token)
-                            ServerView(webSocketClient: webSocketClient, token: token, username: username, serverId: guild.id)
-                        } label: {
+                        NavigationLink(destination: ServerView(webSocketClient: webSocketClient, token: token, username: username, serverId: guild.id)) {
                             HStack {
-                                if guild.icon != nil {
-                                    AsyncImage(url: URL(string: guild.icon!)) { image in
+                                if let icon = guild.icon {
+                                    AsyncImage(url: URL(string: icon)) { image in
                                         image.resizable()
                                             .frame(width: 32, height: 32)
                                             .clipShape(Circle())
@@ -92,44 +85,17 @@ struct ContentView: View {
                                         ProgressView()
                                     }
                                 }
-                                // AsyncImage(url: URL(string: guild.icon!))
                                 Text(guild.name)
-                                    
                             }
                         }
                         .onAppear() {
                             webSocketClient.getcurrentchannel(input: "", guild: "")
                         }
-                        
-                        /* Button(action: {
-                         // print("Guild ID: \(guild.id)")
-                         }) {
-                         Text(guild.name)
-                         }
-                         */
                     }
-                }.navigationTitle("Servers:")
-                    .toolbar {
-                        // Adds an item in the toolbar
-                        ToolbarItem(placement: .topBarLeading) {
-                            NavigationLink {
-                                SettingsView(webSocketClient: webSocketClient, token: $token)
-                            } label: {
-                                Image(systemName: "gearshape.fill")
-                            }
-                        }
-                        ToolbarItem {
-                            // Example with a button
-                            NavigationLink {
-                                DMa(webSocketClient: webSocketClient, token: token, username: username)
-                            } label: {
-                                Text("DMs")
-                            }
-
-                        }
-                    }
-                    .searchable(text: $searchTerm)
-            }.onAppear {
+                }
+                .navigationTitle("Servers:")
+            }
+            .onAppear {
                 token = keychain.get("token") ?? ""
                 if !token.isEmpty {
                     getDiscordUsername(token: token) { fetchedUsername, coolid  in
@@ -141,7 +107,6 @@ struct ContentView: View {
                         self.guilds = fetchedGuilds
                     }
                 }
-                print("test: \(self.webSocketClient.currentuserid)")
             }
             .sheet(isPresented: $hasbeenopened) {
                 LoginView()
@@ -149,15 +114,41 @@ struct ContentView: View {
         }
         .navigationViewStyle(.stack)
     }
-    public func SetGuilds() {
-        token = keychain.get("token") ?? ""
-        if !token.isEmpty {
-            getDiscordGuilds(token: token) { fetchedGuilds in
-                self.webSocketClient.guilds = fetchedGuilds
+}
+
+struct NavView: View {
+    @ObservedObject var webSocketClient: WebSocketClient
+    @State var token = ""
+    @State var username = ""
+    let keychain = KeychainSwift()
+
+    var body: some View {
+        TabView {
+            ContentView(webSocketClient: webSocketClient, token: token, username: username)
+                .tabItem {
+                    Label("Servers", systemImage: "house")
+                }
+
+            DMa(webSocketClient: webSocketClient, token: token, username: username)
+                .tabItem {
+                    Label("DM's", systemImage: "person")
+                }
+            SettingsView(webSocketClient: webSocketClient, token: $token)
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+        }
+        .onAppear {
+            token = keychain.get("token") ?? ""
+            if let storedUsername = UserDefaults.standard.string(forKey: "username") {
+                username = storedUsername
             }
         }
     }
 }
+
+
+
 
 struct SettingsView: View {
     @ObservedObject var webSocketClient: WebSocketClient
@@ -371,19 +362,22 @@ struct DMa: View {
     @State private var items: [Item1] = []
 
     var body: some View {
-        VStack {
-            List(items) { item in
-                if !item.name.starts(with: "Group DM")  {
-                    Text(item.name)
-                } else {
-                    NavigationLink {
-                        ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "", channelname: item.name, username: username)
-                    } label: {
-                        Text(item.name)
+        NavigationView {
+                    VStack {
+                        List(items) { item in
+                            if !item.name.starts(with: "@ ")  {
+                                Text(item.name)
+                            } else {
+                                NavigationLink {
+                                    ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "", channelname: item.name, username: username)
+                                } label: {
+                                    Text(item.name)
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        }
+
         .onAppear() {
             webSocketClient.getcurrentchannel(input: "", guild: "")
             webSocketClient.data = []
@@ -757,7 +751,7 @@ struct ChannelView: View {
                                 HStack {
                                     AsyncImage(url: URL(string: messageData.icon)) { image in
                                         image.resizable()
-                                            .frame(width: 40, height: 40)
+                                            .frame(width: 32, height: 32)
                                             .clipShape(Circle())
                                             .onAppear() {
                                                 previousMessageDate = messageDate
@@ -788,24 +782,25 @@ struct ChannelView: View {
                                                 previousMessageDate = messageDate
                                             }
                                     }
-                                    VStack(alignment: .leading) {
-                                        if let beansman = messageData.replyTo {
-                                            HStack {
-                                                (Text(Image(systemName: "arrow.turn.up.right")) + Text(beansman))
-                                                    .font(.system(size: 10))
-                                            }
+                                    MessageChannelView(token: token, message: messageData.message)
+                                        .onAppear() {
+                                            // print(messageDate)
                                         }
-                                        Text("\(messageData.username)")
-                                            .bold()
-                                        HStack {
-                                            MessageChannelView(token: token, message: messageData.message)
-                                        }
+                                }
+                                    if !messageData.attachment.isEmpty {
+                                        MediaView(url: messageData.attachment)
                                     }
-                                }
-                                if !messageData.attachment.isEmpty {
-                                    MediaView(url: messageData.attachment)
-                                }
+                                
+                                /* AsyncImage(url: URL(string: imageurl2)) { image in
+                                 image.resizable()
+                                 .frame(width: 32, height: 32)
+                                 .clipShape(Circle())
+                                 } placeholder: {
+                                 //
+                                 }
+                                 */
                             }
+                            
                         }
                     }
                 }
@@ -837,17 +832,35 @@ struct ChannelView: View {
                             }) {
                                 Text("Photo")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                                 self.importing = true
                             }) {
                                 Text("Files")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                             }) {
                                 Text("Cancel")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                         }
                     }
                     .padding()
@@ -856,10 +869,6 @@ struct ChannelView: View {
                 }
                 if showEmojiPicker {
                     EmojiPicker(text: $text, pickauto: $ispickedauto, currentsearch: $currentsearch, emojis: emojis)
-                        .padding(.horizontal)
-                         .frame(width: 340, height: 45)
-                         .background(Color.gray.opacity(0.2))
-                         .cornerRadius(10)
                 }
                 if reactons {
                     reactionpicker(token: token, messageid: reactionMessage?.id ?? "", channelid: channelid, shown: $reactons, emojis: emojis)
@@ -884,9 +893,6 @@ struct ChannelView: View {
                                 showEmojiPicker = false
                                 currentsearch = ""
                                 ispickedauto = false
-                            }
-                            if newValue.count <= 1 {
-                                typing(token: token, channel: channelid)
                             }
                         }
                         .padding(.horizontal)
@@ -927,9 +933,9 @@ struct ChannelView: View {
                         Image(systemName: "plus")
                     }
                     .padding(.horizontal)
-                     .frame(width: 45, height: 45)
-                     .background(Color.gray.opacity(0.2))
-                     .cornerRadius(45)
+                    .frame(width: 45, height: 45)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(45)
                     .onAppear() {
                         /* fetchEmojis(token: token, guildID: guild) { fetchedEmojis in
                          emojis = fetchedEmojis ?? []
@@ -973,7 +979,7 @@ struct ChannelView: View {
                 }
             }
             .popover(isPresented: $importingimages, content: {
-                VideoPicker(fileURL: $image, token: token, channelid: channelid, message: text)
+                VideoPicker(videoURL: $image, token: token, channelid: channelid, message: text)
             })
             .padding()
             .alert(item: $selectedMessage) { message in
@@ -1357,37 +1363,35 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                                 }
                             }
                             
-                            var replyTo: String? = nil
-                            
-                            var messageData: MessageData
-                            
-                            if let member = message["member"] as? [String: Any],
-                               let nickname = member["nick"] as? String {
-                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: nickname, messageId: id, replyTo: nil)
-                            } else if let globalname = user["global_name"] as? String {
-                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: globalname, messageId: id, replyTo: nil)
+                            // Handle nickname
+                            if let member = message["member"] as? [String: Any] {
+                                if let nickname = member["nick"] as? String {
+                                    let messageData = MessageData(icon: avatarURL, message: "\(nickname): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                    webSocketClient.data.append(messageData)
+                                    if let globalname = user["global_name"] as? String {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    } else {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    }
+                                    uniqueMessages.insert(id)
+                                }
                             } else {
-                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: username, messageId: id, replyTo: nil)
-                            }
-                            
-                            if let messageReference = message["message_reference"] as? [String: Any],
-                               let parentMessageId = messageReference["message_id"] as? String {
-                                print("reply: yes")
-                                if let index = webSocketClient.data.first(where: { $0.messageId == parentMessageId }) {
-                                    replyTo = "\(messageData.username): \(messageData.message)"
-                                } else {
-                                    replyTo = "Unable to load Message"
+                                    if let globalname = user["global_name"] as? String {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    } else {
+                                        let messageData = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: id)
+                                        webSocketClient.data.append(messageData)
+                                    }
+                                    uniqueMessages.insert(id)
                                 }
                             }
-                            
-                            messageData.replyTo = replyTo
-                            webSocketClient.data.append(messageData)
-                            uniqueMessages.insert(id)
-                        }
                     }
                 }
-                
                 // Sort the messages by their IDs (which are timestamps)
+                
                 DispatchQueue.main.async {
                     let sortedIndices = webSocketClient.data.indices.sorted { webSocketClient.data[$0].messageId < webSocketClient.data[$1].messageId }
                     webSocketClient.data = sortedIndices.map { webSocketClient.data[$0] }
@@ -1400,6 +1404,7 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
     
     task.resume()
 }
+
 
 
 func deleteDiscordMessage(token: String, serverID: String, channelID: String, messageID: String) {

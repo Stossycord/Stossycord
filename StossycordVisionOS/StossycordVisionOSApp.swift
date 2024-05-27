@@ -162,7 +162,6 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                         
                                         
                                         
-                                        
                                         // Handle attachments
                                         var attachmentURL = ""
                                         if let attachments = d["attachments"] as? [[String: Any]] {

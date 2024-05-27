@@ -2,7 +2,7 @@
 //  LoginView.swift
 //  Stossy11DIscord
 //
-//  Created by Stossy11 on 9/5/2024.
+//  Created by Hristos on 9/5/2024.
 //
 
 import Foundation
@@ -22,15 +22,7 @@ struct LoginViewold: View {
     var body: some View {
         VStack {
             Text("")
-            Text("StossyCord - a custom Discord Client")
-                 .font(.title)
-                 .fontWeight(.bold)
-                 .padding(.bottom, 20)
-                 .foregroundColor(.primary)
-             Text("Login Options:")
-                 .fontWeight(.bold)
-                 .padding(.bottom, 20)
-                 .foregroundColor(.primary)
+            Text("Welcome to StossyCord it is a custom Discord Client")
                 .font(.title)
             Text("Login to Discord")
                 .padding()

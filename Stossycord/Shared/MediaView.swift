@@ -2,7 +2,7 @@
 //  MediaView.swift
 //  Stossycord
 //
-//  Created by Stossy11 on 18/5/2024.
+//  Created by Hristos on 18/5/2024.
 //
 
 import Giffy

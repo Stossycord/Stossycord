@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Stossy11DIscord
 //
-//  Created by Stossy11 on 4/5/2024.
+//  Created by Hristos on 4/5/2024.
 //
 
 

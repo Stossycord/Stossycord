@@ -2,7 +2,7 @@
 //  MessageView.swift
 //  Stossycord
 //
-//  Created by Stossy11 on 17/5/2024.
+//  Created by Hristos on 17/5/2024.
 //
 
 import Giffy

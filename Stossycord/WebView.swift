@@ -2,7 +2,7 @@
 //  WebView.swift
 //  Stossy11DIscord
 //
-//  Created by Stossy11 on 9/5/2024.
+//  Created by Hristos on 9/5/2024.
 //
 
 import SwiftUI
