@@ -109,25 +109,6 @@ struct ContentView: View {
                          */
                     }
                 }.navigationTitle("Servers:")
-                    .toolbar {
-                        // Adds an item in the toolbar
-                        ToolbarItem(placement: .topBarLeading) {
-                            NavigationLink {
-                                SettingsView(webSocketClient: webSocketClient, token: $token)
-                            } label: {
-                                Image(systemName: "gearshape.fill")
-                            }
-                        }
-                        ToolbarItem {
-                            // Example with a button
-                            NavigationLink {
-                                DMa(webSocketClient: webSocketClient, token: token, username: username)
-                            } label: {
-                                Text("DMs")
-                            }
-
-                        }
-                    }
                     .searchable(text: $searchTerm)
             }.onAppear {
                 token = keychain.get("token") ?? ""
@@ -158,7 +139,36 @@ struct ContentView: View {
         }
     }
 }
+struct NavView: View {
+    @ObservedObject var webSocketClient: WebSocketClient
+    @State var token = ""
+    @State var username = ""
+    let keychain = KeychainSwift()
 
+    var body: some View {
+        TabView {
+            ContentView(webSocketClient: webSocketClient, token: token, username: username)
+                .tabItem {
+                    Label("Servers", systemImage: "house")
+                }
+
+            DMa(webSocketClient: webSocketClient, token: token, username: username)
+                .tabItem {
+                    Label("DM's", systemImage: "person")
+                }
+            SettingsView(webSocketClient: webSocketClient, token: $token)
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+        }
+        .onAppear {
+            token = keychain.get("token") ?? ""
+            if let storedUsername = UserDefaults.standard.string(forKey: "username") {
+                username = storedUsername
+            }
+        }
+    }
+}
 struct SettingsView: View {
     @ObservedObject var webSocketClient: WebSocketClient
     @AppStorage("ISOpened") var hasbeenopened = true
@@ -837,17 +847,35 @@ struct ChannelView: View {
                             }) {
                                 Text("Photo")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                                 self.importing = true
                             }) {
                                 Text("Files")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                             }) {
                                 Text("Cancel")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                         }
                     }
                     .padding()
