@@ -35,17 +35,6 @@ jobs:
       - name: Convert to IPA
         run: make ipa
 
-      - name: Get current date
-        id: date
-        run: echo "date=$(date -u +'%c')" >> $GITHUB_OUTPUT
-
-      - name: Get current date in AltStore date form
-        id: date_altstore
-        run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Add version to IPA file name
-        run: mv SideStore.ipa SideStore-${{ steps.version.outputs.version }}.ipa
-
       - name: Upload Stossycord.ipa Artifact
         uses: actions/upload-artifact@v3.1.0
         with:
