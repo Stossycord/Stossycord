@@ -32,9 +32,6 @@ jobs:
       - name: Build Stossycord
         run: make build | xcpretty && exit ${PIPESTATUS[0]}
 
-      - name: Fakesign app
-        run: make fakesign
-
       - name: Convert to IPA
         run: make ipa
 
