@@ -5,7 +5,6 @@
 //  Created by Stossy11 on 18/5/2024.
 //
 
-import Giffy
 import AVKit
 import AVFAudio
 import Foundation
@@ -13,22 +12,6 @@ import SwiftUI
 import UniformTypeIdentifiers
 import AVFoundation
 import OggDecoder
-
-struct FullScreenVideoPlayer: UIViewControllerRepresentable {
-    var url: URL
-
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let controller = AVPlayerViewController()
-        controller.player = AVPlayer(url: url)
-        controller.canStartPictureInPictureAutomaticallyFromInline = true
-        controller.allowsPictureInPicturePlayback = true
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        // Update the controller if needed.
-    }
-}
 
 struct MediaView: View {
     @State var savefile = false
@@ -39,7 +22,7 @@ struct MediaView: View {
         if let url2 = URL(string: url) {
             Group {
                 if url2.pathExtension.lowercased() == "mp4" {
-                    FullScreenVideoPlayer(url: url2)
+                    VideoPlayer(player: AVPlayer(url: url2))
                         .aspectRatio(contentMode: .fit)
                         .contextMenu {
                             // Show the message date when holding the message
@@ -56,7 +39,6 @@ struct MediaView: View {
                                 Text("Save to photos")
                             }
                         }
-                    // VideoPlayer(player: AVPlayer(url: url2)) on line 42
                 } else if url2.pathExtension.lowercased() == "png" || url2.pathExtension.lowercased() == "jpg" {
                     AsyncImage(url: url2) { phase in
                         switch phase {
@@ -88,26 +70,21 @@ struct MediaView: View {
                         }
                     }
                 } else if url2.pathExtension.lowercased() == "gif"  {
-                    AsyncGiffy(url: URL(string: url)!) { phase in
+                    AsyncImage(url: url2) { phase in
                         switch phase {
-                        case .loading:
+                        case .empty:
                             ProgressView()
-                        case .error:
-                            DownloadView(url: url2)
-                        case .success(let giffy):
-                            giffy
-                                .frame(width: 32, height: 32)
-                                .clipShape(Circle())
-                                .onAppear() {
-                                    print("giffff")
-                                }
+                        case .success(let image):
+                            image.resizable().aspectRatio(contentMode: .fit)
                                 .contextMenu {
                                     // Show the message date when holding the message
                                     Text("To Reply hold the user icon")
                                     Button(action: {
+                                        
                                     }) {
                                         Text("Save to files")
                                     }
+                                    
                                     Button(action: {
                                         // self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
                                         savefile = true
@@ -116,6 +93,10 @@ struct MediaView: View {
                                         Text("Save to Photos")
                                     }
                                 }
+                        case .failure:
+                            DownloadView(url: url2)
+                        @unknown default:
+                            EmptyView()
                         }
                     }
                 } else if url2.pathExtension.lowercased() == "mp3" {
@@ -319,7 +300,7 @@ struct DownloadView: View {
             Text(url.lastPathComponent)
             Button(action: {
                 // Open the URL in Safari
-                UIApplication.shared.open(url)
+                // UIApplication.shared.open(url)
             }) {
                 Image(systemName: "square.and.arrow.down.fill")
             }

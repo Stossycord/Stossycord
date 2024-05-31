@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import Starscream
 import KeychainSwift
+import AVFoundation
 
 
 
@@ -22,6 +23,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     var currentguild = ""
     @Published var guilds: [(name: String, id: String, icon: String?)] = []
     @Published var hasnitro: Bool = false
+    @Published var hastts: Bool = false
     @Published var currentuserid = ""
     @Published var messages: [String] = []
     @Published var data: [MessageData] = []
@@ -31,6 +33,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     @Published var attachments: [String] = []
     var didDisconnectIntentionally = false
     var isconnected = false
+    let speechSynthesizer = AVSpeechSynthesizer()
     
     func getcurrentchannel(input: String, guild: String) {
         currentchannel = input
@@ -206,6 +209,27 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                             self.data.append(beans)
                                         }
                                         self.messages.append(content)
+                                        
+                                        if self.hastts {
+                                            var utterance: AVSpeechUtterance? = nil
+                                            if let member = d["member"] as? [String: Any] {
+                                                if let nickname = member["nick"] as? String {
+                                                    utterance = AVSpeechUtterance(string: "\(nickname) said \(content)")
+                                                } else if let globalname = author["global_name"] as? String {
+                                                    utterance = AVSpeechUtterance(string: "\(globalname) said \(content)")
+                                                } else {
+                                                    utterance = AVSpeechUtterance(string: "\(username) said \(content)")
+                                                }
+                                            } else if let globalname = author["global_name"] as? String {
+                                                utterance = AVSpeechUtterance(string: "\(globalname) said \(content)")
+                                            } else {
+                                                utterance = AVSpeechUtterance(string: "\(username) said \(content)")
+                                            }
+                                            if let utterance1 = utterance {
+                                                self.speechSynthesizer.speak(utterance1)
+                                            }
+                                            
+                                        }
                                     } else if t == "MESSAGE_UPDATE" {
                                         if let index = self.messageIDs.firstIndex(of: messageid) {
                                             if let globalname = author["global_name"] as? String {

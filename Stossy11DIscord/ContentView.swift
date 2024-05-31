@@ -9,8 +9,9 @@
 import Foundation
 import SwiftUI
 import KeychainSwift
-import Giffy
 import UniformTypeIdentifiers
+import AVFoundation
+import AVKit
 
 // let user = DiscordREST()
 
@@ -139,6 +140,7 @@ struct ContentView: View {
         }
     }
 }
+
 struct NavView: View {
     @ObservedObject var webSocketClient: WebSocketClient
     @State var token = ""
@@ -165,25 +167,6 @@ struct NavView: View {
             token = keychain.get("token") ?? ""
             if let storedUsername = UserDefaults.standard.string(forKey: "username") {
                 username = storedUsername
-            }
-        }
-    }
-}
-struct SettingsView: View {
-    @ObservedObject var webSocketClient: WebSocketClient
-    @AppStorage("ISOpened") var hasbeenopened = true
-    let keychain = KeychainSwift()
-    @Binding var token: String
-    @Environment(\.presentationMode) var presentationMode
-    
-    var body: some View {
-        List {
-            Toggle("Show All Server Emojis (most will not work unless you have nitro)", isOn: $webSocketClient.hasnitro)
-            Button("Log Out") {
-                keychain.set("", forKey: "token")
-                token = ""
-                hasbeenopened = true
-                self.presentationMode.wrappedValue.dismiss()
             }
         }
     }
@@ -737,6 +720,8 @@ struct ChannelView: View {
     @State var replyMessage: Message? = nil
     @State var reactionMessage: Message? = nil
     
+    @State var isuploadingfile: Bool = false
+    @State var file: URL? = nil
     @State var ispickedauto = false
     @State var showEmojiPicker = false
     @State var previousMessageDate: Date? = nil
@@ -745,77 +730,200 @@ struct ChannelView: View {
     @State var importingimages = false
     @State var reactons = false
     @State var showprompt: Bool? = nil
+    let speechSynthesizer = AVSpeechSynthesizer()
+    @State private var scrollTarget: CGFloat?
 
         var body: some View {
             VStack {
-                ScrollView {
-                    ForEach(webSocketClient.data, id: \.messageId) { messageData in
-                        VStack {
-                            let timestamp = (Int(messageData.messageId)! >> 22 + 1420070400000) / 1000
-                            let messageDate = Date(timeIntervalSince1970: TimeInterval(timestamp))
-                            
-                            // Check if the message is the first message of a new day
-                            if let previousDate = previousMessageDate, !Calendar.current.isDate(previousMessageDate!, inSameDayAs: messageDate) {
-                                // If it is, add a section divider here
-                                Divider()
-                                    .padding(.vertical)
-                                    .onAppear() {
-                                        // print(previousDate)
-                                    }
-                            }
+                if #available(iOS 17.0, *) {
+                    ScrollView {
+                        ForEach(webSocketClient.data, id: \.messageId) { messageData in
                             VStack {
-                                HStack {
-                                    AsyncImage(url: URL(string: messageData.icon)) { image in
-                                        image.resizable()
-                                            .frame(width: 40, height: 40)
-                                            .clipShape(Circle())
-                                            .onAppear() {
-                                                previousMessageDate = messageDate
-                                            }
-                                            .contextMenu {
-                                                // Show the message date when holding the message
-                                                Text("Message Date: \(messageDate)")
-                                                Button(action: {
-                                                    self.selectedMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
-                                                }) {
-                                                    Text("Delete")
-                                                }
-                                                Button(action: {
-                                                    self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
-                                                }) {
-                                                    Text("Reply")
-                                                }
-                                                Button(action: {
-                                                    self.reactionMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
-                                                    self.reactons = true
-                                                }) {
-                                                    Text("React")
-                                                }
-                                            }
-                                    } placeholder: {
-                                        ProgressView()
-                                            .onAppear() {
-                                                previousMessageDate = messageDate
-                                            }
-                                    }
-                                    VStack(alignment: .leading) {
-                                        if let beansman = messageData.replyTo {
-                                            HStack {
-                                                (Text(Image(systemName: "arrow.turn.up.right")) + Text(beansman))
-                                                    .font(.system(size: 10))
-                                            }
+                                let timestamp = (Int(messageData.messageId)! >> 22 + 1420070400000) / 1000
+                                let messageDate = Date(timeIntervalSince1970: TimeInterval(timestamp))
+                                
+                                // Check if the message is the first message of a new day
+                                if let previousDate = previousMessageDate, !Calendar.current.isDate(previousMessageDate!, inSameDayAs: messageDate) {
+                                    // If it is, add a section divider here
+                                    Divider()
+                                        .padding(.vertical)
+                                        .onAppear() {
+                                            // print(previousDate)
                                         }
-                                        Text("\(messageData.username)")
-                                            .bold()
-                                        HStack {
-                                            MessageChannelView(token: token, message: messageData.message)
-                                        }
-                                    }
                                 }
-                                if !messageData.attachment.isEmpty {
-                                    MediaView(url: messageData.attachment)
+                                VStack {
+                                    HStack {
+                                        AsyncImage(url: URL(string: messageData.icon)) { image in
+                                            image.resizable()
+                                                .frame(width: 40, height: 40)
+                                                .clipShape(Circle())
+                                                .onAppear() {
+                                                    previousMessageDate = messageDate
+                                                }
+                                                .contextMenu {
+                                                    // Show the message date when holding the message
+                                                    Text("Message Date: \(messageDate)")
+                                                    Button(action: {
+                                                        self.selectedMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                    }) {
+                                                        Text("Delete")
+                                                    }
+                                                    Button(action: {
+                                                        self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                    }) {
+                                                        Text("Reply")
+                                                    }
+                                                    Button(action: {
+                                                        self.reactionMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                        self.reactons = true
+                                                    }) {
+                                                        Text("React")
+                                                    }
+                                                    Button(action: {
+                                                        let utterance = AVSpeechUtterance(string: messageData.message)
+                                                        speechSynthesizer.speak(utterance)
+                                                        
+                                                    }) {
+                                                        Text("Speak with TTS")
+                                                    }
+                                                }
+                                        } placeholder: {
+                                            ProgressView()
+                                                .onAppear() {
+                                                    previousMessageDate = messageDate
+                                                }
+                                        }
+                                        VStack(alignment: .leading) {
+                                            if let beansman = messageData.replyTo {
+                                                HStack {
+                                                    (Text(Image(systemName: "arrow.turn.up.right")) + Text(beansman))
+                                                        .font(.system(size: 10))
+                                                }
+                                            }
+                                            Text("\(messageData.username)")
+                                                .bold()
+                                            HStack {
+                                                MessageChannelView(token: token, message: messageData.message)
+                                                    .contextMenu {
+                                                        // Show the message date when holding the message
+                                                        Text("Message Date: \(messageDate)")
+                                                        Button(action: {
+                                                            let utterance = AVSpeechUtterance(string: messageData.message)
+                                                            speechSynthesizer.speak(utterance)
+                                                            
+                                                        }) {
+                                                            Text("Speak with TTS")
+                                                        }
+                                                    }
+                                            }
+                                        }
+                                    }
+                                    if !messageData.attachment.isEmpty {
+                                        MediaView(url: messageData.attachment)
+                                    }
                                 }
                             }
+                        }
+                    }
+                    .defaultScrollAnchor(.bottom)
+                } else {
+                    ScrollViewReader { scrollView in
+                        ScrollView {
+                            ForEach(webSocketClient.data, id: \.messageId) { messageData in
+                                VStack {
+                                    let timestamp = (Int(messageData.messageId)! >> 22 + 1420070400000) / 1000
+                                    let messageDate = Date(timeIntervalSince1970: TimeInterval(timestamp))
+                                    
+                                    // Check if the message is the first message of a new day
+                                    if let previousDate = previousMessageDate, !Calendar.current.isDate(previousMessageDate!, inSameDayAs: messageDate) {
+                                        // If it is, add a section divider here
+                                        Divider()
+                                            .padding(.vertical)
+                                            .onAppear() {
+                                                // print(previousDate)
+                                            }
+                                    }
+                                    VStack {
+                                        HStack {
+                                            AsyncImage(url: URL(string: messageData.icon)) { image in
+                                                image.resizable()
+                                                    .frame(width: 40, height: 40)
+                                                    .clipShape(Circle())
+                                                    .onAppear() {
+                                                        previousMessageDate = messageDate
+                                                    }
+                                                    .contextMenu {
+                                                        // Show the message date when holding the message
+                                                        Text("Message Date: \(messageDate)")
+                                                        Button(action: {
+                                                            self.selectedMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                        }) {
+                                                            Text("Delete")
+                                                        }
+                                                        Button(action: {
+                                                            self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                        }) {
+                                                            Text("Reply")
+                                                        }
+                                                        Button(action: {
+                                                            self.reactionMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                            self.reactons = true
+                                                        }) {
+                                                            Text("React")
+                                                        }
+                                                        Button(action: {
+                                                            let utterance = AVSpeechUtterance(string: messageData.message)
+                                                            speechSynthesizer.speak(utterance)
+                                                            
+                                                        }) {
+                                                            Text("Speak with TTS")
+                                                        }
+                                                    }
+                                            } placeholder: {
+                                                ProgressView()
+                                                    .onAppear() {
+                                                        previousMessageDate = messageDate
+                                                    }
+                                            }
+                                            VStack(alignment: .leading) {
+                                                if let beansman = messageData.replyTo {
+                                                    HStack {
+                                                        (Text(Image(systemName: "arrow.turn.up.right")) + Text(beansman))
+                                                            .font(.system(size: 10))
+                                                    }
+                                                }
+                                                Text("\(messageData.username)")
+                                                    .bold()
+                                                HStack {
+                                                    MessageChannelView(token: token, message: messageData.message)
+                                                        .contextMenu {
+                                                            // Show the message date when holding the message
+                                                            Text("Message Date: \(messageDate)")
+                                                            Button(action: {
+                                                                let utterance = AVSpeechUtterance(string: messageData.message)
+                                                                speechSynthesizer.speak(utterance)
+                                                                
+                                                            }) {
+                                                                Text("Speak with TTS")
+                                                            }
+                                                        }
+                                                }
+                                            }
+                                        }
+                                        if !messageData.attachment.isEmpty {
+                                            MediaView(url: messageData.attachment)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .background(GeometryReader {
+                            Color.clear.preference(key: ViewHeightKey.self,
+                                                   value: $0.frame(in: .local).size.height)
+                        })
+                        .onPreferenceChange(ViewHeightKey.self) { scrollTarget = $0 }
+                        .onChange(of: scrollTarget) { target in
+                            scrollView.scrollTo(target, anchor: .bottom)
                         }
                     }
                 }
@@ -892,6 +1000,9 @@ struct ChannelView: View {
                 if reactons {
                     reactionpicker(token: token, messageid: reactionMessage?.id ?? "", channelid: channelid, shown: $reactons, emojis: emojis)
                 }
+                if let file = file {
+                    EmojiPicker2(image: self.$file)
+                }
                 HStack {
                     TextField("Message \(channelname)", text: $text)
                         .onChange(of: text) { newValue in
@@ -934,10 +1045,30 @@ struct ChannelView: View {
                             }
                             
                             if let replyMessage = replyMessage {
-                                sendPostRequest1(content: text, token: token, channel: channelid, messageReference: ["message_id": replyMessage.id])
+                                if let file = file {
+                                    if file.startAccessingSecurityScopedResource() {
+                                             uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text, messageReference: ["message_id": replyMessage.id])
+                                        file.stopAccessingSecurityScopedResource()
+                                        self.file = nil
+                                    } else {
+                                        print("Failed to access the file")
+                                    }
+                                } else {
+                                    sendPostRequest1(content: text, token: token, channel: channelid, messageReference: ["message_id": replyMessage.id])
+                                }
                                 self.replyMessage = nil
                             } else {
-                                sendPostRequest1(content: text, token: token, channel: channelid, messageReference: nil)
+                                if let file = file {
+                                    if file.startAccessingSecurityScopedResource() {
+                                        uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text)
+                                        file.stopAccessingSecurityScopedResource()
+                                        self.file = nil
+                                    } else {
+                                        print("Failed to access the file")
+                                    }
+                                } else {
+                                    sendPostRequest1(content: text, token: token, channel: channelid, messageReference: nil)
+                                }
                             }
                             text = ""
                             ispickedauto = false
@@ -980,7 +1111,7 @@ struct ChannelView: View {
             }
             .fileImporter(
                 isPresented: $importing,
-                allowedContentTypes: [.image, .audio, .archive, .text, .video]
+                allowedContentTypes: [.image, .audio, .archive, .text, .video, .data]
             ) { result in
                 switch result {
                 case .success(let file):
@@ -988,7 +1119,8 @@ struct ChannelView: View {
                     let fileManager = FileManager.default
                     if file.startAccessingSecurityScopedResource() {
                         if fileManager.fileExists(atPath: file.path) {
-                            uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text)
+                            self.file = file
+                            // uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text, messageReference: ["message_id": replyMessage.id])
                             } else {
                                 print("File Doesnt Exist 1")
                             }
@@ -1001,7 +1133,7 @@ struct ChannelView: View {
                 }
             }
             .popover(isPresented: $importingimages, content: {
-                VideoPicker(fileURL: $image, token: token, channelid: channelid, message: text)
+                VideoPicker(fileURL: $file, token: token, channelid: channelid, message: text)
             })
             .padding()
             .alert(item: $selectedMessage) { message in
@@ -1038,6 +1170,101 @@ struct ChannelView: View {
                 
             }
         }
+}
+
+
+struct EmojiPicker2: View {
+    @Binding var image: URL?
+
+    var body: some View {
+        ScrollView {
+            VStack {
+                if let image = image {
+                    Button {
+                        self.image = nil
+                    } label: {
+                        Image(systemName: "x.square")
+                    }
+                    if image.startAccessingSecurityScopedResource() {
+                        if isImage(url: image) {
+                            AsyncImage(url: image) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image.resizable().aspectRatio(contentMode: .fit)
+                                case .failure:
+                                    DownloadView(url: image)
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        } else if isVideo(url: image) {
+                            VideoPlayer(player: AVPlayer(url: image))
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 300, height: 200)
+                        } else {
+                            AsyncImage(url: image) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image.resizable().aspectRatio(contentMode: .fit)
+                                case .failure:
+                                    AsyncImage(url: image) { phase in
+                                        switch phase {
+                                        case .empty:
+                                            ProgressView()
+                                        case .success(let image):
+                                            image.resizable().aspectRatio(contentMode: .fit)
+                                        case .failure:
+                                            DownloadView(url: image)
+                                                .onAppear() {
+                                                    print("is not Video")
+                                                }
+                                        @unknown default:
+                                            EmptyView()
+                                        }
+                                    }
+                                    .onAppear() {
+                                        print("is not image")
+                                    }
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        }
+                        
+                        Text("")
+                            .onAppear() {
+                                image.stopAccessingSecurityScopedResource()
+                            }
+                    }
+                }
+            }
+        }
+    }
+    
+    func isImage(url: URL) -> Bool {
+        guard let uttype = UTType(filenameExtension: url.pathExtension) else {
+            return false
+        }
+        return uttype.conforms(to: UTType.image)
+    }
+
+    func isVideo(url: URL) -> Bool {
+        guard let uttype = UTType(filenameExtension: url.pathExtension) else {
+            return false
+        }
+        return uttype.conforms(to: UTType.movie)
+    }
+}
+
+struct ViewHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat?
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = value ?? nextValue()
+    }
 }
 
 func fetchAllEmojis(token: String, completion: @escaping ([Emoji]?) -> Void) {
@@ -1337,7 +1564,15 @@ struct MessageChannelView: View {
 
 
 func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSocketClient) {
-    let url = URL(string: "https://discord.com/api/channels/\(channelID)/messages?limit=25")!
+    var MessageLimit: Int? = nil
+    if #available(iOS 16, *) {
+        MessageLimit = 50
+    } else if #available(iOS 17, *)  {
+        MessageLimit = 100
+    } else {
+        MessageLimit = 150
+    }
+    let url = URL(string: "https://discord.com/api/channels/\(channelID)/messages?limit=\(MessageLimit ?? 25)")!
     
     var request = URLRequest(url: url)
     request.httpMethod = "GET"

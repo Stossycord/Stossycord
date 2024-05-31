@@ -2,7 +2,7 @@
 //  StossycordmacOSApp.swift
 //  StossycordmacOS
 //
-//  Created by Stossy11 on 26/5/2024.
+//  Created by Stossy11 on 28/5/2024.
 //
 
 import SwiftUI
@@ -18,6 +18,7 @@ struct MessageData {
     let attachment: String
     let username: String
     let messageId: String
+    var replyTo: String?  // Add this line
 }
 
 class WebSocketClient: WebSocketDelegate, ObservableObject {
@@ -26,6 +27,9 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     var token = ""
     var currentchannel = ""
     var currentguild = ""
+    @Published var guilds: [(name: String, id: String, icon: String?)] = []
+    @Published var hasnitro: Bool = false
+    @Published var currentuserid = ""
     @Published var messages: [String] = []
     @Published var data: [MessageData] = []
     @Published var icons: [String] = []
@@ -137,13 +141,13 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     }
     
     func handleMessage(_ string: String) {
-        print("event recieved")
+        print("event recieved \(self.currentuserid), \(self.hasnitro)")
         if let data = string.data(using: .utf8),
            let json = receiveJSONResponse(data: data) {
             print("Recieved JSON") // Debug log
             if let t = json["t"] as? String {
                 // print("Event type: \(t)") // Debug log
-                if t == "MESSAGE_CREATE" || t == "MESSAGE_UPDATE" {
+                if t == "MESSAGE_CREATE" || t == "MESSAGE_UPDATE"  {
                     DispatchQueue.main.async {
                         if let d = json["d"] as? [String: Any],
                            let channelId = d["channel_id"] as? String,
@@ -152,7 +156,6 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                            let author = d["author"] as? [String: Any],
                            let username = author["username"] as? String,
                            let avatarHash = author["avatar"] as? String,
-                           let member = d["member"] as? [String: Any],
                            let id = author["id"] as? String {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(id)/\(avatarHash).png"
                             print("username: \(username)")
@@ -169,7 +172,6 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                         
                                         
                                         
-                                        
                                         // Handle attachments
                                         var attachmentURL = ""
                                         if let attachments = d["attachments"] as? [[String: Any]] {
@@ -179,51 +181,65 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                                 }
                                             }
                                         }
-                                        if let nickname = member["nick"] as? String {
-                                            let beans = MessageData(icon: avatarURL, message: "\(nickname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
-                                            self.data.append(beans)
+                                        
+                                        var replyTo: String? = nil
+                                        
+                                        if let messageReference = d["message_reference"] as? [String: Any],
+                                           let parentMessageId = messageReference["message_id"] as? String {
+                                            print("reply: yes")
+                                            if let index = self.data.first(where: { $0.messageId == parentMessageId }) {
+                                                replyTo = "\(index.username): \(index.message)"
+                                            } else {
+                                                replyTo = "Unable to load Message"
+                                            }
+                                        }
+                                        
+                                        if let member = d["member"] as? [String: Any] {
+                                            if let nickname = member["nick"] as? String {
+                                                let beans = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: nickname, messageId: messageid, replyTo: replyTo)
+                                                self.data.append(beans)
+                                            } else if let globalname = author["global_name"] as? String {
+                                                let beans = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: globalname, messageId: messageid, replyTo: replyTo)
+                                                self.data.append(beans)
+                                            } else {
+                                                let beans = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: username, messageId: messageid, replyTo: replyTo)
+                                                self.data.append(beans)
+                                            }
                                         } else if let globalname = author["global_name"] as? String {
-                                            let beans = MessageData(icon: avatarURL, message: "\(globalname): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
+                                            let beans = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: globalname, messageId: messageid, replyTo: replyTo)
                                             self.data.append(beans)
                                         } else {
-                                            let beans = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: messageid)
+                                            let beans = MessageData(icon: avatarURL, message: "\(username): \(content)", attachment: attachmentURL, username: username, messageId: messageid, replyTo: replyTo)
                                             self.data.append(beans)
                                         }
                                         self.messages.append(content)
                                     } else if t == "MESSAGE_UPDATE" {
                                         if let index = self.messageIDs.firstIndex(of: messageid) {
                                             if let globalname = author["global_name"] as? String {
-                                                self.messages[index] = "\(globalname): " + "\(content)"
+                                                self.messages[index] = "\(content)"
                                             } else {
-                                                self.messages[index] = "\(username ): " + "\(content)"
+                                                self.messages[index] = "\(content)"
                                             }
                                             // Find the index in the data array
                                             if let dataIndex = self.data.firstIndex(where: { $0.messageId == messageid }) {
                                                 self.data[dataIndex].message = self.messages[index]
                                             }
                                         }
-                                    } else if t == "MESSAGE_DELETE" {
-                                        DispatchQueue.main.async {
-                                            if let d = json["d"] as? [String: Any],
-                                               let messageid = d["id"] as? String,
-                                               let index = self.messageIDs.firstIndex(of: messageid) {
-                                                self.messageIDs.remove(at: index)
-                                                self.messages.remove(at: index)
-                                                self.usernames.remove(at: index)
-                                                self.icons.remove(at: index)
-                                                // Find the index in the data array
-                                                if let dataIndex = self.data.firstIndex(where: { $0.messageId == messageid }) {
-                                                    self.data.remove(at: dataIndex)
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
-                        } else {
-                            print("unable to decode stuffs \(string)")
                         }
                     }
+                } else if t == "MESSAGE_DELETE" {
+                    DispatchQueue.main.async {
+                        if let d = json["d"] as? [String: Any],
+                           let messageid = d["id"] as? String,
+                           let index = self.data.firstIndex(where: { $0.messageId == messageid }) {
+                            self.data.remove(at: index)
+                        }
+                    }
+                } else {
+                    print("unable to decode stuffs \(string)")
                 }
             }
         }
@@ -232,14 +248,11 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
 
 
 @main
-struct YourApp: App {
-    // @StateObject var webSocketClient = WebSocketClient()
-
+struct StossycordmacOSApp: App {
+    @StateObject var webSocketClient = WebSocketClient()
     var body: some Scene {
         WindowGroup {
-            // ContentView(webSocketClient: webSocketClient)
-            ContentView()
-            // ContentSource(webSocketClient: webSocketClient)
+            SidebarView(webSocketClient: webSocketClient)
         }
     }
 }
