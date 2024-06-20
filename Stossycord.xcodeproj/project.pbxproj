@@ -7,12 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		38368C702BF1B44D00B666B2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD04B2BE5EBE10073CADF /* ContentView.swift */; };
-		38403B3C2BEF09DC0037A8E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38403B3B2BEF09DC0037A8E2 /* Assets.xcassets */; };
-		38403B3F2BEF09DC0037A8E2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38403B3E2BEF09DC0037A8E2 /* Preview Assets.xcassets */; };
 		38403B5F2BEF09E30037A8E2 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B3A4342BEC44C700C27E1A /* WebView.swift */; };
 		38403B602BEF09E30037A8E2 /* Stossy11DIscordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */; };
-		38403B612BEF09E30037A8E2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387AD04B2BE5EBE10073CADF /* ContentView.swift */; };
 		38403B622BEF09E30037A8E2 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38303C5D2BEC80BA0085D277 /* LoginView.swift */; };
 		386B2EEE2BEF1EA600FCF947 /* StossycordAppleTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EED2BEF1EA600FCF947 /* StossycordAppleTVApp.swift */; };
 		386B2EF02BEF1EA600FCF947 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EEF2BEF1EA600FCF947 /* ContentView.swift */; };
@@ -20,6 +16,8 @@
 		386B2EF52BEF1EA700FCF947 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 386B2EF42BEF1EA700FCF947 /* Preview Assets.xcassets */; };
 		386B2EFA2BEF1ECE00FCF947 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EF92BEF1ECE00FCF947 /* LoginView.swift */; };
 		386B2EFC2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */; };
+		387B0F992C23DEE100874E89 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 387B0F982C23DEE100874E89 /* Assets.xcassets */; };
+		387B0F9B2C23DEF300874E89 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387B0F9A2C23DEF300874E89 /* ContentView.swift */; };
 		38AA98C52C0898270027A840 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AA98C42C0898270027A840 /* SettingsView.swift */; };
 		38AD93F32BFB6DCA00FE2A0E /* ImageSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AD93F22BFB6DC900FE2A0E /* ImageSelectorView.swift */; };
 		38AD93F42BFB6DCA00FE2A0E /* ImageSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AD93F22BFB6DC900FE2A0E /* ImageSelectorView.swift */; };
@@ -78,8 +76,6 @@
 /* Begin PBXFileReference section */
 		38303C5D2BEC80BA0085D277 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		38403B352BEF09DB0037A8E2 /* Stossycord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossycord.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		38403B3B2BEF09DC0037A8E2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		38403B3E2BEF09DC0037A8E2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		386B2EEB2BEF1EA600FCF947 /* StossycordAppleTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StossycordAppleTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		386B2EED2BEF1EA600FCF947 /* StossycordAppleTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StossycordAppleTVApp.swift; sourceTree = "<group>"; };
 		386B2EEF2BEF1EA600FCF947 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -88,9 +84,8 @@
 		386B2EF92BEF1ECE00FCF947 /* LoginView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		386B2EFB2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stossy11DiscordAppleTVApp.swift; sourceTree = "<group>"; };
 		387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stossy11DIscordApp.swift; sourceTree = "<group>"; wrapsLines = 0; };
-		387AD04B2BE5EBE10073CADF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = ../Stossy11DIscord/ContentView.swift; sourceTree = "<group>"; wrapsLines = 1; };
-		387AD04D2BE5EBE20073CADF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ../Stossy11DIscord/Assets.xcassets; sourceTree = "<group>"; };
-		387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		387B0F982C23DEE100874E89 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		387B0F9A2C23DEF300874E89 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		38AA98C42C0898270027A840 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		38AD93F22BFB6DC900FE2A0E /* ImageSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSelectorView.swift; sourceTree = "<group>"; };
 		38B3A4342BEC44C700C27E1A /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
@@ -201,26 +196,15 @@
 				38E6E1412BF7162B00FC575A /* Shared */,
 				387AD0492BE5EBE10073CADF /* Stossy11DIscordApp.swift */,
 				38CA23292C15A0C1003F9F79 /* WebSocketClass.swift */,
+				387B0F9A2C23DEF300874E89 /* ContentView.swift */,
 				38AA98C42C0898270027A840 /* SettingsView.swift */,
 				38CA23242C159F06003F9F79 /* UDPSocket.swift */,
-				387AD04B2BE5EBE10073CADF /* ContentView.swift */,
 				38CA23222C159F00003F9F79 /* VoiceChatClass.swift */,
 				38B3A4342BEC44C700C27E1A /* WebView.swift */,
-				387AD04D2BE5EBE20073CADF /* Assets.xcassets */,
-				387AD04F2BE5EBE20073CADF /* Preview Content */,
+				387B0F982C23DEE100874E89 /* Assets.xcassets */,
 				38303C5D2BEC80BA0085D277 /* LoginView.swift */,
-				38403B3B2BEF09DC0037A8E2 /* Assets.xcassets */,
-				38403B3D2BEF09DC0037A8E2 /* Preview Content */,
 			);
 			path = Stossycord;
-			sourceTree = "<group>";
-		};
-		38403B3D2BEF09DC0037A8E2 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				38403B3E2BEF09DC0037A8E2 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 		386B2EEC2BEF1EA600FCF947 /* StossycordAppleTV */ = {
@@ -267,15 +251,6 @@
 				38FEFA902C05D2E100CFE8CF /* StossycordmacOS.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		387AD04F2BE5EBE20073CADF /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				387AD0502BE5EBE20073CADF /* Preview Assets.xcassets */,
-			);
-			name = "Preview Content";
-			path = "../Stossy11DIscord/Preview Content";
 			sourceTree = "<group>";
 		};
 		38C119EE2BFA0D1F00D66F59 /* StossycordVisionOS */ = {
@@ -510,7 +485,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 387AD0412BE5EBE10073CADF /* Build configuration list for PBXProject "Stossy11DIscord" */;
+			buildConfigurationList = 387AD0412BE5EBE10073CADF /* Build configuration list for PBXProject "Stossycord" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -544,8 +519,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				38403B3F2BEF09DC0037A8E2 /* Preview Assets.xcassets in Resources */,
-				38403B3C2BEF09DC0037A8E2 /* Assets.xcassets in Resources */,
+				387B0F992C23DEE100874E89 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -585,12 +559,12 @@
 			files = (
 				38CA232D2C171A60003F9F79 /* WebSocketClass.swift in Sources */,
 				38E6E1432BF716AF00FC575A /* MessageView.swift in Sources */,
+				387B0F9B2C23DEF300874E89 /* ContentView.swift in Sources */,
 				38CA23232C159F00003F9F79 /* VoiceChatClass.swift in Sources */,
 				38CA23252C159F06003F9F79 /* UDPSocket.swift in Sources */,
 				38403B622BEF09E30037A8E2 /* LoginView.swift in Sources */,
 				38403B5F2BEF09E30037A8E2 /* WebView.swift in Sources */,
 				38AA98C52C0898270027A840 /* SettingsView.swift in Sources */,
-				38403B612BEF09E30037A8E2 /* ContentView.swift in Sources */,
 				38F3C9262C0357B3005D3DDB /* TypingSwift.swift in Sources */,
 				38403B602BEF09E30037A8E2 /* Stossy11DIscordApp.swift in Sources */,
 				38AD93F32BFB6DCA00FE2A0E /* ImageSelectorView.swift in Sources */,
@@ -603,7 +577,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				386B2EFA2BEF1ECE00FCF947 /* LoginView.swift in Sources */,
-				38368C702BF1B44D00B666B2 /* ContentView.swift in Sources */,
 				386B2EF02BEF1EA600FCF947 /* ContentView.swift in Sources */,
 				386B2EFC2BEF1EDA00FCF947 /* Stossy11DiscordAppleTVApp.swift in Sources */,
 				386B2EEE2BEF1EA600FCF947 /* StossycordAppleTVApp.swift in Sources */,
@@ -1028,7 +1001,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		387AD0412BE5EBE10073CADF /* Build configuration list for PBXProject "Stossy11DIscord" */ = {
+		387AD0412BE5EBE10073CADF /* Build configuration list for PBXProject "Stossycord" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				387AD0682BE5EBE20073CADF /* Debug */,

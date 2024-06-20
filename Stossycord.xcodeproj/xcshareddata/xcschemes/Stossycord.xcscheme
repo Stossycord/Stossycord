@@ -18,7 +18,7 @@
                BlueprintIdentifier = "38403B342BEF09DB0037A8E2"
                BuildableName = "Stossycord.app"
                BlueprintName = "Stossycord"
-               ReferencedContainer = "container:Stossy11DIscord.xcodeproj">
+               ReferencedContainer = "container:Stossycord.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -38,7 +38,7 @@
                BlueprintIdentifier = "38403B432BEF09DC0037A8E2"
                BuildableName = "StossycordTests.xctest"
                BlueprintName = "StossycordTests"
-               ReferencedContainer = "container:Stossy11DIscord.xcodeproj">
+               ReferencedContainer = "container:Stossycord.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -49,7 +49,7 @@
                BlueprintIdentifier = "38403B4D2BEF09DC0037A8E2"
                BuildableName = "StossycordUITests.xctest"
                BlueprintName = "StossycordUITests"
-               ReferencedContainer = "container:Stossy11DIscord.xcodeproj">
+               ReferencedContainer = "container:Stossycord.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -71,7 +71,7 @@
             BlueprintIdentifier = "38403B342BEF09DB0037A8E2"
             BuildableName = "Stossycord.app"
             BlueprintName = "Stossycord"
-            ReferencedContainer = "container:Stossy11DIscord.xcodeproj">
+            ReferencedContainer = "container:Stossycord.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -88,7 +88,7 @@
             BlueprintIdentifier = "38403B342BEF09DB0037A8E2"
             BuildableName = "Stossycord.app"
             BlueprintName = "Stossycord"
-            ReferencedContainer = "container:Stossy11DIscord.xcodeproj">
+            ReferencedContainer = "container:Stossycord.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

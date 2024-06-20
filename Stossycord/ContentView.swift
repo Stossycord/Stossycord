@@ -9,8 +9,9 @@
 import Foundation
 import SwiftUI
 import KeychainSwift
-import Giffy
 import UniformTypeIdentifiers
+import AVFoundation
+import AVKit
 
 // let user = DiscordREST()
 
@@ -98,6 +99,7 @@ struct ContentView: View {
                             }
                         }
                         .onAppear() {
+                    
                             webSocketClient.getcurrentchannel(input: "", guild: "")
                         }
                         
@@ -109,33 +111,16 @@ struct ContentView: View {
                          */
                     }
                 }.navigationTitle("Servers:")
-                    .toolbar {
-                        // Adds an item in the toolbar
-                        ToolbarItem(placement: .topBarLeading) {
-                            NavigationLink {
-                                SettingsView(webSocketClient: webSocketClient, token: $token)
-                            } label: {
-                                Image(systemName: "gearshape.fill")
-                            }
-                        }
-                        ToolbarItem {
-                            // Example with a button
-                            NavigationLink {
-                                DMa(webSocketClient: webSocketClient, token: token, username: username)
-                            } label: {
-                                Text("DMs")
-                            }
-
-                        }
-                    }
                     .searchable(text: $searchTerm)
             }.onAppear {
                 token = keychain.get("token") ?? ""
                 if !token.isEmpty {
                     getDiscordUsername(token: token) { fetchedUsername, coolid  in
-                        self.username = fetchedUsername
+                        self.webSocketClient.currentusername = fetchedUsername
                         self.webSocketClient.currentuserid = coolid
                         self.user = coolid
+                        self.username = self.webSocketClient.currentusername
+                        print(self.username)
                     }
                     getDiscordGuilds(token: token) { fetchedGuilds in
                         self.guilds = fetchedGuilds
@@ -159,21 +144,32 @@ struct ContentView: View {
     }
 }
 
-struct SettingsView: View {
+struct NavView: View {
     @ObservedObject var webSocketClient: WebSocketClient
-    @AppStorage("ISOpened") var hasbeenopened = true
+    @State var token = ""
+    @State var username = ""
     let keychain = KeychainSwift()
-    @Binding var token: String
-    @Environment(\.presentationMode) var presentationMode
-    
+
     var body: some View {
-        List {
-            Toggle("Show All Server Emojis (most will not work unless you have nitro)", isOn: $webSocketClient.hasnitro)
-            Button("Log Out") {
-                keychain.set("", forKey: "token")
-                token = ""
-                hasbeenopened = true
-                self.presentationMode.wrappedValue.dismiss()
+        TabView {
+            ContentView(webSocketClient: webSocketClient, token: token, username: username)
+                .tabItem {
+                    Label("Servers", systemImage: "house")
+                }
+
+            DMa(webSocketClient: webSocketClient, token: token, username: username)
+                .tabItem {
+                    Label("DM's", systemImage: "person")
+                }
+            SettingsView(webSocketClient: webSocketClient, token: $token)
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+        }
+        .onAppear {
+            token = keychain.get("token") ?? ""
+            if let storedUsername = UserDefaults.standard.string(forKey: "username") {
+                username = storedUsername
             }
         }
     }
@@ -270,6 +266,9 @@ struct ServerView: View {
     let username: String
     let serverId: String
     @State private var items: [Item] = []
+    @State private var selectedChannelId: String?
+    @State var vc = false
+    var voiceWebSocketClient: VoiceWebSocketClient?
 
     var body: some View {
         VStack {
@@ -279,12 +278,57 @@ struct ServerView: View {
                         Text(item.name)
                             .font(.headline)
                             .padding(.top)
-                    } else if item.name.starts(with: "#") { // This is a channel
+                    } else if item.type == 0 || item.type == 5 { // This is a channel
                         VStack {
                             NavigationLink {
                                 ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: serverId, channelname: item.name, username: username)
                             } label: {
-                                Text(item.name)
+                                HStack {
+                                    if let lastReadMessage = webSocketClient.lastReadMessageID[item.id], lastReadMessage.1 != item.lastMessageId {
+                                        Image(systemName: "circle.fill")
+                                            .foregroundColor(.white)
+                                    }
+                                    Text("# " + item.name)
+                                }
+                            }
+                        }
+                    } else if item.type == 2 {
+                        Button {
+                            if vc {
+                                if selectedChannelId == item.id {
+                                    self.webSocketClient.disconnect()
+                                    self.voiceWebSocketClient?.disconnect()
+                                    selectedChannelId = nil
+                                    vc = false
+                                } else {
+                                    self.webSocketClient.disconnect()
+                                    self.voiceWebSocketClient?.disconnect()
+                                    vc = true
+                                    selectedChannelId = item.id
+                                    self.webSocketClient.connectToVoiceChannel(guildID: serverId, channelID: item.id)
+                                }
+                            } else {
+                                vc = true
+                                selectedChannelId = item.id
+                                self.webSocketClient.connectToVoiceChannel(guildID: serverId, channelID: item.id)
+                            }
+                        } label: {
+                            HStack {
+                                if vc && selectedChannelId == item.id {
+                                    Image(systemName: "speaker.wave.2")
+                                        .font(.system(size: 16)) // Change the icon size here
+                                        .foregroundColor(.blue) // Change the icon color here
+                                    Text(item.name)
+                                        .font(.system(size: 16)) // Change the font size here
+                                        .foregroundColor(.blue) // Change the text color here
+                                } else {
+                                    Image(systemName: "speaker.wave.2")
+                                        .font(.system(size: 16)) // Change the icon size here
+                                        .foregroundColor(.white) // Change the icon color here
+                                    Text(item.name)
+                                        .font(.system(size: 16)) // Change the font size here
+                                        .foregroundColor(.white) // Change the text color here
+                                }
                             }
                         }
                     }
@@ -293,6 +337,7 @@ struct ServerView: View {
         }
         .onAppear() {
             webSocketClient.disconnect()
+            self.webSocketClient.getTokenAndConnect()
             getDiscordChannels(serverId: serverId, token: token) { items in
                 self.items = items
             }
@@ -335,7 +380,8 @@ struct ServerView: View {
                                 if type == 4 { // This is a category
                                     currentHeading = name
                                 } else { // This is a channel
-                                    let item = Item(id: id, name: type == 0 ? "# " + name : name, heading: currentHeading, type: type, position: position)
+                                    let lastMessageId = webSocketClient.lastReadMessageID[id]?.1 ?? ""
+                                    let item = Item(id: id, name: type == 0 ? name : name, heading: currentHeading, type: type, position: position, lastMessageId: lastMessageId)
                                     items.append(item)
                                 }
                             }
@@ -361,6 +407,7 @@ struct ServerView: View {
         let heading: String?
         let type: Int
         let position: Int
+        let lastMessageId: String
     }
 }
 
@@ -373,14 +420,10 @@ struct DMa: View {
     var body: some View {
         VStack {
             List(items) { item in
-                if !item.name.starts(with: "Group DM")  {
+                NavigationLink {
+                    ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "", channelname: item.name, username: username)
+                } label: {
                     Text(item.name)
-                } else {
-                    NavigationLink {
-                        ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "", channelname: item.name, username: username)
-                    } label: {
-                        Text(item.name)
-                    }
                 }
             }
         }
@@ -565,7 +608,7 @@ func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: 
 
 
 func getDiscordGuildsold(token: String, completion: @escaping ([(name: String, id: String)]) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
+    let url = URL(string: "https://discord.com/api/users/@me/guilds")!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -726,8 +769,13 @@ struct ChannelView: View {
     @State private var translation = ""
     @State var replyMessage: Message? = nil
     @State var reactionMessage: Message? = nil
+    @State var editmessage: Message? = nil
     
+    @State var oldtext = ""
+    @State var isuploadingfile: Bool = false
+    @State var file: URL? = nil
     @State var ispickedauto = false
+    @State var editing = false
     @State var showEmojiPicker = false
     @State var previousMessageDate: Date? = nil
     @State var emojis: [Emoji] = []
@@ -735,16 +783,18 @@ struct ChannelView: View {
     @State var importingimages = false
     @State var reactons = false
     @State var showprompt: Bool? = nil
+    let speechSynthesizer = AVSpeechSynthesizer()
+    @State private var scrollTarget: CGFloat?
 
         var body: some View {
             VStack {
                 ScrollView {
                     ForEach(webSocketClient.data, id: \.messageId) { messageData in
+                        let timestamp = (Int(messageData.messageId)! >> 22 + 1420070400000) / 1000
+                        let messageDate = Date(timeIntervalSince1970: TimeInterval(timestamp))
+                        
+                        // Check if the message is the first message of a new day
                         VStack {
-                            let timestamp = (Int(messageData.messageId)! >> 22 + 1420070400000) / 1000
-                            let messageDate = Date(timeIntervalSince1970: TimeInterval(timestamp))
-                            
-                            // Check if the message is the first message of a new day
                             if let previousDate = previousMessageDate, !Calendar.current.isDate(previousMessageDate!, inSameDayAs: messageDate) {
                                 // If it is, add a section divider here
                                 Divider()
@@ -781,6 +831,23 @@ struct ChannelView: View {
                                                 }) {
                                                     Text("React")
                                                 }
+                                                if messageData.userId == webSocketClient.currentuserid {
+                                                    Button(action: {
+                                                        self.editmessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                        self.editing = true
+                                                        oldtext = text
+                                                        self.text = messageData.message
+                                                    }) {
+                                                        Text("Edit")
+                                                    }
+                                                }
+                                                Button(action: {
+                                                    let utterance = AVSpeechUtterance(string: messageData.message)
+                                                    speechSynthesizer.speak(utterance)
+                                                    
+                                                }) {
+                                                    Text("Speak with TTS")
+                                                }
                                             }
                                     } placeholder: {
                                         ProgressView()
@@ -798,7 +865,44 @@ struct ChannelView: View {
                                         Text("\(messageData.username)")
                                             .bold()
                                         HStack {
-                                            MessageChannelView(token: token, message: messageData.message)
+                                            MessageChannelView(token: token, message: messageData.message, curremtusername: webSocketClient.currentusername, username: messageData.username)
+                                                .contextMenu {
+                                                    // Show the message date when holding the message
+                                                    Text("Message Date: \(messageDate)")
+                                                    Button(action: {
+                                                        self.selectedMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                    }) {
+                                                        Text("Delete")
+                                                    }
+                                                    Button(action: {
+                                                        self.replyMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                    }) {
+                                                        Text("Reply")
+                                                    }
+                                                    Button(action: {
+                                                        self.reactionMessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                        self.reactons = true
+                                                    }) {
+                                                        Text("React")
+                                                    }
+                                                    if messageData.userId == webSocketClient.currentuserid {
+                                                        Button(action: {
+                                                            self.editmessage = Message(id: messageData.messageId, content: messageData.message, username: messageData.username)
+                                                            self.editing = true
+                                                            oldtext = text
+                                                            self.text = messageData.message
+                                                        }) {
+                                                            Text("Edit")
+                                                        }
+                                                    }
+                                                    Button(action: {
+                                                        let utterance = AVSpeechUtterance(string: messageData.message)
+                                                        speechSynthesizer.speak(utterance)
+                                                        
+                                                    }) {
+                                                        Text("Speak with TTS")
+                                                    }
+                                                }
                                         }
                                     }
                                 }
@@ -825,6 +929,25 @@ struct ChannelView: View {
                     .padding()
                     .background(Color.gray.opacity(0.2))
                 }
+                if let editmessage = editmessage, editing {
+                    HStack {
+                        Text("Editing:")
+                            .font(.headline)
+                        Text(editmessage.content)
+                            .font(.subheadline)
+                        Spacer()
+                        Button(action: {
+                            self.editmessage = nil
+                            self.text = oldtext
+                            self.oldtext = ""
+                            self.editing = false
+                        }) {
+                            Image(systemName: "xmark.circle")
+                        }
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                }
                 if let showprompt = showprompt {
                     VStack {
                         Text("Upload Photo or Upload Video")
@@ -837,17 +960,35 @@ struct ChannelView: View {
                             }) {
                                 Text("Photo")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                                 self.importing = true
                             }) {
                                 Text("Files")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                             }) {
                                 Text("Cancel")
                             }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                         }
                     }
                     .padding()
@@ -863,6 +1004,9 @@ struct ChannelView: View {
                 }
                 if reactons {
                     reactionpicker(token: token, messageid: reactionMessage?.id ?? "", channelid: channelid, shown: $reactons, emojis: emojis)
+                }
+                if let file = file {
+                    EmojiPicker2(image: self.$file)
                 }
                 HStack {
                     TextField("Message \(channelname)", text: $text)
@@ -906,10 +1050,38 @@ struct ChannelView: View {
                             }
                             
                             if let replyMessage = replyMessage {
-                                sendPostRequest1(content: text, token: token, channel: channelid, messageReference: ["message_id": replyMessage.id])
+                                if let file = file {
+                                    if file.startAccessingSecurityScopedResource() {
+                                        uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text, messageReference: ["message_id": replyMessage.id])
+                                        file.stopAccessingSecurityScopedResource()
+                                        self.file = nil
+                                    } else {
+                                        print("Failed to access the file")
+                                    }
+                                } else {
+                                    sendPostRequest1(content: text, token: token, channel: channelid, messageReference: ["message_id": replyMessage.id])
+                                }
                                 self.replyMessage = nil
+                            } else if editing {
+                                if let editmessage = editmessage {
+                                    editMessage(token: token, channelID: channelid, messageID: editmessage.id, newContent: text)
+                                    self.editmessage = nil
+                                    self.text = oldtext
+                                    self.oldtext = ""
+                                    self.editing = false
+                                }
                             } else {
-                                sendPostRequest1(content: text, token: token, channel: channelid, messageReference: nil)
+                                if let file = file {
+                                    if file.startAccessingSecurityScopedResource() {
+                                        uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text)
+                                        file.stopAccessingSecurityScopedResource()
+                                        self.file = nil
+                                    } else {
+                                        print("Failed to access the file")
+                                    }
+                                } else {
+                                    sendPostRequest1(content: text, token: token, channel: channelid, messageReference: nil)
+                                }
                             }
                             text = ""
                             ispickedauto = false
@@ -952,7 +1124,7 @@ struct ChannelView: View {
             }
             .fileImporter(
                 isPresented: $importing,
-                allowedContentTypes: [.image, .audio, .archive, .text, .video]
+                allowedContentTypes: [.image, .audio, .archive, .text, .video, .data]
             ) { result in
                 switch result {
                 case .success(let file):
@@ -960,7 +1132,8 @@ struct ChannelView: View {
                     let fileManager = FileManager.default
                     if file.startAccessingSecurityScopedResource() {
                         if fileManager.fileExists(atPath: file.path) {
-                            uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text)
+                            self.file = file
+                            // uploadFileToDiscord2(fileUrl: file, token: token, channelid: channelid, message: text, messageReference: ["message_id": replyMessage.id])
                             } else {
                                 print("File Doesnt Exist 1")
                             }
@@ -973,7 +1146,7 @@ struct ChannelView: View {
                 }
             }
             .popover(isPresented: $importingimages, content: {
-                VideoPicker(fileURL: $image, token: token, channelid: channelid, message: text)
+                VideoPicker(fileURL: $file, token: token, channelid: channelid, message: text)
             })
             .padding()
             .alert(item: $selectedMessage) { message in
@@ -1012,9 +1185,139 @@ struct ChannelView: View {
         }
 }
 
+
+func editMessage(token: String, channelID: String, messageID: String, newContent: String) {
+    let url = URL(string: "https://discord.com/api/v9/channels/\(channelID)/messages/\(messageID)")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "PATCH"
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.addValue(token, forHTTPHeaderField: "Authorization")
+    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
+    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
+    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
+    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
+    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
+    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
+    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
+    request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
+    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
+    request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
+    request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
+
+    let body: [String: Any] = ["content": newContent]
+    request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
+
+    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+        if let error = error {
+            print("Error: \(error)")
+        } else if let data = data {
+            let str = String(data: data, encoding: .utf8)
+            print("Received data:\n\(str ?? "")")
+        }
+    }
+
+    task.resume()
+}
+
+
+
+struct EmojiPicker2: View {
+    @Binding var image: URL?
+
+    var body: some View {
+        ScrollView {
+            VStack {
+                if let image = image {
+                    Button {
+                        self.image = nil
+                    } label: {
+                        Image(systemName: "x.square")
+                    }
+                    if image.startAccessingSecurityScopedResource() {
+                        if isImage(url: image) {
+                            AsyncImage(url: image) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image.resizable().aspectRatio(contentMode: .fit)
+                                case .failure:
+                                    DownloadView(url: image)
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        } else if isVideo(url: image) {
+                            VideoPlayer(player: AVPlayer(url: image))
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 300, height: 200)
+                        } else {
+                            AsyncImage(url: image) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image.resizable().aspectRatio(contentMode: .fit)
+                                case .failure:
+                                    AsyncImage(url: image) { phase in
+                                        switch phase {
+                                        case .empty:
+                                            ProgressView()
+                                        case .success(let image):
+                                            image.resizable().aspectRatio(contentMode: .fit)
+                                        case .failure:
+                                            DownloadView(url: image)
+                                                .onAppear() {
+                                                    print("is not Video")
+                                                }
+                                        @unknown default:
+                                            EmptyView()
+                                        }
+                                    }
+                                    .onAppear() {
+                                        print("is not image")
+                                    }
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        }
+                        
+                        Text("")
+                            .onAppear() {
+                                image.stopAccessingSecurityScopedResource()
+                            }
+                    }
+                }
+            }
+        }
+    }
+    
+    func isImage(url: URL) -> Bool {
+        guard let uttype = UTType(filenameExtension: url.pathExtension) else {
+            return false
+        }
+        return uttype.conforms(to: UTType.image)
+    }
+
+    func isVideo(url: URL) -> Bool {
+        guard let uttype = UTType(filenameExtension: url.pathExtension) else {
+            return false
+        }
+        return uttype.conforms(to: UTType.movie)
+    }
+}
+
+struct ViewHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat?
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = value ?? nextValue()
+    }
+}
+
 func fetchAllEmojis(token: String, completion: @escaping ([Emoji]?) -> Void) {
     // First, fetch all guilds the bot is in
-    let guildsUrl = URL(string: "https://discord.com/api/users/@me/guilds")!
+    let guildsUrl = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
     var request = URLRequest(url: guildsUrl)
     request.httpMethod = "GET"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1189,7 +1492,7 @@ struct Emoji: Codable {
 
 func retrieveAllEmojis(userToken: String, completion: @escaping ([Emoji]?) -> Void) {
     // First, fetch all guilds the bot is in
-    let guildsUrl = URL(string: "https://discord.com/api/users/@me/guilds")!
+    let guildsUrl = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
     var guildsRequest = URLRequest(url: guildsUrl)
     guildsRequest.addValue(userToken, forHTTPHeaderField: "Authorization")
     
@@ -1252,6 +1555,8 @@ func fetchEmojis(token: String, guildID: String, completion: @escaping ([Emoji]?
 struct MessageChannelView: View {
     let token: String
     let message: String
+    let curremtusername: String
+    let username: String
     var body: some View {
         //  let pattern = "<:(.*):(\\d*)>"
         let gifEmojiPattern = "<a:(.*):(\\d*)>"
@@ -1276,8 +1581,13 @@ struct MessageChannelView: View {
             if let match = userIdMatch {
                 if let userIdRange = Range(match.range(at: 1), in: message) {
                     let userId = String(message[userIdRange])
-                    MessageView(message: message, isEmoji: "userid", token: token)
-                    Spacer()
+                    if curremtusername == username {
+                        Spacer()
+                        MessageView(message: message, isEmoji: "userid", token: token)
+                    } else {
+                        MessageView(message: message, isEmoji: "userid", token: token)
+                        Spacer()
+                    }
                 }
             }
             
@@ -1285,8 +1595,13 @@ struct MessageChannelView: View {
             if let match = emojiMatch {
                 if let emojiRange = Range(match.range(at: 2), in: message) {
                     let emojiId = String(message[emojiRange])
-                    MessageView(message: message, isEmoji: "yes", token: token)
-                    Spacer()
+                    if curremtusername == username {
+                        Spacer()
+                        MessageView(message: message, isEmoji: "yes", token: token)
+                    } else {
+                        MessageView(message: message, isEmoji: "yes", token: token)
+                        Spacer()
+                    }
                 }
             }
             
@@ -1294,8 +1609,13 @@ struct MessageChannelView: View {
             if let match = animatedEmojiMatch {
                 if let animatedEmojiRange = Range(match.range(at: 2), in: message) {
                     let animatedEmojiId = String(message[animatedEmojiRange])
-                    MessageView(message: message, isEmoji: "no", token: token)
-                    Spacer()
+                    if curremtusername == username {
+                        Spacer()
+                        MessageView(message: message, isEmoji: "no", token: token)
+                    } else {
+                        MessageView(message: message, isEmoji: "no", token: token)
+                        Spacer()
+                    }
                 }
             }
         }
@@ -1309,7 +1629,15 @@ struct MessageChannelView: View {
 
 
 func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSocketClient) {
-    let url = URL(string: "https://discord.com/api/channels/\(channelID)/messages?limit=25")!
+    var MessageLimit: Int? = nil
+    if #available(iOS 16, *) {
+        MessageLimit = 50
+    } else if #available(iOS 17, *)  {
+        MessageLimit = 100
+    } else {
+        MessageLimit = 150
+    }
+    let url = URL(string: "https://discord.com/api/v9/channels/\(channelID)/messages?limit=\(MessageLimit ?? 25)")!
     
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
@@ -1361,20 +1689,20 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                             
                             var messageData: MessageData
                             
+                            let authorid = user["id"] as? String
                             if let member = message["member"] as? [String: Any],
                                let nickname = member["nick"] as? String {
-                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: nickname, messageId: id, replyTo: nil)
+                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: nickname, messageId: id, userId: authorid ?? "", replyTo: nil)
                             } else if let globalname = user["global_name"] as? String {
-                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: globalname, messageId: id, replyTo: nil)
+                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: globalname, messageId: id, userId: authorid ?? "", replyTo: nil)
                             } else {
-                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: username, messageId: id, replyTo: nil)
+                                messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: username, messageId: id, userId: authorid ?? "", replyTo: nil)
                             }
                             
                             if let messageReference = message["message_reference"] as? [String: Any],
                                let parentMessageId = messageReference["message_id"] as? String {
-                                print("reply: yes")
-                                if let index = webSocketClient.data.first(where: { $0.messageId == parentMessageId }) {
-                                    replyTo = "\(messageData.username): \(messageData.message)"
+                                if let parentMessage = webSocketClient.data.first(where: { $0.messageId == parentMessageId }) {
+                                    replyTo = "\(parentMessage.username): \(parentMessage.message)"
                                 } else {
                                     replyTo = "Unable to load Message"
                                 }
@@ -1401,9 +1729,8 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
     task.resume()
 }
 
-
 func deleteDiscordMessage(token: String, serverID: String, channelID: String, messageID: String) {
-    let url = URL(string: "https://discord.com/api/channels/\(channelID)/messages/\(messageID)")!
+    let url = URL(string: "https://discord.com/api/v9/channels/\(channelID)/messages/\(messageID)")!
     var request = URLRequest(url: url)
     request.httpMethod = "DELETE"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
