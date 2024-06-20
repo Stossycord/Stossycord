@@ -1,0 +1,21 @@
+on:
+  release:
+    types: [published]
+
+jobs:
+  github-releases-to-discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Github Releases To Discord
+        uses: SethCohen/github-releases-to-discord@v1.13.1
+        with:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          color: "2105893"
+          username: "Stossy11"
+          avatar_url: "https://cdn.discordapp.com/icons/1112269891903422535/ed95087179918095a41779afe33d126c.webp?size=240"
+          content: "||<@&1239499660209553502>|| NEW RELEASE BABY <:yippee:1253232167505367050>"
+          footer_title: "Changelog"
+          footer_icon_url: "https://cdn.discordapp.com/icons/1112269891903422535/ed95087179918095a41779afe33d126c.webp?size=240"
+          footer_timestamp: true
