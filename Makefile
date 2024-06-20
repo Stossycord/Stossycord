@@ -157,7 +157,7 @@ test:
 ## -- Building --
 
 build:
-	@xcodebuild -project Stossy11DIscord.xcodeproj \
+	@xcodebuild -project Stossycord.xcodeproj \
 				-scheme Stossycord \
 				-sdk iphoneos \
 				archive -archivePath ./archive \
