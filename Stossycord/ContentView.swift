@@ -42,7 +42,6 @@ import AVKit
 }
 */
 
-
 struct ContentView: View {
     @ObservedObject var webSocketClient: WebSocketClient
     @AppStorage("ISOpened") var hasbeenopened = true
@@ -55,117 +54,232 @@ struct ContentView: View {
     let keychain = KeychainSwift()
 
     var body: some View {
-        let keychain = KeychainSwift()
         NavigationView {
             VStack {
-                Text("")
-                    .font(.title)
+                Text("Welcome, \(username)")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .padding()
+                    .foregroundColor(.primary)
                     .onTapGesture {
                         hasbeenopened = true
                     }
-                    .onAppear() {
-                        // let keychain = KeychainSwift()
+                    .onAppear {
                         token = keychain.get("token") ?? ""
-                        if token == "" {
+                        if token.isEmpty {
                             hasbeenopened = true
                         }
-                        webSocketClient.getcurrentchannel(input: "", guild: "")
-                        webSocketClient.data = []
-                        webSocketClient.messageIDs = []
-                        webSocketClient.usernames = []
-                        webSocketClient.disconnect()
+                        resetWebSocketClient()
                     }
+                
+                SearchBar(text: $searchTerm)
+                    .padding([.leading, .trailing], 10)
+                
                 List {
-                    ForEach(guilds.filter { guild in
-                        searchTerm.isEmpty || guild.name.lowercased().contains(searchTerm.lowercased())
-                    }, id: \.id) { guild in
-                        NavigationLink {
-                            // ChannelView(webSocketClient: webSocketClient, token: token)
-                            ServerView(webSocketClient: webSocketClient, token: token, username: username, serverId: guild.id)
-                        } label: {
+                    ForEach(filteredGuilds, id: \.id) { guild in
+                        CustomNavigationLink(destination: ServerView(webSocketClient: webSocketClient, token: token, username: username, serverId: guild.id)) {
                             HStack {
-                                if guild.icon != nil {
-                                    AsyncImage(url: URL(string: guild.icon!)) { image in
-                                        image.resizable()
-                                            .frame(width: 32, height: 32)
-                                            .clipShape(Circle())
-                                    } placeholder: {
-                                        ProgressView()
-                                    }
+                                Spacer()
+                                GuildIconView(iconURL: guild.icon)
+                                VStack(alignment: .leading) {
+                                    Text(guild.name)
+                                        .font(.headline)
                                 }
-                                // AsyncImage(url: URL(string: guild.icon!))
-                                Text(guild.name)
-                                    
+                                Spacer()
                             }
+                            .padding()
+                            .background(LinearGradient(gradient: Gradient(colors: [Color.white, Color(UIColor.systemGray6)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .cornerRadius(15)
+                            .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
+                            .animation(.easeInOut(duration: 0.2))
                         }
-                        .onAppear() {
-                    
-                            webSocketClient.getcurrentchannel(input: "", guild: "")
-                        }
-                        
-                        /* Button(action: {
-                         // print("Guild ID: \(guild.id)")
-                         }) {
-                         Text(guild.name)
-                         }
-                         */
-                    }
-                }.navigationTitle("Servers:")
-                    .searchable(text: $searchTerm)
-            }.onAppear {
-                token = keychain.get("token") ?? ""
-                if !token.isEmpty {
-                    getDiscordUsername(token: token) { fetchedUsername, coolid  in
-                        self.webSocketClient.currentusername = fetchedUsername
-                        self.webSocketClient.currentuserid = coolid
-                        self.user = coolid
-                        self.username = self.webSocketClient.currentusername
-                        print(self.username)
-                    }
-                    getDiscordGuilds(token: token) { fetchedGuilds in
-                        self.guilds = fetchedGuilds
+                        .padding([.top, .bottom], 5)
                     }
                 }
-                print("test: \(self.webSocketClient.currentuserid)")
+                .listStyle(PlainListStyle())
+            }
+            .onAppear {
+                loadInitialData()
             }
             .sheet(isPresented: $hasbeenopened) {
                 LoginView()
             }
         }
-        .navigationViewStyle(.stack)
+        .navigationViewStyle(StackNavigationViewStyle())
+        .accentColor(.blue)
     }
-    public func SetGuilds() {
+
+    private var filteredGuilds: [(name: String, id: String, icon: String?)] {
+        guilds.filter { guild in
+            searchTerm.isEmpty || guild.name.lowercased().contains(searchTerm.lowercased())
+        }
+    }
+
+    private func resetWebSocketClient() {
+        webSocketClient.getcurrentchannel(input: "", guild: "")
+        webSocketClient.data = []
+        webSocketClient.messageIDs = []
+        webSocketClient.usernames = []
+        webSocketClient.disconnect()
+    }
+
+    private func loadInitialData() {
+        token = keychain.get("token") ?? ""
+        if !token.isEmpty {
+            getDiscordUsername(token: token) { fetchedUsername, coolid in
+                webSocketClient.currentusername = fetchedUsername
+                webSocketClient.currentuserid = coolid
+                user = coolid
+                username = fetchedUsername
+            }
+            getDiscordGuilds(token: token) { fetchedGuilds in
+                guilds = fetchedGuilds
+            }
+        }
+    }
+
+    public func setGuilds() {
         token = keychain.get("token") ?? ""
         if !token.isEmpty {
             getDiscordGuilds(token: token) { fetchedGuilds in
-                self.webSocketClient.guilds = fetchedGuilds
+                webSocketClient.guilds = fetchedGuilds
             }
         }
     }
 }
 
+struct GuildIconView: View {
+    let iconURL: String?
+
+    var body: some View {
+        if let iconURL = iconURL, let url = URL(string: iconURL) {
+            AsyncImage(url: url) { image in
+                image.resizable()
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                    .shadow(radius: 2)
+            } placeholder: {
+                ProgressView()
+            }
+        } else {
+            Circle()
+                .fill(Color.gray)
+                .frame(width: 40, height: 40)
+                .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                .shadow(radius: 2)
+        }
+    }
+}
+
+struct SearchBar: UIViewRepresentable {
+    @Binding var text: String
+
+    class Coordinator: NSObject, UISearchBarDelegate {
+        @Binding var text: String
+
+        init(text: Binding<String>) {
+            _text = text
+        }
+
+        func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+            text = searchText
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(text: $text)
+    }
+
+    func makeUIView(context: Context) -> UISearchBar {
+        let searchBar = UISearchBar(frame: .zero)
+        searchBar.delegate = context.coordinator
+        searchBar.placeholder = "Search Servers"
+        return searchBar
+    }
+
+    func updateUIView(_ uiView: UISearchBar, context: Context) {
+        uiView.text = text
+    }
+}
+
+struct CustomNavigationLink<Destination: View, Label: View>: View {
+    var destination: Destination
+    var label: () -> Label
+
+    var body: some View {
+        NavigationLink(destination: destination) {
+            label()
+                .background(NavigationLink("", destination: destination).opacity(0))
+        }
+    }
+}
+import SwiftUI
+import KeychainSwift
+
 struct NavView: View {
     @ObservedObject var webSocketClient: WebSocketClient
     @State var token = ""
     @State var username = ""
+    @State private var selectedTab: Tab = .servers
+    @State private var showTabBar: Bool = true
     let keychain = KeychainSwift()
 
-    var body: some View {
-        TabView {
-            ContentView(webSocketClient: webSocketClient, token: token, username: username)
-                .tabItem {
-                    Label("Servers", systemImage: "house")
-                }
+    enum Tab {
+        case servers
+        case dms
+        case settings
+    }
 
-            DMa(webSocketClient: webSocketClient, token: token, username: username)
-                .tabItem {
-                    Label("DM's", systemImage: "person")
+    var body: some View {
+        VStack(spacing: 0) {
+            // Display the selected view
+            Group {
+                switch selectedTab {
+                case .servers:
+                    ContentView(webSocketClient: webSocketClient)
+                case .dms:
+                    DMa(webSocketClient: webSocketClient, token: token, username: username)
+                case .settings:
+                    SettingsView(webSocketClient: webSocketClient, token: $token)
                 }
-            SettingsView(webSocketClient: webSocketClient, token: $token)
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            // Custom tab bar
+            if showTabBar {
+                HStack {
+                    TabButton(selectedTab: $selectedTab, tab: .servers, iconName: "house", title: "Servers")
+                    Spacer()
+                    TabButton(selectedTab: $selectedTab, tab: .dms, iconName: "person", title: "DM's")
+                    Spacer()
+                    TabButton(selectedTab: $selectedTab, tab: .settings, iconName: "gear", title: "Settings")
                 }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                .background(Color(UIColor.systemGray6))
+                .cornerRadius(15)
+                .padding([.leading, .trailing, .bottom])
+                .shadow(radius: 5)
+                .transition(.move(edge: .bottom))
+                .animation(.easeInOut(duration: 0.3))
+            }
         }
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width < -100 {
+                        // Swipe left to hide
+                        withAnimation {
+                            showTabBar = false
+                        }
+                    } else if value.translation.width > 100 {
+                        // Swipe right to show
+                        withAnimation {
+                            showTabBar = true
+                        }
+                    }
+                }
+        )
         .onAppear {
             token = keychain.get("token") ?? ""
             if let storedUsername = UserDefaults.standard.string(forKey: "username") {
@@ -174,6 +288,33 @@ struct NavView: View {
         }
     }
 }
+
+struct TabButton: View {
+    @Binding var selectedTab: NavView.Tab
+    let tab: NavView.Tab
+    let iconName: String
+    let title: String
+
+    var body: some View {
+        Button(action: {
+            selectedTab = tab
+        }) {
+            VStack {
+                Image(systemName: iconName)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(selectedTab == tab ? .blue : .gray)
+                Text(title)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(selectedTab == tab ? .blue : .gray)
+            }
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity)
+            .background(selectedTab == tab ? Color(UIColor.systemGray5) : Color.clear)
+            .cornerRadius(8)
+        }
+    }
+}
+
 
 func getDiscordUsername(token: String, completion: @escaping (String, String) -> Void) {
     let url = URL(string: "https://discord.com/api/v9/users/@me")!
@@ -274,66 +415,78 @@ struct ServerView: View {
         VStack {
             List {
                 ForEach(items) { item in
-                    if item.type == 4 { // This is a heading
+                    if item.type == 4 { // Heading
                         Text(item.name)
-                            .font(.headline)
-                            .padding(.top)
-                    } else if item.type == 0 || item.type == 5 { // This is a channel
-                        VStack {
-                            NavigationLink {
-                                ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: serverId, channelname: item.name, username: username)
-                            } label: {
-                                HStack {
-                                    if let lastReadMessage = webSocketClient.lastReadMessageID[item.id], lastReadMessage.1 != item.lastMessageId {
-                                        Image(systemName: "circle.fill")
-                                            .foregroundColor(.white)
-                                    }
-                                    Text("# " + item.name)
-                                }
-                            }
-                        }
-                    } else if item.type == 2 {
-                        Button {
-                            if vc {
-                                if selectedChannelId == item.id {
-                                    self.webSocketClient.disconnect()
-                                    self.voiceWebSocketClient?.disconnect()
-                                    selectedChannelId = nil
-                                    vc = false
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
+                            .foregroundColor(.blue) // Apple-like color
+                    } else if item.type == 0 || item.type == 5 { // Channel
+                        NavigationLink(destination: ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: serverId, channelname: item.name, username: username)) {
+                            HStack(spacing: 16) {
+                                if let lastReadMessage = webSocketClient.lastReadMessageID[item.id], lastReadMessage.1 != item.lastMessageId {
+                                    Image(systemName: "circle.fill")
+                                        .foregroundColor(.blue) // Apple-like color
+                                        .font(.system(size: 10))
                                 } else {
-                                    self.webSocketClient.disconnect()
-                                    self.voiceWebSocketClient?.disconnect()
-                                    vc = true
-                                    selectedChannelId = item.id
-                                    self.webSocketClient.connectToVoiceChannel(guildID: serverId, channelID: item.id)
+                                    Image(systemName: "circle")
+                                        .foregroundColor(.clear)
+                                        .frame(width: 10, height: 10)
                                 }
+                                Text("# " + item.name)
+                                    .font(.headline)
+                                    .foregroundColor(.primary) // Apple-like text color
+                                Spacer()
+                            }
+                            .padding(12)
+                            .background(Color.secondary.opacity(0.1)) // Apple-like secondary color
+                            .cornerRadius(12)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .animation(.easeInOut(duration: 0.2)) // Smooth animation
+                        }
+                        .buttonStyle(PlainButtonStyle()) // Use a plain button style for navigation link
+                    } else if item.type == 2 { // Button
+                        Button(action: {
+                            if vc && selectedChannelId == item.id {
+                                self.webSocketClient.disconnect()
+                                self.voiceWebSocketClient?.disconnect()
+                                selectedChannelId = nil
+                                vc = false
                             } else {
+                                self.webSocketClient.disconnect()
+                                self.voiceWebSocketClient?.disconnect()
                                 vc = true
                                 selectedChannelId = item.id
                                 self.webSocketClient.connectToVoiceChannel(guildID: serverId, channelID: item.id)
                             }
-                        } label: {
-                            HStack {
-                                if vc && selectedChannelId == item.id {
-                                    Image(systemName: "speaker.wave.2")
-                                        .font(.system(size: 16)) // Change the icon size here
-                                        .foregroundColor(.blue) // Change the icon color here
-                                    Text(item.name)
-                                        .font(.system(size: 16)) // Change the font size here
-                                        .foregroundColor(.blue) // Change the text color here
-                                } else {
-                                    Image(systemName: "speaker.wave.2")
-                                        .font(.system(size: 16)) // Change the icon size here
-                                        .foregroundColor(.white) // Change the icon color here
-                                    Text(item.name)
-                                        .font(.system(size: 16)) // Change the font size here
-                                        .foregroundColor(.white) // Change the text color here
-                                }
+                        }) {
+                            HStack(spacing: 16) {
+                                Image(systemName: vc && selectedChannelId == item.id ? "speaker.wave.2.fill" : "speaker.wave.2")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(vc && selectedChannelId == item.id ? .blue : .gray) // Apple-like color
+                                Text(item.name)
+                                    .font(.headline)
+                                    .foregroundColor(.primary) // Apple-like text color
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.gray)
                             }
+                            .padding(12)
+                            .background(vc && selectedChannelId == item.id ? Color.blue.opacity(0.2) : Color.secondary.opacity(0.1)) // Apple-like secondary color
+                            .cornerRadius(12)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .animation(.spring(response: 0.5, dampingFraction: 0.8, blendDuration: 0.2)) // Spring animation
+                            .buttonStyle(BorderlessButtonStyle()) // Apple-like button style
                         }
+                        .buttonStyle(BorderlessButtonStyle()) // Use a borderless button style for button
                     }
                 }
             }
+            .environment(\.defaultMinListRowHeight, 60) // Adjust minimum row height for better touch interaction
+
         }
         .onAppear() {
             webSocketClient.disconnect()
@@ -579,7 +732,6 @@ func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: 
     request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
     request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
     request.addValue("eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IlNhZmFyaSIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1BVSIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwXzE1XzcpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNy40IFNhZmFyaS82MDUuMS4xNSIsImJyb3dzZXJfdmVyc2lvbiI6IjE3LjQiLCJvc192ZXJzaW9uIjoiMTAuMTUuNyIsInJlZmVycmVyIjoiIiwicmVmZXJyaW5nX2RvbWFpbiI6IiIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoyOTE1MDcsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImRlc2lnbl9pZCI6MH0=", forHTTPHeaderField: "X-Super-Properties")
-    // ... rest of your headers ...
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
@@ -749,7 +901,15 @@ struct Guild: Decodable {
     let name: String
 }
 
-
+struct DefaultScrollAnchorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 17, *) {
+            content.defaultScrollAnchor(.bottom)
+        } else {
+            content
+        }
+    }
+}
 
 struct ChannelView: View {
     @AppStorage("ISOpened") var hasbeenopened = true
@@ -795,7 +955,7 @@ struct ChannelView: View {
                         
                         // Check if the message is the first message of a new day
                         VStack {
-                            if let previousDate = previousMessageDate, !Calendar.current.isDate(previousMessageDate!, inSameDayAs: messageDate) {
+                            if let previousDate = previousMessageDate, !Calendar.current.isDate(previousDate, inSameDayAs: messageDate) {
                                 // If it is, add a section divider here
                                 Divider()
                                     .padding(.vertical)
@@ -844,7 +1004,6 @@ struct ChannelView: View {
                                                 Button(action: {
                                                     let utterance = AVSpeechUtterance(string: messageData.message)
                                                     speechSynthesizer.speak(utterance)
-                                                    
                                                 }) {
                                                     Text("Speak with TTS")
                                                 }
@@ -898,7 +1057,6 @@ struct ChannelView: View {
                                                     Button(action: {
                                                         let utterance = AVSpeechUtterance(string: messageData.message)
                                                         speechSynthesizer.speak(utterance)
-                                                        
                                                     }) {
                                                         Text("Speak with TTS")
                                                     }
@@ -913,6 +1071,7 @@ struct ChannelView: View {
                         }
                     }
                 }
+                .modifier(DefaultScrollAnchorModifier())
                 if let replyMessage = replyMessage {
                     HStack {
                         Text("Replying to \(replyMessage.username):")
@@ -950,22 +1109,22 @@ struct ChannelView: View {
                 }
                 if let showprompt = showprompt {
                     VStack {
-                        Text("Upload Photo or Upload Video")
+                        Text("Upload File")
                             .font(.headline)
                         Divider()
                         HStack {
-                            Button(action: {
-                                self.showprompt = nil
-                                self.importingimages = true
-                            }) {
-                                Text("Photo")
-                            }
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.vertical, 10)
-                            .frame(width: 80, height: 30)
-                            .background(Color.blue)
-                            .cornerRadius(10)
+                            //Button(action: {
+                              //  self.showprompt = nil
+                                //self.importingimages = true
+                           // }) {
+                             //   Text("Photo")
+                           // }
+                            //.font(.headline)
+                          //  .foregroundColor(.white)
+                          //  .padding(.vertical, 10)
+                          //  .frame(width: 80, height: 30)
+                          //  .background(Color.blue)
+                          //  .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                                 self.importing = true
