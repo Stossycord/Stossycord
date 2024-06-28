@@ -87,7 +87,7 @@ struct ContentView: View {
                                 Spacer()
                             }
                             .padding()
-                            .background(LinearGradient(gradient: Gradient(colors: [Color.white, Color(UIColor.systemGray6)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .background(Color(UIColor.systemGray6))
                             .cornerRadius(15)
                             .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
                             .animation(.easeInOut(duration: 0.2))
