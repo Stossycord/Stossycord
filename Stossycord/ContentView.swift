@@ -213,8 +213,6 @@ struct CustomNavigationLink<Destination: View, Label: View>: View {
         }
     }
 }
-import SwiftUI
-import KeychainSwift
 
 struct NavView: View {
     @ObservedObject var webSocketClient: WebSocketClient
@@ -449,28 +447,29 @@ struct ServerView: View {
                         .buttonStyle(PlainButtonStyle()) // Use a plain button style for navigation link
                     } else if item.type == 2 { // Button
                         Button(action: {
-                            if vc && selectedChannelId == item.id {
-                                self.webSocketClient.disconnect()
-                                self.voiceWebSocketClient?.disconnect()
-                                selectedChannelId = nil
-                                vc = false
-                            } else {
-                                self.webSocketClient.disconnect()
-                                self.voiceWebSocketClient?.disconnect()
-                                vc = true
-                                selectedChannelId = item.id
-                                self.webSocketClient.connectToVoiceChannel(guildID: serverId, channelID: item.id)
-                            }
+                                        vc = false
+                           // if vc && selectedChannelId == item.id {
+                             //   self.webSocketClient.disconnect()
+               //                 self.voiceWebSocketClient?.disconnect()
+                 //               selectedChannelId = nil
+                   //             vc = false
+                     //       } else {
+                       //         self.webSocketClient.disconnect()
+                         //       self.voiceWebSocketClient?.disconnect()
+                           //     vc = true
+                             //   selectedChannelId = item.id
+                               // self.webSocketClient.connectToVoiceChannel(guildID: serverId, channelID: item.id)
                         }) {
                             HStack(spacing: 16) {
-                                Image(systemName: vc && selectedChannelId == item.id ? "speaker.wave.2.fill" : "speaker.wave.2")
-                                    .font(.system(size: 20))
-                                    .foregroundColor(vc && selectedChannelId == item.id ? .blue : .gray) // Apple-like color
-                                Text(item.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary) // Apple-like text color
-                                Spacer()
-                                Image(systemName: "chevron.right")
+                                Text("Voice chat is broken.")
+                              //  Image(systemName: vc && selectedChannelId == item.id ? "speaker.wave.2.fill" : "speaker.wave.2")
+   //                                 .font(.system(size: 20))
+     //                               .foregroundColor(vc && selectedChannelId == item.id ? .blue : .gray) // Apple-like color
+       //                         Text(item.name)
+         //                           .font(.headline)
+           //                         .foregroundColor(.primary) // Apple-like text color
+             //                   Spacer()
+               //                 Image(systemName: "chevron.right")
                                     .foregroundColor(.gray)
                             }
                             .padding(12)
@@ -571,25 +570,36 @@ struct DMa: View {
     @State private var items: [Item1] = []
 
     var body: some View {
-        VStack {
-            List(items) { item in
-                NavigationLink {
-                    ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "", channelname: item.name, username: username)
-                } label: {
-                    Text(item.name)
+        NavigationView {
+            VStack {
+                List(items) { item in
+                    NavigationLink(destination: ChannelView(channelid: item.id, webSocketClient: webSocketClient, token: token, guild: "", channelname: item.name, username: username)) {
+                        HStack {
+                            Image(systemName: "message.circle.fill")
+                                .foregroundColor(.blue)
+                                .padding(.trailing, 8)
+                            Text(item.name)
+                                .font(.headline)
+                        }
+                    }
                 }
+                .listStyle(PlainListStyle())
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+                .padding()
             }
-        }
-        .onAppear() {
-            webSocketClient.getcurrentchannel(input: "", guild: "")
-            webSocketClient.data = []
-            webSocketClient.messageIDs = []
-            webSocketClient.icons = []
-            webSocketClient.icons = []
-            webSocketClient.usernames = []
-            webSocketClient.disconnect()
-            getDiscordDMs(token: token) { items in
-                self.items = items
+            .navigationBarTitle("DM's", displayMode: .inline)
+            .background(Color(.systemBackground))
+            .onAppear {
+                webSocketClient.getcurrentchannel(input: "", guild: "")
+                webSocketClient.data = []
+                webSocketClient.messageIDs = []
+                webSocketClient.icons = []
+                webSocketClient.usernames = []
+                webSocketClient.disconnect()
+                getDiscordDMs(token: token) { items in
+                    self.items = items
+                }
             }
         }
     }

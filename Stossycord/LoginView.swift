@@ -200,7 +200,13 @@ struct LoginView1: View {
                     .padding(.horizontal)
                 }
                 .popover(isPresented: $showingPopover) {
-                    TextField("Authentication Code", text: $code)
+                    HStack{
+                        TextField("Authentication Code", text: $code)
+                    }
+                    .padding(.horizontal)
+                    .frame(width: 340, height: 60)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(10)
                     Button("Submit") {
                         if code.isEmpty != true {
                             print(self.code)
@@ -211,6 +217,13 @@ struct LoginView1: View {
                             }
                         }
                     }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.vertical, 10)
+                    .frame(width: 340, height: 45)
+                    .background(Color.blue)
+                    .cornerRadius(10)
+                    .padding(.horizontal)
                 }
         }
     }
