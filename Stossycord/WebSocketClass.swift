@@ -39,12 +39,15 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
     @Published var isconnecedtoVC = false
     let speechSynthesizer = AVSpeechSynthesizer()
     var voiceWebSocketClient: VoiceWebSocketClient?
-    
+    var heartbeatTimer: Timer?
+    var lastHeartbeatAck: Bool = true
+    var heartbeatInterval: TimeInterval = 0
+
     func getcurrentchannel(input: String, guild: String) {
         currentchannel = input
         currentguild = guild
     }
-    
+
     func disconnect() {
         if isconnected {
             didDisconnectIntentionally = true
@@ -54,45 +57,46 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             try voiceWebSocketClient?.disconnect()
         }
     }
-    
+
     init() {
         isconnected = false
+        getTokenAndConnect()
     }
-    
+
     func getTokenAndConnect() {
         self.token = keychain.get("token") ?? ""
         if self.token.isEmpty {
             print("Token is empty!")
             return
         }
-        
+
         var request = URLRequest(url: URL(string: "wss://gateway.discord.gg/?v=9&encoding=json")!)
         request.timeoutInterval = 10
         request.setValue("https://discord.com", forHTTPHeaderField: "Origin")
         request.setValue("websocket", forHTTPHeaderField: "Upgrade")
         request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
-        
+
         socket = WebSocket(request: request)
         socket.delegate = self
         socket.connect()
     }
-    
+
     func sendJSONRequest(_ request: [String: Any]) {
         if let data = try? JSONSerialization.data(withJSONObject: request, options: []) {
             socket.write(data: data)
         }
     }
-    
+
     func receiveJSONResponse(data: Data) -> [String: Any]? {
         return try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
     }
-    
+
     func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
         switch event {
         case .connected(let headers):
             if !isconnected {
                 isconnected = true
-                print("connected? \(isconnected)")
+                // print("connected? \(isconnected)")
                 let payload: [String: Any] = [
                     "op": 2,
                     "d": [
@@ -109,6 +113,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                 sendJSONRequest(payload)
             }
         case .disconnected(let reason, let code):
+            //print("Disconnected for this reason: \(reason) code: \(code) recconecting...")
             getTokenAndConnect()
         case .text(let string):
             handleMessage(string)
@@ -129,6 +134,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                 getTokenAndConnect()
             }
         case .error(let error):
+            //print(error?.localizedDescription)
             if !didDisconnectIntentionally {
                 getTokenAndConnect()
             }
@@ -138,7 +144,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             }
         }
     }
-    
+
     func handleMessage(_ string: String) {
         //print("event received \(self.currentuserid), \(self.hasnitro)")
         if let data = string.data(using: .utf8),
@@ -158,13 +164,58 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                 } else if t == "CHANNEL_UNREAD_UPDATE" {
                     handleChannelUnreadUpdate(json: json)
                 } else {
-                    print("None: " + string)
+                    // print("None: " + string)
                     // print("unable to decode stuffs \(string)")
+                }
+            } else if let op = json["op"] as? Int {
+                switch op {
+                case 10:
+                    handleHello(json: json)
+                case 11:
+                    handleHeartbeatAck()
+                case 1:
+                    sendHeartbeat()
+                default:
+                    break
                 }
             }
         }
     }
-    
+
+    func handleHello(json: [String: Any]) {
+        if let d = json["d"] as? [String: Any],
+           let interval = d["heartbeat_interval"] as? Double {
+            self.heartbeatInterval = interval / 1000
+            startHeartbeat()
+        }
+    }
+
+    func handleHeartbeatAck() {
+        lastHeartbeatAck = true
+    }
+
+    func sendHeartbeat() {
+        let payload: [String: Any] = [
+            "op": 1,
+            "d": Int(Date().timeIntervalSince1970 * 1000)
+        ]
+        sendJSONRequest(payload)
+    }
+
+    func startHeartbeat() {
+        heartbeatTimer?.invalidate()
+        lastHeartbeatAck = true
+        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: heartbeatInterval, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            if self.lastHeartbeatAck {
+                self.lastHeartbeatAck = false
+                self.sendHeartbeat()
+            } else {
+                self.socket.disconnect()
+            }
+        }
+    }
+
     func handleChannelUnreadUpdate(json: [String: Any]) {
         if let d = json["d"] as? [String: Any],
            let guildId = d["guild_id"] as? String,
@@ -177,7 +228,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             }
         }
     }
-    
+
     func handleChatMessage(json: [String: Any], eventType: String) {
         DispatchQueue.main.async { [self] in
             if let d = json["d"] as? [String: Any],
@@ -205,8 +256,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                 }
                             }
                         }
-                        
-                        
+
                         var replyTo: String? = nil
                         if let messageReference = d["message_reference"] as? [String: Any],
                            let parentMessageId = messageReference["message_id"] as? String {
@@ -216,8 +266,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                                 replyTo = "Unable to load Message"
                             }
                         }
-                        
-                        
+
                         if let member = d["member"] as? [String: Any] {
                             if let nickname = member["nick"] as? String {
                                 let beans = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: nickname, messageId: messageid, userId: authorid, replyTo: replyTo)
@@ -237,7 +286,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
                             self.data.append(beans)
                         }
                         self.messages.append(content)
-                        
+
                         if self.hastts {
                             var utterance: AVSpeechUtterance? = nil
                             if let member = d["member"] as? [String: Any] {
@@ -275,7 +324,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             }
         }
     }
-    
+
     func handleDeleteMessage(json: [String: Any]) {
         DispatchQueue.main.async {
             if let d = json["d"] as? [String: Any],
@@ -285,13 +334,14 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             }
         }
     }
-    
+
     func handleVoiceStateUpdate(json: [String: Any]) {
         if let d = json["d"] as? [String: Any],
            let session_id = d["session_id"] as? String {
             self.sessionID = session_id
         }
     }
+
     func handleVoiceServerUpdate(json: [String: Any]) {
         DispatchQueue.main.async {
             if let d = json["d"] as? [String: Any],
@@ -305,8 +355,7 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
             }
         }
     }
-    
-    
+
     func connectToVoiceChannel(guildID: String, channelID: String, selfMute: Bool = false, selfDeaf: Bool = false) {
         let voiceStateUpdate: [String: Any] = [
             "op": 4,
@@ -320,5 +369,3 @@ class WebSocketClient: WebSocketDelegate, ObservableObject {
         sendJSONRequest(voiceStateUpdate)
     }
 }
-
-

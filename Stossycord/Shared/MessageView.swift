@@ -34,7 +34,6 @@ struct MessageView: View {
     let keychain = KeychainSwift()
 
     var body: some View {
-        print(message)
         let userIdPattern = "<@(\\d*)>"
         let emojiPattern = "<:[a-zA-Z0-9_]+:[0-9]+>"
         let gifemojipattern = "<a:(.*):(\\d*)>"

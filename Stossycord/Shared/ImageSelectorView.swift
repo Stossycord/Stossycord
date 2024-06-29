@@ -4,6 +4,7 @@
 //
 //  Created by Stossy11 on 20/5/2024.
 //
+
 import PhotosUI
 import SwiftUI
 import AVFoundation
@@ -17,13 +18,14 @@ struct VideoPicker: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var config = PHPickerConfiguration()
         config.filter = .any(of: [.images, .videos])
+        config.selectionLimit = 1
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = context.coordinator
         return picker
     }
 
     func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {
-
+        // No need for updates
     }
 
     func makeCoordinator() -> Coordinator {
@@ -39,32 +41,45 @@ struct VideoPicker: UIViewControllerRepresentable {
 
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             picker.dismiss(animated: true)
-
             guard let provider = results.first?.itemProvider else { return }
 
             if provider.hasItemConformingToTypeIdentifier("public.movie") {
                 provider.loadFileRepresentation(forTypeIdentifier: "public.movie") { url, error in
                     guard let url = url else { return }
-                    
-                    // If the video is not in mp4 format, convert it
+                    // Ensure the file URL is accessible
+                    guard url.startAccessingSecurityScopedResource() else {
+                        print("Failed to access the file")
+                        return
+                    }
+                    defer { url.stopAccessingSecurityScopedResource() }
                     if url.pathExtension.lowercased() != "mp4" {
                         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
                         convertVideoToMP4(inputURL: url, outputURL: outputURL) { success in
                             if success {
                                 self.parent.fileURL = outputURL
-                                // uploadFileToDiscord2(fileUrl: outputURL, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
                             }
                         }
                     } else {
                         self.parent.fileURL = url
-                        // uploadFileToDiscord2(fileUrl: url, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
                     }
                 }
             } else if provider.hasItemConformingToTypeIdentifier("public.image") {
                 provider.loadFileRepresentation(forTypeIdentifier: "public.image") { url, error in
                     guard let url = url else { return }
-                    self.parent.fileURL = url
-                    // uploadFileToDiscord2(fileUrl: url, token: self.parent.token, channelid: self.parent.channelid, message: self.parent.message)
+                    // Ensure the file URL is accessible
+                    guard url.startAccessingSecurityScopedResource() else {
+                        print("Failed to access the file")
+                        return
+                    }
+                    defer { url.stopAccessingSecurityScopedResource() }
+                    let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension(url.pathExtension)
+                    do {
+                        try FileManager.default.copyItem(at: url, to: tempURL)
+                        self.parent.fileURL = tempURL
+                        
+                    } catch {
+                        print("Failed to copy image to temporary directory: \(error)")
+                    }
                 }
             }
         }

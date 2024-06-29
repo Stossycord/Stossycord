@@ -12,6 +12,7 @@ import KeychainSwift
 import UniformTypeIdentifiers
 import AVFoundation
 import AVKit
+import PhotosUI
 
 // let user = DiscordREST()
 
@@ -56,7 +57,7 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack {
-                Text("Welcome, \(username)")
+                Text("Welcome, \(webSocketClient.currentusername)")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .padding()
                     .foregroundColor(.primary)
@@ -68,7 +69,6 @@ struct ContentView: View {
                         if token.isEmpty {
                             hasbeenopened = true
                         }
-                        resetWebSocketClient()
                     }
                 
                 SearchBar(text: $searchTerm)
@@ -76,7 +76,7 @@ struct ContentView: View {
                 
                 List {
                     ForEach(filteredGuilds, id: \.id) { guild in
-                        CustomNavigationLink(destination: ServerView(webSocketClient: webSocketClient, token: token, username: username, serverId: guild.id)) {
+                        CustomNavigationLink(destination: ServerView(webSocketClient: webSocketClient, token: token, username: webSocketClient.currentusername, serverId: guild.id)) {
                             HStack {
                                 Spacer()
                                 GuildIconView(iconURL: guild.icon)
@@ -101,7 +101,7 @@ struct ContentView: View {
                 loadInitialData()
             }
             .sheet(isPresented: $hasbeenopened) {
-                LoginView()
+                LoginView(webSocketClient: webSocketClient)
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -109,7 +109,7 @@ struct ContentView: View {
     }
 
     private var filteredGuilds: [(name: String, id: String, icon: String?)] {
-        guilds.filter { guild in
+        webSocketClient.guilds.filter { guild in
             searchTerm.isEmpty || guild.name.lowercased().contains(searchTerm.lowercased())
         }
     }
@@ -119,7 +119,6 @@ struct ContentView: View {
         webSocketClient.data = []
         webSocketClient.messageIDs = []
         webSocketClient.usernames = []
-        webSocketClient.disconnect()
     }
 
     private func loadInitialData() {
@@ -132,7 +131,7 @@ struct ContentView: View {
                 username = fetchedUsername
             }
             getDiscordGuilds(token: token) { fetchedGuilds in
-                guilds = fetchedGuilds
+                webSocketClient.guilds = fetchedGuilds
             }
         }
     }
@@ -341,7 +340,11 @@ func getDiscordUsername(token: String, completion: @escaping (String, String) ->
             do {
                 if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                     if let username = json["username"] as? String, let id = json["id"] as? String {
-                        completion(username, id)
+                        if let displayname = json["global_name"] as? String {
+                            completion(displayname, id)
+                        } else {
+                            completion(username, id)
+                        }
                     }
                 }
             } catch {
@@ -488,8 +491,6 @@ struct ServerView: View {
 
         }
         .onAppear() {
-            webSocketClient.disconnect()
-            self.webSocketClient.getTokenAndConnect()
             getDiscordChannels(serverId: serverId, token: token) { items in
                 self.items = items
             }
@@ -596,7 +597,6 @@ struct DMa: View {
                 webSocketClient.messageIDs = []
                 webSocketClient.icons = []
                 webSocketClient.usernames = []
-                webSocketClient.disconnect()
                 getDiscordDMs(token: token) { items in
                     self.items = items
                 }
@@ -645,10 +645,20 @@ struct DMa: View {
                                     let item = Item1(id: id, name: name, heading: nil, position: Int(lastMessageId ?? "") ?? 0)
                                     items.append(item)
                                 } else if type == 3 {
-                                    let name = "Group DM"
-                                    let lastMessageId = dict["last_message_id"] as? String
-                                    let item = Item1(id: id, name: name, heading: nil, position: Int(lastMessageId ?? "") ?? 0)
-                                    items.append(item)
+                                    if let recipients = dict["recipients"] as? [[String: Any]] {
+                                        let recipientNames = recipients.compactMap { recipient -> String? in
+                                            if let global_name = recipient["global_name"] as? String, !global_name.isEmpty {
+                                                return global_name
+                                            } else if let username = recipient["username"] as? String {
+                                                return username
+                                            }
+                                            return nil
+                                        }
+                                        let name = "Group DMs with \(recipientNames.joined(separator: ", "))"
+                                        let lastMessageId = dict["last_message_id"] as? String
+                                        let item = Item1(id: id, name: name, heading: nil, position: Int(lastMessageId ?? "") ?? 0)
+                                        items.append(item)
+                                    }
                                 }
                             }
                         }
@@ -770,7 +780,7 @@ func getDiscordGuilds(token: String, completion: @escaping ([(name: String, id: 
 
 
 func getDiscordGuildsold(token: String, completion: @escaping ([(name: String, id: String)]) -> Void) {
-    let url = URL(string: "https://discord.com/api/users/@me/guilds")!
+    let url = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -940,6 +950,8 @@ struct ChannelView: View {
     @State var replyMessage: Message? = nil
     @State var reactionMessage: Message? = nil
     @State var editmessage: Message? = nil
+    @State private var pickerItem: PhotosPickerItem?
+    @State private var selectedImage: Image?
     
     @State var oldtext = ""
     @State var isuploadingfile: Bool = false
@@ -1123,18 +1135,33 @@ struct ChannelView: View {
                             .font(.headline)
                         Divider()
                         HStack {
-                            //Button(action: {
-                              //  self.showprompt = nil
-                                //self.importingimages = true
-                           // }) {
-                             //   Text("Photo")
-                           // }
-                            //.font(.headline)
-                          //  .foregroundColor(.white)
-                          //  .padding(.vertical, 10)
-                          //  .frame(width: 80, height: 30)
-                          //  .background(Color.blue)
-                          //  .cornerRadius(10)
+                            PhotosPicker("Photo", selection: $pickerItem, matching: .images)
+                                .onChange(of: pickerItem) { newItem in
+                                    guard let newItem = newItem else { return }
+                                    Task {
+                                        selectedImage = try await pickerItem?.loadTransferable(type: Image.self)
+                                        
+                                        let fileManager = FileManager.default
+                                        let tempDirURL = fileManager.temporaryDirectory
+                                        let fileURL = tempDirURL.appendingPathComponent("selectedImage.jpg")
+                                        
+                                        do {
+                                            try await pickerItem?.loadTransferable(type: Data.self)!.write(to: fileURL)
+                                            file = fileURL
+                                            
+                                            print("Image saved to temporary directory: \(fileURL)")
+                                        } catch {
+                                            print("Error saving image: \(error)")
+                                        }
+                                    }
+                                    self.showprompt = nil
+                                }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(width: 80, height: 30)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                             Button(action: {
                                 self.showprompt = nil
                                 self.importing = true
@@ -1315,8 +1342,10 @@ struct ChannelView: View {
                 }
             }
             .popover(isPresented: $importingimages, content: {
-                VideoPicker(fileURL: $file, token: token, channelid: channelid, message: text)
+                // VideoPicker(fileURL: $file, token: token, channelid: channelid, message: text)
+                    
             })
+            
             .padding()
             .alert(item: $selectedMessage) { message in
                 Alert(
@@ -1345,13 +1374,21 @@ struct ChannelView: View {
                 webSocketClient.icons = []
                 webSocketClient.usernames = []
                 webSocketClient.data = []
-                webSocketClient.disconnect()
                 getDiscordMessages(token: token, channelID: channelid, webSocketClient: webSocketClient)
                 webSocketClient.getcurrentchannel(input: channelid, guild: guild)
-                webSocketClient.getTokenAndConnect()
                 
             }
         }
+    func handleSelectedData(data: Data, fileExtension: String) {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension(fileExtension)
+        do {
+            try data.write(to: tempURL)
+            file = tempURL
+            // uploadFileToDiscord(fileUrl: tempURL, token: token, channelid: channelid, message: message)
+        } catch {
+            print("Failed to write data to temporary directory: \(error)")
+        }
+    }
 }
 
 
@@ -1450,12 +1487,58 @@ struct EmojiPicker2: View {
                                     EmptyView()
                                 }
                             }
+                            
                         }
-                        
-                        Text("")
-                            .onAppear() {
-                                image.stopAccessingSecurityScopedResource()
+                    } else {
+                        if isImage(url: image) {
+                            AsyncImage(url: image) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image.resizable().aspectRatio(contentMode: .fit)
+                                case .failure:
+                                    DownloadView(url: image)
+                                @unknown default:
+                                    EmptyView()
+                                }
                             }
+                        } else if isVideo(url: image) {
+                            VideoPlayer(player: AVPlayer(url: image))
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 300, height: 200)
+                        } else {
+                            AsyncImage(url: image) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image.resizable().aspectRatio(contentMode: .fit)
+                                case .failure:
+                                    AsyncImage(url: image) { phase in
+                                        switch phase {
+                                        case .empty:
+                                            ProgressView()
+                                        case .success(let image):
+                                            image.resizable().aspectRatio(contentMode: .fit)
+                                        case .failure:
+                                            DownloadView(url: image)
+                                                .onAppear() {
+                                                    print("is not Video")
+                                                }
+                                        @unknown default:
+                                            EmptyView()
+                                        }
+                                    }
+                                    .onAppear() {
+                                        print("is not image")
+                                    }
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                            
+                        }
                     }
                 }
             }
@@ -1687,7 +1770,7 @@ func retrieveAllEmojis(userToken: String, completion: @escaping ([Emoji]?) -> Vo
 
 
 func fetchEmojis(token: String, guildID: String, completion: @escaping ([Emoji]?) -> Void) {
-    let url = URL(string: "https://discord.com/api/guilds/\(guildID)/emojis")!
+    let url = URL(string: "https://discord.com/api/v9/guilds/\(guildID)/emojis")!
     var request = URLRequest(url: url)
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
     request.addValue(token, forHTTPHeaderField: "Authorization")
@@ -1798,15 +1881,16 @@ struct MessageChannelView: View {
 
 
 func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSocketClient) {
-    var MessageLimit: Int? = nil
+    var messageLimit: Int? = nil
     if #available(iOS 16, *) {
-        MessageLimit = 50
+        messageLimit = 50
     } else if #available(iOS 17, *)  {
-        MessageLimit = 100
+        messageLimit = 100
     } else {
-        MessageLimit = 150
+        messageLimit = 25
     }
-    let url = URL(string: "https://discord.com/api/v9/channels/\(channelID)/messages?limit=\(MessageLimit ?? 25)")!
+    
+    let url = URL(string: "https://discord.com/api/v9/channels/\(channelID)/messages?limit=\(messageLimit ?? 25)")!
     
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
@@ -1823,12 +1907,11 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
     request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
     request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
     request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
-    request.addValue("eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IlNhZmFyaSIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1BVSIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwXzE1XzcpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNy40IFNhZmFyaS82MDUuMS4xNSIsImJyb3dzZXJfdmVyc2lvbiI6IjE3LjQiLCJvc192ZXJzaW9uIjoiMTAuMTUuNyIsInJlZmVycmVyIjoiIiwicmVmZXJyaW5nX2RvbWFpbiI6IiIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoyOTE1MDcsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImRlc2lnbl9pZCI6MH0=", forHTTPHeaderField: "X-Super-Properties")
-    
+    request.addValue("eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IlNhZmFyaSIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1BVSIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwXzE1XzcpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNy40IFNhZmFyaS82MDUuMS4xNSIsImJyb3dzZXJfdmVyc2lvbiI6IjE3LjQiLCJvc192ZXJzaW9uIjoiMTAuMTUuNyIsInJlZmVycmVyIjoiIiwicmVmZXJyaW5nX2RvbWFpbiI6IiIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoyOTE1MDcsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImRlc2lnbl9pZCI6MH0=", forHTTPHeaderField: "X-Super-Properties")
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data else {
-            // print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
+            print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
             return
         }
         
@@ -1844,7 +1927,6 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                         DispatchQueue.main.async {
                             let avatarURL = "https://cdn.discordapp.com/avatars/\(user["id"] ?? "")/\(avatar).png"
                             
-                            // Handle attachments
                             var attachmentURL = ""
                             if let attachments = message["attachments"] as? [[String: Any]] {
                                 for attachment in attachments {
@@ -1868,36 +1950,102 @@ func getDiscordMessages(token: String, channelID: String, webSocketClient: WebSo
                                 messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: username, messageId: id, userId: authorid ?? "", replyTo: nil)
                             }
                             
+                            
                             if let messageReference = message["message_reference"] as? [String: Any],
                                let parentMessageId = messageReference["message_id"] as? String {
-                                if let parentMessage = webSocketClient.data.first(where: { $0.messageId == parentMessageId }) {
-                                    replyTo = "\(parentMessage.username): \(parentMessage.message)"
+                                if let index = webSocketClient.data.first(where: { $0.messageId == parentMessageId }) {
+                                    replyTo = "\(index.username): \(index.message)"
                                 } else {
                                     replyTo = "Unable to load Message"
                                 }
+                                print("uhhhh")
+                                messageData.replyTo = replyTo
+                                webSocketClient.data.append(messageData)
+                                uniqueMessages.insert(id)
+                            } else {
+                                webSocketClient.data.append(messageData)
+                                uniqueMessages.insert(id)
                             }
-                            
-                            messageData.replyTo = replyTo
-                            webSocketClient.data.append(messageData)
-                            uniqueMessages.insert(id)
                         }
                     }
                 }
                 
-                // Sort the messages by their IDs (which are timestamps)
                 DispatchQueue.main.async {
                     let sortedIndices = webSocketClient.data.indices.sorted { webSocketClient.data[$0].messageId < webSocketClient.data[$1].messageId }
                     webSocketClient.data = sortedIndices.map { webSocketClient.data[$0] }
                 }
             }
         } catch {
-            // print("Error parsing JSON: \(error)")
+            print("Error parsing JSON: \(error)")
         }
     }
     
     task.resume()
 }
 
+func fetchMessage(token: String, channelID: String, messageID: String, completion: @escaping (MessageData?) -> Void) {
+    let url = URL(string: "https://discord.com/api/v9/channels/\(channelID)/messages/\(messageID)")!
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET"
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.addValue(token, forHTTPHeaderField: "Authorization")
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let data = data else {
+            print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
+            completion(nil)
+            return
+        }
+        
+        do {
+            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+            if let content = json["content"] as? String,
+               let id = json["id"] as? String,
+               let user = json["author"] as? [String: Any],
+               let username = user["username"] as? String,
+               let avatar = user["avatar"] as? String {
+                let avatarURL = "https://cdn.discordapp.com/avatars/\(user["id"] ?? "")/\(avatar).png"
+                
+                var attachmentURL = ""
+                if let attachments = json["attachments"] as? [[String: Any]] {
+                    for attachment in attachments {
+                        if let url = attachment["url"] as? String {
+                            attachmentURL = url
+                        }
+                    }
+                }
+                
+                var messageData: MessageData
+                let authorid = user["id"] as? String
+                
+                if let member = json["member"] as? [String: Any],
+                   let nickname = member["nick"] as? String {
+                    messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: nickname, messageId: id, userId: authorid ?? "", replyTo: nil)
+                } else if let globalname = user["global_name"] as? String {
+                    messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: globalname, messageId: id, userId: authorid ?? "", replyTo: nil)
+                } else {
+                    messageData = MessageData(icon: avatarURL, message: "\(content)", attachment: attachmentURL, username: username, messageId: id, userId: authorid ?? "", replyTo: nil)
+                }
+                
+                print("worked! \(messageData)")
+                
+                completion(messageData)
+            } else {
+                print("un worked! \(json)")
+            }
+            } else {
+                print("didnt!")
+                completion(nil)
+            }
+        } catch {
+            print("Error parsing JSON: \(error)")
+            completion(nil)
+        }
+    }
+    
+    task.resume()
+}
 func deleteDiscordMessage(token: String, serverID: String, channelID: String, messageID: String) {
     let url = URL(string: "https://discord.com/api/v9/channels/\(channelID)/messages/\(messageID)")!
     var request = URLRequest(url: url)

@@ -43,6 +43,7 @@ struct LoginView: View {
     @State var showingPopover = false
     @State var showingPopover2 = false
     @State private var showingAlert = false
+    @ObservedObject var webSocketClient: WebSocketClient
     var body: some View {
         VStack {
             Text("StossyCord - a custom Discord Client")
@@ -83,7 +84,7 @@ struct LoginView: View {
             .cornerRadius(10)
             .padding(.horizontal)
         .popover(isPresented: $showingPopover) {
-            LoginView1()
+            LoginView1(webSocketClient: webSocketClient)
         }
         .popover(isPresented: $showingPopover2) {
             tokenview()
@@ -112,7 +113,7 @@ struct tokenview: View {
 
                 TextField("Token", text: $token)
                     .font(.headline)
-                    .foregroundColor(.black)
+                    .foregroundColor(.primary)
             }
             .padding(.horizontal)
             .frame(width: 340, height: 60)
@@ -143,6 +144,7 @@ struct LoginView1: View {
     @State private var code = ""
     @State var showingAlert = false
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var webSocketClient: WebSocketClient
     let keychain = KeychainSwift()
     
     var body: some View {
@@ -163,9 +165,9 @@ struct LoginView1: View {
                             .foregroundColor(Color.gray.opacity(0.5))
                             .frame(width: 44, height: 44)
                         
-                        TextField("Username", text: $Username)
+                        TextField("Email", text: $Username)
                             .font(.headline)
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                     }
                     .padding(.horizontal)
                     .frame(width: 340, height: 60)
@@ -178,17 +180,33 @@ struct LoginView1: View {
                         
                         SecureField("Password", text: $Password)
                             .font(.headline)
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                     }
                     .padding(.horizontal)
                     .frame(width: 340, height: 60)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(10)
                     Button("Login") {
-                        sendPostRequest2(username: Username, password: Password) { user in
-                            print("\(user.totp)" + " " + user.ticket)
-                            self.showingPopover = user.totp
-                            self.ticket = user.ticket
+                        sendPostRequest2(username: Username, password: Password) { user, token  in
+                            if let user = user {
+                                print("\(user.totp)" + " " + user.ticket)
+                                self.showingPopover = user.totp
+                                self.ticket = user.ticket
+                            } else if let token = token {
+                                sendNewPostRequest(code: self.code, ticket: self.ticket) { user in
+                                    self.token = user.token
+                                    self.keychain.set(self.token, forKey: "token")
+                                    getDiscordUsername(token: token.token) { fetchedUsername, coolid in
+                                        webSocketClient.currentusername = fetchedUsername
+                                        webSocketClient.currentuserid = coolid
+
+                                    }
+                                    getDiscordGuilds(token: token.token) { fetchedGuilds in
+                                        webSocketClient.guilds = fetchedGuilds
+                                    }
+                                    dismiss()
+                                }
+                            }
                         }
                     }
                     .font(.headline)
@@ -213,6 +231,14 @@ struct LoginView1: View {
                             sendNewPostRequest(code: self.code, ticket: self.ticket) { user in
                                 self.token = user.token
                                 self.keychain.set(self.token, forKey: "token")
+                                getDiscordUsername(token: token) { fetchedUsername, coolid in
+                                    webSocketClient.currentusername = fetchedUsername
+                                    webSocketClient.currentuserid = coolid
+
+                                }
+                                getDiscordGuilds(token: token) { fetchedGuilds in
+                                    webSocketClient.guilds = fetchedGuilds
+                                }
                                 dismiss()
                             }
                         }
@@ -237,12 +263,17 @@ struct LoginView1: View {
         let totp: Bool
         let webauthn: Bool?
     }
+
+struct Userid: Codable {
+    let user_id: String
+    let token: String
+}
     
     struct Product: Codable {
         let token: String
     }
     
-    func sendPostRequest2(username: String, password: String, completion: @escaping (User) -> Void) {
+    func sendPostRequest2(username: String, password: String, completion: @escaping (User?, Userid?) -> Void) {
         let url = URL(string: "https://discord.com/api/v9/auth/login")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -277,12 +308,22 @@ struct LoginView1: View {
                     let decoder = JSONDecoder()
                     let user = try decoder.decode(User.self, from: data)
                     DispatchQueue.main.async {
-                        completion(user)
+                        completion(user, nil)
+                        let str = String(data: data, encoding: .utf8)
+                        print("Error decoding JSON: \(str ?? "")")
                     }
                 } catch {
-                    let str = String(data: data, encoding: .utf8)
-                    print(str)
-                    print("Error decoding JSON: \(error)")
+                    do {
+                        let decoder = JSONDecoder()
+                        let user = try decoder.decode(Userid.self, from: data)
+                        DispatchQueue.main.async {
+                            completion(nil, user)
+                        }
+                    } catch {
+                        let str = String(data: data, encoding: .utf8)
+                        print(str)
+                        print("Error decoding JSON: \(str ?? "")")
+                    }
                 }
             }
         }
