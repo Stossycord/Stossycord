@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4E099B762C9BD7BF00C2D383 /* CocoaAsyncSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B752C9BD7BF00C2D383 /* CocoaAsyncSocket */; };
+		4E099B792C9BD7C800C2D383 /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B782C9BD7C800C2D383 /* Giffy */; };
+		4E099B7C2C9BD7D100C2D383 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B7B2C9BD7D100C2D383 /* KeychainSwift */; };
+		4E099B7F2C9BD7DB00C2D383 /* OggDecoder in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B7E2C9BD7DB00C2D383 /* OggDecoder */; };
+		4E099B822C9BD7EC00C2D383 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B812C9BD7EC00C2D383 /* Starscream */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4E099B632C9BD76C00C2D383 /* Stossycord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossycord.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +31,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E099B7C2C9BD7D100C2D383 /* KeychainSwift in Frameworks */,
+				4E099B7F2C9BD7DB00C2D383 /* OggDecoder in Frameworks */,
+				4E099B792C9BD7C800C2D383 /* Giffy in Frameworks */,
+				4E099B822C9BD7EC00C2D383 /* Starscream in Frameworks */,
+				4E099B762C9BD7BF00C2D383 /* CocoaAsyncSocket in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +78,11 @@
 			);
 			name = Stossycord;
 			packageProductDependencies = (
+				4E099B752C9BD7BF00C2D383 /* CocoaAsyncSocket */,
+				4E099B782C9BD7C800C2D383 /* Giffy */,
+				4E099B7B2C9BD7D100C2D383 /* KeychainSwift */,
+				4E099B7E2C9BD7DB00C2D383 /* OggDecoder */,
+				4E099B812C9BD7EC00C2D383 /* Starscream */,
 			);
 			productName = Stossycord;
 			productReference = 4E099B632C9BD76C00C2D383 /* Stossycord.app */;
@@ -94,6 +112,13 @@
 			);
 			mainGroup = 4E099B5A2C9BD76C00C2D383;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4E099B742C9BD7BF00C2D383 /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */,
+				4E099B772C9BD7C800C2D383 /* XCRemoteSwiftPackageReference "giffy" */,
+				4E099B7A2C9BD7D100C2D383 /* XCRemoteSwiftPackageReference "keychain-swift" */,
+				4E099B7D2C9BD7DB00C2D383 /* XCRemoteSwiftPackageReference "OggDecoder" */,
+				4E099B802C9BD7EC00C2D383 /* XCRemoteSwiftPackageReference "Starscream" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4E099B642C9BD76C00C2D383 /* Products */;
 			projectDirPath = "";
@@ -255,11 +280,15 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
+				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -284,11 +313,15 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
+				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -324,6 +357,77 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4E099B742C9BD7BF00C2D383 /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/robbiehanson/CocoaAsyncSocket";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.6.5;
+			};
+		};
+		4E099B772C9BD7C800C2D383 /* XCRemoteSwiftPackageReference "giffy" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tfmart/giffy";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		4E099B7A2C9BD7D100C2D383 /* XCRemoteSwiftPackageReference "keychain-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/evgenyneu/keychain-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 24.0.0;
+			};
+		};
+		4E099B7D2C9BD7DB00C2D383 /* XCRemoteSwiftPackageReference "OggDecoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/arkasas/OggDecoder.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		4E099B802C9BD7EC00C2D383 /* XCRemoteSwiftPackageReference "Starscream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/daltoniam/Starscream";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.8;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4E099B752C9BD7BF00C2D383 /* CocoaAsyncSocket */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E099B742C9BD7BF00C2D383 /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */;
+			productName = CocoaAsyncSocket;
+		};
+		4E099B782C9BD7C800C2D383 /* Giffy */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E099B772C9BD7C800C2D383 /* XCRemoteSwiftPackageReference "giffy" */;
+			productName = Giffy;
+		};
+		4E099B7B2C9BD7D100C2D383 /* KeychainSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E099B7A2C9BD7D100C2D383 /* XCRemoteSwiftPackageReference "keychain-swift" */;
+			productName = KeychainSwift;
+		};
+		4E099B7E2C9BD7DB00C2D383 /* OggDecoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E099B7D2C9BD7DB00C2D383 /* XCRemoteSwiftPackageReference "OggDecoder" */;
+			productName = OggDecoder;
+		};
+		4E099B812C9BD7EC00C2D383 /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E099B802C9BD7EC00C2D383 /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4E099B5B2C9BD76C00C2D383 /* Project object */;
 }
