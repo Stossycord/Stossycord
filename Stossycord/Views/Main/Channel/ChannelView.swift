@@ -252,6 +252,13 @@ struct ChannelView: View {
     private func handleOnDisappear() {
         webSocketService.currentchannel = ""
         webSocketService.data.removeAll()
+        
+        if currentchannelname.starts(with: "@") {
+            guard let token = keychain.get("token") else { return }
+            getDiscordDMs(token: token) { items in
+                webSocketService.dms = items
+            }
+        }
     }
 
     private func clearTemporaryFolder() {
