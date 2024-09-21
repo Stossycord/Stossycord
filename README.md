@@ -2,6 +2,8 @@
 
 Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift and SwiftUI for Privacy, Responsiveness and Security
 
+**Note:** Stossycord is still in beta so there will be bugs and glitches, if you find any please join the [Discord](https://discord.gg/sNzwHGDVEJ) report it there and make a post in [Issues](https://github.com/Stossycord/Stossycord/issues)
+
 ## Requirements
 - iPhone or iPad with iOS 16+
 - Your Discord Token
@@ -27,6 +29,8 @@ Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift a
 - Typing Indicators
 - Notifications
 
+# Discord
+You can find the discord server [Gere](https://discord.gg/sNzwHGDVEJ)
 
 # How to install
 
