@@ -18,9 +18,22 @@
 		4E099B632C9BD76C00C2D383 /* Stossycord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stossycord.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4E4F31562C9E7ADB00C545DD /* Exceptions for "Stossycord" folder in "Stossycord" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4E099B622C9BD76C00C2D383 /* Stossycord */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4E099B652C9BD76C00C2D383 /* Stossycord */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4E4F31562C9E7ADB00C545DD /* Exceptions for "Stossycord" folder in "Stossycord" target */,
+			);
 			path = Stossycord;
 			sourceTree = "<group>";
 		};
@@ -280,6 +293,7 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stossycord/Info.plist;
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
 				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";
@@ -313,6 +327,7 @@
 				DEVELOPMENT_TEAM = 95J8WZ4TN8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stossycord/Info.plist;
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
 				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";

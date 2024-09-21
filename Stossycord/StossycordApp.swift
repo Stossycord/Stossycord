@@ -41,7 +41,7 @@ struct StossycordApp: App {
                         break
                     }
                 }
-                .popover(isPresented: $isPresented) {
+                .sheet(isPresented: $isPresented) {
                     WelcomeView(webSocketService: webSocketService)
                 }
                 .onAppear {
