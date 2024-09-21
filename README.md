@@ -23,14 +23,14 @@ Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift a
 - Roles
 - Adding Friends
 - Joining Servers
-- Profile
+- User Profiles
 - Discord Settings
 - Reactions
-- Typing Indicators
+- Showing Typing Indicators
 - Notifications
 
 # Discord
-You can find the discord server [Gere](https://discord.gg/sNzwHGDVEJ)
+You can find the discord server [Here](https://discord.gg/sNzwHGDVEJ)
 
 # How to install
 
