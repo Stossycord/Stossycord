@@ -14,7 +14,7 @@ Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift a
 - Recieving Messages
 - Replying to Messages
 - Uploading Images, Videos and other files
-- Reciving Images, Videos, Music and other files
+- Recieving Images, Videos, Music and other files
 - Sending and Recieving DMs
 
 
