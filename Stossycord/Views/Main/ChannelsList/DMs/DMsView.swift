@@ -13,12 +13,16 @@ struct DMsView: View {
     let keychain = KeychainSwift()
     @StateObject var webSocketService: WebSocketService
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List {
                 ForEach(webSocketService.dms, id: \.id) { channels in
                     if channels.type == 1 {
                         NavigationLink {
-                            ChannelView(webSocketService: webSocketService, currentchannelname: "@" + channels.recipients!.first!.username, currentid: channels.id).toolbar(.hidden, for: .tabBar)
+                            if UIDevice.current.userInterfaceIdiom == .pad {
+                                ChannelView(webSocketService: webSocketService, currentchannelname: "@" + (channels.recipients?.first!.username)!, currentid: channels.id)
+                            } else {
+                                ChannelView(webSocketService: webSocketService, currentchannelname: "@" + (channels.recipients?.first!.username)!, currentid: channels.id).toolbar(.hidden, for: .tabBar)
+                            }
                         } label: {
                             HStack {
                                 if let avatar = channels.recipients?.first?.avatar {
@@ -51,7 +55,11 @@ struct DMsView: View {
                         let namesString2 = otherrecipientNames.joined(separator: ", ")
                         
                         NavigationLink {
-                            ChannelView(webSocketService: webSocketService, currentchannelname: namesString2, currentid: channels.id)
+                            if UIDevice.current.userInterfaceIdiom == .pad {
+                                ChannelView(webSocketService: webSocketService, currentchannelname: namesString2, currentid: channels.id)
+                            } else {
+                                ChannelView(webSocketService: webSocketService, currentchannelname: namesString2, currentid: channels.id).toolbar(.hidden, for: .tabBar)
+                            }
                         } label: {
                             let recipientNames = channels.recipients?.prefix(3).map { $0.global_name ?? $0.username } ?? []
                             let namesString = recipientNames.joined(separator: ", ")

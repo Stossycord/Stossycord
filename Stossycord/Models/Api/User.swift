@@ -25,7 +25,6 @@ struct User: Codable {
     let publicFlags: Int?
     let global_name: String?
     let banner_color: String?
-    let clan: String?
     let phone: String?
     let nsfwAllowed: Bool?
     var purchased_flags: Int?
@@ -51,7 +50,6 @@ struct User: Codable {
         publicFlags: Int? = nil,
         global_name: String? = nil,
         banner_color: String? = nil,
-        clan: String? = nil,
         phone: String? = nil,
         nsfwAllowed: Bool? = nil,
         purchased_flags: Int? = nil,
@@ -76,7 +74,6 @@ struct User: Codable {
         self.publicFlags = publicFlags
         self.global_name = global_name
         self.banner_color = banner_color
-        self.clan = clan
         self.phone = phone
         self.nsfwAllowed = nsfwAllowed
         self.purchased_flags = purchased_flags

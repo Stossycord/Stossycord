@@ -11,5 +11,18 @@ struct Channel: Codable {
     let id: String
     let name: String
     let type: Int
+    let position: Int?
+    let parent_id: String?
     let lastMessage: Message?
 }
+
+
+struct Heading: Codable {
+    let id: String
+    let name: String
+    let type: Int
+    let position: Int?
+    
+    var channels: [Channel]
+}
+

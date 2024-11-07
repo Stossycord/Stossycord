@@ -15,20 +15,35 @@ struct ServerView: View {
     @State var guildID = ""
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List {
                 ForEach(filteredGuilds, id: \.id) { guild in
-                    NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)                .toolbar(.hidden, for: .tabBar)) {
-                        HStack {
-                            GuildIconView(iconURL: guild.iconUrl)
-                            VStack(alignment: .leading) {
-                                Text(guild.name)
-                                    .font(.headline)
-                                    .lineLimit(1)
+                    if UIDevice.current.userInterfaceIdiom == .pad {
+                        NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
+                            HStack {
+                                GuildIconView(iconURL: guild.iconUrl)
+                                VStack(alignment: .leading) {
+                                    Text(guild.name)
+                                        .font(.headline)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
                             }
-                            Spacer()
+                            .padding(.vertical, 8)
                         }
-                        .padding(.vertical, 8)
+                    } else {
+                        NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService).toolbar(.hidden, for: .tabBar)) {
+                            HStack {
+                                GuildIconView(iconURL: guild.iconUrl)
+                                VStack(alignment: .leading) {
+                                    Text(guild.name)
+                                        .font(.headline)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                        }
                     }
                 }
                 // .listRowBackground(Color(UIColor.systemGroupedBackground))

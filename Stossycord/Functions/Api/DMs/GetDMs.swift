@@ -24,10 +24,19 @@ func getDiscordDMs(token: String, completion: @escaping ([DMs]) -> Void) {
     request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
     request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
     request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-    request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
+    let Country: String = CurrentDeviceInfo.shared.Country
+    
+    let currentTimeZone = CurrentDeviceInfo.shared.currentTimeZone
+    
+    let timeZoneIdentifier = currentTimeZone.identifier
+    
+    let deviceInfo = CurrentDeviceInfo.shared.deviceInfo
+    
+    request.addValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
     request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("en-US", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue("Australia/Sydney", forHTTPHeaderField: "X-Discord-Timezone")
+    request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
+    request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
+    request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
@@ -45,6 +54,7 @@ func getDiscordDMs(token: String, completion: @escaping ([DMs]) -> Void) {
                     completion(channels)
                 }
             } catch {
+                print(String(data: data, encoding: .utf8))
                 print("Error: \(error)")
             }
         }

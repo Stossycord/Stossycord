@@ -16,7 +16,7 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
     @Published var currentUser: User
     @Published var isConnected: Bool = false
     @Published var data: [Message] = []
-    @Published var channels: [Channel] = []
+    @Published var channels: [Heading] = []
     @Published var dms: [DMs] = []
     @Published var currentchannel: String = ""
     @Published var isNetworkAvailable: Bool = true // Network status tracking
