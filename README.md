@@ -6,7 +6,7 @@ Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift a
 
 ## Requirements
 - iPhone or iPad with iOS 16+
-- Your Discord Token
+- A Discord Account (Token is not needed anymore)
 
 
 ## Features
