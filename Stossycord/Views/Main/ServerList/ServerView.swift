@@ -11,6 +11,8 @@ import Foundation
 struct ServerView: View {
     @State private var searchTerm = ""
     @StateObject var webSocketService: WebSocketService
+    @State var showPopover = false
+    @State var guildID = ""
 
     var body: some View {
         NavigationStack {

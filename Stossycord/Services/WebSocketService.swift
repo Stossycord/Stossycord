@@ -65,7 +65,6 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
             }
         }
         
-        setupNetworkMonitor()
         
         getDiscordGuilds(token: token) { result in
             DispatchQueue.main.async {

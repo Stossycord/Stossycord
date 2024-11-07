@@ -142,7 +142,7 @@ struct ChannelView: View {
                             }
 
                             // Execute the task after 1 second
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: typingWorkItem!)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: typingWorkItem!)
                         }
                     }
                 Button(action: { uploadfiles = true }) {

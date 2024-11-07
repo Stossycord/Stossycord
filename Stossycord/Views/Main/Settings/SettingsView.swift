@@ -14,6 +14,10 @@ struct SettingsView: View {
     @State var isspoiler: Bool = true
     let keychain = KeychainSwift()
     @State var showAlert: Bool = false
+    @State var showPopover = false
+    @State var guildID = ""
+
+    
     var body: some View {
         VStack {
             Text("Settings")
@@ -66,6 +70,35 @@ struct SettingsView: View {
                         }
                     }
                 }
+                /*
+                if let token = keychain.get("token") {
+                    Section("Servers") {
+                        HStack {
+                            Text("Join Server: ")
+                            
+                            TextField("Discord Invite Link", text: $guildID)
+                                .onSubmit {
+                                    if let inviteID = GetInviteId(from: guildID) {
+                                        GetServerID(token: token, inviteID: inviteID) { invite in
+                                            print(invite)
+                                            if let invite {
+                                                joinDiscordGuild(token: token, guildId: invite) { response in
+                                                    if response == nil {
+                                                        print("Server already joined")
+                                                    } else {
+                                                        print(response)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                    }
+                                }
+                            
+                        }
+                    }
+                }
+                 */
             }
             .alert(isPresented: $showAlert) {
                 .init(

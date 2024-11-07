@@ -1,17 +1,17 @@
 //
-//  GetServers.swift
+//  AddServer.swift
 //  Stossycord
 //
-//  Created by Stossy11 on 20/9/2024.
+//  Created by Stossy11 on 7/11/2024.
 //
 
 import Foundation
 
 
-func getDiscordGuilds(token: String, completion: @escaping ([Guild]) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
+func joinDiscordGuild(token: String, guildId: String, lurker: Bool? = nil, sessionId: String? = nil, location: String? = nil, recommendationLoadId: String? = nil, completion: @escaping (String?) -> Void) {
+    let url = URL(string: "https://discord.com/api/v9/guilds/\(guildId)/members/@me")!
     var request = URLRequest(url: url)
-    request.httpMethod = "GET"
+    request.httpMethod = "PUT"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
     request.addValue(token, forHTTPHeaderField: "Authorization")
     request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
@@ -33,6 +33,30 @@ func getDiscordGuilds(token: String, completion: @escaping ([Guild]) -> Void) {
     request.addValue("\(currentTimeZone)-\(country)", forHTTPHeaderField: "X-Discord-Locale")
     request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
     request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
+    
+    // Prepare query parameters as JSON body
+    var requestBody: [String: Any] = [:]
+    if let lurker = lurker {
+        requestBody["lurker"] = lurker
+    }
+    if let sessionId = sessionId {
+        requestBody["session_id"] = sessionId
+    } else {
+        requestBody["lurker"] = false
+    }
+    if let location = location {
+        requestBody["location"] = location
+    }
+    if let recommendationLoadId = recommendationLoadId {
+        requestBody["recommendation_load_id"] = recommendationLoadId
+    }
+    
+    // Encode request body to JSON
+    if !requestBody.isEmpty, let jsonData = try? JSONSerialization.data(withJSONObject: requestBody, options: []) {
+        request.httpBody = jsonData
+    }
+    
+    print(requestBody)
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
@@ -40,13 +64,17 @@ func getDiscordGuilds(token: String, completion: @escaping ([Guild]) -> Void) {
             return
         } else if let data = data {
             do {
-                let guilds = try JSONDecoder().decode([Guild].self, from: data)
-                completion(guilds)
+                completion(String(data: data, encoding: .utf8))
             } catch {
-                print("Error decoding JSON to get Guilds: \(error)")
+                print("Error decoding JSON: \(error)")
+                completion(nil)
             }
+        } else if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 {
+            // Successfully joined but no data returned
+            completion(nil)
         }
     }
 
     task.resume()
 }
+

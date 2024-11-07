@@ -1,15 +1,19 @@
 //
-//  GetServers.swift
+//  GetServerID.swift
 //  Stossycord
 //
-//  Created by Stossy11 on 20/9/2024.
+//  Created by Stossy11 on 7/11/2024.
 //
 
 import Foundation
 
-
-func getDiscordGuilds(token: String, completion: @escaping ([Guild]) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
+func GetServerID(token: String, inviteID: String, completion: @escaping (String?) -> Void) {
+    let urlString = "https://discord.com/api/v10/invites/\(inviteID)"
+    guard let url = URL(string: urlString) else {
+        completion(nil)
+        return
+    }
+    
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -34,19 +38,32 @@ func getDiscordGuilds(token: String, completion: @escaping ([Guild]) -> Void) {
     request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
     request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
 
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
         if let error = error {
-            print("Error: \(error)")
+            print("Error fetching guild ID:", error)
+            completion(nil)
             return
-        } else if let data = data {
-            do {
-                let guilds = try JSONDecoder().decode([Guild].self, from: data)
-                completion(guilds)
-            } catch {
-                print("Error decoding JSON to get Guilds: \(error)")
+        }
+        
+        guard let data = data else {
+            print("No data returned.")
+            completion(nil)
+            return
+        }
+        
+        do {
+            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+               let guild = json["guild"] as? [String: Any],
+               let guildID = guild["id"] as? String {
+                completion(guildID)
+            } else {
+                completion(nil)
             }
+        } catch {
+            print("Error parsing JSON:", error)
+            completion(nil)
         }
     }
-
+    
     task.resume()
 }
