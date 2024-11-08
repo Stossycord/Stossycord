@@ -21,15 +21,15 @@ struct ChannelsListView: View {
                 Text("No channels available.")
                     .foregroundColor(.gray)
             } else {
-                // Iterate over the headings
-                ForEach(webSocketService.channels, id: \.id) { heading in
-                    Section(header: Text(heading.name)
+                // Iterate over the categories
+                ForEach(webSocketService.channels, id: \.id) { Category in
+                    Section(header: Text(Category.name)
                                 .font(.title)
                                 .foregroundColor(.primary)
                                 .padding(.top)) {
                         
-                        // Iterate over the channels within each heading
-                        ForEach(heading.channels, id: \.id) { channel in
+                        // Iterate over the channels within each Category
+                        ForEach(Category.channels, id: \.id) { channel in
                             if channel.type == 0 || channel.type == 5 {
                                 NavigationLink {
                                     ChannelView(webSocketService: webSocketService, currentchannelname: channel.name, currentid: channel.id)
@@ -67,23 +67,23 @@ struct ChannelsListView: View {
             let recievedChannels = channels.filter { $0.type == 0 }
             
             // Get categories
-            let recievedHeadings = channels.filter { $0.type == 4 }
+            let recievedcategories = channels.filter { $0.type == 4 }
             
-            var headings: [Heading] = []
+            var categories: [Category] = []
             
-            recievedHeadings.forEach { headin in
+            recievedcategories.forEach { headin in
                 // Get channels that belong to this category
-                let channelsForHeading = recievedChannels.filter { $0.parent_id == headin.id }
+                let channelsForCategory = recievedChannels.filter { $0.parent_id == headin.id }
                 
-                let heading = Heading(id: headin.id, name: headin.name, type: headin.type, position: headin.position, channels: channelsForHeading)
-                headings.append(heading)
+                let Category = Category(id: headin.id, name: headin.name, type: headin.type, position: headin.position, channels: channelsForCategory)
+                categories.append(Category)
             }
             
-            // Sort headings by position if available
-            let sortedHeadings = headings.sorted { ($0.position ?? 0) < ($1.position ?? 0) }
+            // Sort categories by position if available
+            let sortedcategories = categories.sorted { ($0.position ?? 0) < ($1.position ?? 0) }
             
             DispatchQueue.main.async {
-                webSocketService.channels = sortedHeadings
+                webSocketService.channels = sortedcategories
             }
         }
     }

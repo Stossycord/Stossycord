@@ -110,7 +110,7 @@ struct WebView: UIViewRepresentable {
                     self.onTokenDetected?(token)
                 } else {
                     self.retryCount += 1
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    DispatchQueue.main.asyncAfter(deadline: .now()) {
                         self.checkForToken(in: webView)
                     }
                 }

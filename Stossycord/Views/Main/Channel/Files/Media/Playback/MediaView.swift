@@ -20,12 +20,26 @@ struct MediaView: View {
     let audioExtensions = ["mp3", "m4a", "ogg"]
     let imageExtensions = ["jpg", "jpeg", "png"]
 
+    // Target maximum width or height for resized content
+    let maxDimension: CGFloat = 300.0
+
+    // Function to calculate the scaled dimensions while keeping the aspect ratio
+    func scaledSize(for size: CGSize) -> CGSize {
+        let aspectRatio = size.width / size.height
+        if size.width > size.height {
+            return CGSize(width: maxDimension, height: maxDimension / aspectRatio)
+        } else {
+            return CGSize(width: maxDimension * aspectRatio, height: maxDimension)
+        }
+    }
+
     var body: some View {
         if let url2 = URL(string: url) {
             Group {
                 if videoExtensions.contains(url2.pathExtension.lowercased()) {
                     FSVideoPlayer(url: url2)
                         .aspectRatio(contentMode: .fit)
+                        .frame(width: maxDimension, height: maxDimension)
                         .contextMenu {
                             Button { savefile = true } label: { Text("Save to photos") }
                         }
@@ -34,7 +48,10 @@ struct MediaView: View {
                         switch phase {
                         case .empty: ProgressView()
                         case .success(let image):
-                            image.resizable().aspectRatio(contentMode: .fit)
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: maxDimension, height: maxDimension)
                                 .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }
                         case .failure: DownloadView(url: url2)
                         @unknown default: EmptyView()

@@ -13,7 +13,7 @@ struct ServerView: View {
     @StateObject var webSocketService: WebSocketService
     @State var showPopover = false
     @State var guildID = ""
-
+    
     var body: some View {
         NavigationView {
             List {
@@ -53,9 +53,10 @@ struct ServerView: View {
             }
             .searchable(text: $searchTerm, prompt: Text("Search for a server"))
             .navigationTitle("Servers")
+            .toolbar(.visible, for: .tabBar)
         }
     }
-
+    
     // Filter guilds based on the search term
     private var filteredGuilds: [Guild] {
         webSocketService.Guilds.filter { guild in

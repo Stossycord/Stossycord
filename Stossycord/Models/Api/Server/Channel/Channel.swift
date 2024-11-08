@@ -17,7 +17,7 @@ struct Channel: Codable {
 }
 
 
-struct Heading: Codable {
+struct Category: Codable {
     let id: String
     let name: String
     let type: Int

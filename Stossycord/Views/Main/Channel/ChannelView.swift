@@ -20,7 +20,9 @@ struct ChannelView: View {
     let keychain = KeychainSwift()
     @State private var showTranslation = false
     @State var scrollto: String = ""
+    @State var showingFilePicker = false
     @State private var typingWorkItem: DispatchWorkItem?
+    
     
     var body: some View {
         VStack {
@@ -30,38 +32,55 @@ struct ChannelView: View {
                         
                         VStack {
                             if webSocketService.currentUser.id == messageData.author.authorId {
-                                HStack {
-                                    MessageSelfView(messageData: messageData, reply: $scrollto, webSocketService: webSocketService)
-                                        .contextMenu {
-                                            Button {
-                                                showcurrentuser = true
-                                            } label: {
-                                                Text("Show User")
+                                VStack {
+                                    HStack {
+                                        MessageSelfView(messageData: messageData, reply: $scrollto, webSocketService: webSocketService)
+                                            .contextMenu {
+                                                Button {
+                                                    showcurrentuser = true
+                                                } label: {
+                                                    Text("Show User")
+                                                }
+                                                
+                                                Button {
+                                                    repliedmessage = messageData
+                                                } label: {
+                                                    Text("Reply")
+                                                }
                                             }
-                                            
-                                            Button {
-                                                repliedmessage = messageData
-                                            } label: {
-                                                Text("Reply")
+                                    }
+                                    
+                                    if let messageattachments = messageData.attachments {
+                                        HStack {
+                                            Spacer()
+                                            ForEach(messageattachments, id: \.id) { attachment in
+                                                MediaView(url: attachment.url)
                                             }
                                         }
+                                    }
                                 }
                             } else {
-                                HStack {
-                                    MessageView(messageData: messageData, reply: $scrollto, webSocketService: webSocketService)
-                                        .contextMenu {
-                                            Button {
-                                                repliedmessage = messageData
-                                            } label: {
-                                                Text("Reply")
+                                VStack {
+                                    HStack {
+                                        MessageView(messageData: messageData, reply: $scrollto, webSocketService: webSocketService)
+                                            .contextMenu {
+                                                Button {
+                                                    repliedmessage = messageData
+                                                } label: {
+                                                    Text("Reply")
+                                                }
                                             }
+                                    }
+                                    
+                                    if let messageattachments = messageData.attachments {
+                                        HStack {
+                                            ForEach(messageattachments, id: \.id) { attachment in
+                                                MediaView(url: attachment.url)
+                                            }
+                                            
+                                            Spacer()
                                         }
-                                }
-                            }
-                            
-                            if let messageattachments = messageData.attachments {
-                                ForEach(messageattachments, id: \.id) { attachment in
-                                    MediaView(url: attachment.url)
+                                    }
                                 }
                             }
                         }
@@ -77,13 +96,7 @@ struct ChannelView: View {
                         }
                     }
                 }
-                .onChange(of: webSocketService.data.count) { _ in
-                    if let lastMessage = webSocketService.data.last {
-                        withAnimation {
-                            scrollViewProxy.scrollTo(lastMessage.messageId, anchor: .bottom)
-                        }
-                    }
-                }
+                .scrollAnchorBottom(websocket: webSocketService, scrollproxy: scrollViewProxy)
             }
             
             if let fileURL = fileURL {
@@ -97,6 +110,7 @@ struct ChannelView: View {
                         }
                     }
                     MediaPreview(file: fileURL)
+                        
                 }
             }
             
@@ -109,6 +123,33 @@ struct ChannelView: View {
                     Spacer()
                     Button(action: {
                         self.repliedmessage = nil
+                    }) {
+                        Image(systemName: "xmark.circle")
+                    }
+                }
+                .padding()
+                .background(Color.gray.opacity(0.2))
+            }
+            
+            if showingFilePicker {
+                HStack(alignment: .center) {
+                    PhotoPickerView() { savedImageURL in
+                        fileURL = savedImageURL
+                    }
+                    Button {
+                        uploadfiles = true
+                    } label: {
+                        Text("Select File")
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    Button(action: {
+                        showingFilePicker = false
                     }) {
                         Image(systemName: "xmark.circle")
                     }
@@ -145,7 +186,7 @@ struct ChannelView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: typingWorkItem!)
                         }
                     }
-                Button(action: { uploadfiles = true }) {
+                Button(action: { showingFilePicker = true }) {
                     Image(systemName: "plus")
                         .resizable()
                         .scaledToFit()
@@ -240,6 +281,8 @@ struct ChannelView: View {
         repliedmessage = nil
         fileURL = nil
         
+        showingFilePicker = false
+        
         clearTemporaryFolder()
     }
 
@@ -278,3 +321,30 @@ struct ChannelView: View {
     }
 }
 
+
+struct ScrollLock: ViewModifier {
+    var webSocketService: WebSocketService
+    var scrollViewProxy: ScrollViewProxy
+
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content
+                .defaultScrollAnchor(.bottom)
+        } else {
+            content
+                .onChange(of: webSocketService.data.count) { _ in
+                    if let lastMessage = webSocketService.data.last {
+                        // withAnimation {
+                            scrollViewProxy.scrollTo(lastMessage.messageId, anchor: .bottom)
+                        // }
+                    }
+                }
+        }
+    }
+}
+
+extension View {
+    func scrollAnchorBottom(websocket: WebSocketService, scrollproxy: ScrollViewProxy) -> some View {
+        self.modifier(ScrollLock(webSocketService: websocket, scrollViewProxy: scrollproxy))
+    }
+}
