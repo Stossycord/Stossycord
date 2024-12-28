@@ -68,16 +68,25 @@ struct MessageView: View {
                     }
                 }
                 
-                // Author display name
-                
-                if roleColor != 0  {
-                    Text(messageData.author.currentname)
-                        .bold()
-                        .foregroundColor(.init(hex: roleColor))
-                } else {
-                    Text(messageData.author.currentname)
-                        .bold()
-                        .foregroundColor(.primary)
+                HStack {
+                    if messageData.editedtimestamp != nil {
+                        HStack {
+                            Text("(edited)")
+                                .font(.system(size: 10)) // Same size for the text
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    
+                    
+                    if roleColor != 0  {
+                        Text(messageData.author.currentname)
+                            .bold()
+                            .foregroundColor(.init(hex: roleColor))
+                    } else {
+                        Text(messageData.author.currentname)
+                            .bold()
+                            .foregroundColor(.primary)
+                    }
                 }
                 
                 // Message bubble
@@ -91,6 +100,9 @@ struct MessageView: View {
                     .background(Color(.systemGray2))
                 #endif
                     .cornerRadius(15)
+                    .onAppear() {
+                        print(messageData.editedtimestamp)
+                    }
 #if os(macOS)
                     .overlay(
                         RoundedRectangle(cornerRadius: 15)
@@ -102,6 +114,7 @@ struct MessageView: View {
                             .stroke(Color(.systemGray4), lineWidth: 1)
                     )
 #endif
+                
                 
             }
             Spacer()
@@ -169,16 +182,27 @@ struct MessageSelfView: View {
                 }
                 
                 
-                if roleColor != 0  {
-                    Text(messageData.author.currentname)
-                        .bold()
-                        .foregroundColor(Color(hex: roleColor))
-                } else {
-                    Text(messageData.author.currentname)
-                        .bold()
-                        .foregroundColor(.primary)
-                }
+
                 
+                HStack {
+                    if messageData.editedtimestamp != nil {
+                        HStack {
+                            Text("(edited)")
+                                .font(.system(size: 10)) // Same size for the text
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    
+                    if roleColor != 0  {
+                        Text(messageData.author.currentname)
+                            .bold()
+                            .foregroundColor(Color(hex: roleColor))
+                    } else {
+                        Text(messageData.author.currentname)
+                            .bold()
+                            .foregroundColor(.primary)
+                    }
+                }
                
                 Text(LocalizedStringKey(messageData.content))
                     .multilineTextAlignment(.trailing)

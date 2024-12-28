@@ -11,6 +11,7 @@ struct Message: Codable {
     let channelId: String
     var content: String
     let messageId: String
+    let editedtimestamp: String?
     let author: Author
     let messageReference: MessageReference?
     let attachments: [Attachment]?
@@ -20,6 +21,7 @@ struct Message: Codable {
         case content
         case messageId = "id"
         case author
+        case editedtimestamp = "edited_timestamp"
         case messageReference = "message_reference"
         case attachments
     }

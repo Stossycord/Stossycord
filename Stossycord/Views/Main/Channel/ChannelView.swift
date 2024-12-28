@@ -268,6 +268,7 @@ struct ChannelView: View {
                     guard let token = keychain.get("token") else { return }
                     webSocketService.currentchannel = currentid
                     
+                    
                     getDiscordMessages(token: token, webSocketService: webSocketService)
                     
                     
@@ -279,7 +280,7 @@ struct ChannelView: View {
                     }
                 } else {
                     webSocketService.currentchannel = ""
-                    webSocketService.data.removeAll(where: { $0.channelId == currentid })
+                    // webSocketService.data.removeAll(where: { $0.channelId == currentid })
                     webSocketService.currentroles.removeAll()
                 }
                 // Perform any actions when tab changes

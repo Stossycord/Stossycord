@@ -311,7 +311,7 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
                 }
             } else if eventType == "MESSAGE_UPDATE" {
                 if let index = self.data.firstIndex(where: { $0.messageId == currentmessage.messageId }) {
-                    self.data[index].content = currentmessage.content.appending(" (edited)")
+                    self.data[index].content = currentmessage.content
                 }
             }
         }
