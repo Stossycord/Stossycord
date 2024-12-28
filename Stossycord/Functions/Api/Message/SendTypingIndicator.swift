@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import UIKit
 
 func sendtyping(token: String, channel: String) {
     let url = URL(string: "https://discord.com/api/v9/channels/\(channel)/typing")!

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import UIKit
 
 func SendMessage(content: String, fileUrl: URL?, token: String, channel: String, messageReference: [String: String]?) {
     let url = URL(string: "https://discord.com/api/v9/channels/\(channel)/messages")!

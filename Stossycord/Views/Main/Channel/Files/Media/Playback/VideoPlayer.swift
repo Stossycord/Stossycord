@@ -6,12 +6,48 @@
 //
 
 
-import UIKit
+import SwiftUI
 import AVFoundation
 import AVKit
-import SwiftUI
 
-struct FSVideoPlayer: UIViewControllerRepresentable {
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
+
+struct FSVideoPlayer: View {
+    var url: URL
+
+    #if os(macOS)
+    var body: some View {
+        VideoPlayerMac(url: url)
+    }
+    #else
+    var body: some View {
+        VideoPlayeriOS(url: url)
+    }
+    #endif
+}
+
+#if os(macOS)
+struct VideoPlayerMac: NSViewRepresentable {
+    var url: URL
+
+    func makeNSView(context: Context) -> AVPlayerView {
+        let playerView = AVPlayerView()
+        let player = AVPlayer(url: url)
+        playerView.player = player
+        return playerView
+    }
+
+    func updateNSView(_ nsView: AVPlayerView, context: Context) {
+        // Update the view if needed, e.g., changing the player or its properties.
+        nsView.player?.replaceCurrentItem(with: AVPlayerItem(url: url))
+    }
+}
+#else
+struct VideoPlayeriOS: UIViewControllerRepresentable {
     var url: URL
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
@@ -27,3 +63,4 @@ struct FSVideoPlayer: UIViewControllerRepresentable {
         // Update the controller if needed.
     }
 }
+#endif

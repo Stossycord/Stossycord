@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4E099B762C9BD7BF00C2D383 /* CocoaAsyncSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B752C9BD7BF00C2D383 /* CocoaAsyncSocket */; };
-		4E099B792C9BD7C800C2D383 /* Giffy in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B782C9BD7C800C2D383 /* Giffy */; };
+		4E099B792C9BD7C800C2D383 /* Giffy in Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; productRef = 4E099B782C9BD7C800C2D383 /* Giffy */; };
 		4E099B7C2C9BD7D100C2D383 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B7B2C9BD7D100C2D383 /* KeychainSwift */; };
 		4E099B7F2C9BD7DB00C2D383 /* OggDecoder in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B7E2C9BD7DB00C2D383 /* OggDecoder */; };
 		4E099B822C9BD7EC00C2D383 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B812C9BD7EC00C2D383 /* Starscream */; };
@@ -287,6 +287,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Stossycord/Stossycord.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Stossycord/Preview Content\"";
@@ -309,12 +310,17 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossycord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Debug;
 		};
@@ -323,6 +329,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Stossycord/Stossycord.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Stossycord/Preview Content\"";
@@ -345,12 +352,17 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossycord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Release;
 		};

@@ -17,18 +17,20 @@ struct ChannelView: View {
     @State var fileURL: URL?
     @State var repliedmessage: Message?
     @State var currentid: String
+    @State var currentGuild: Guild?
     let keychain = KeychainSwift()
     @State private var showTranslation = false
     @State var scrollto: String = ""
     @State var showingFilePicker = false
     @State private var typingWorkItem: DispatchWorkItem?
-    
+    @State var shown = true
+    @State var editMessage: Message?
     
     var body: some View {
         VStack {
             ScrollViewReader { scrollViewProxy in
                 ScrollView {
-                    ForEach(webSocketService.data, id: \.messageId) { messageData in
+                    ForEach(webSocketService.data.filter { $0.channelId == currentid }, id: \.messageId) { messageData in
                         
                         VStack {
                             if webSocketService.currentUser.id == messageData.author.authorId {
@@ -40,6 +42,15 @@ struct ChannelView: View {
                                                     showcurrentuser = true
                                                 } label: {
                                                     Text("Show User")
+                                                }
+                                                
+                                                
+                                                Button {
+                                                    editMessage = messageData
+                                                    
+                                                    message = messageData.content
+                                                } label: {
+                                                    Text("Edit Message")
                                                 }
                                                 
                                                 Button {
@@ -129,6 +140,22 @@ struct ChannelView: View {
                 }
                 .padding()
                 .background(Color.gray.opacity(0.2))
+            } else if let replyMessage = editMessage {
+                HStack {
+                    Text("Editing: \(replyMessage.author.globalName ?? replyMessage.author.username):")
+                        .font(.headline)
+                    Text(replyMessage.content)
+                        .font(.subheadline)
+                    Spacer()
+                    Button(action: {
+                        message = ""
+                        self.editMessage = nil
+                    }) {
+                        Image(systemName: "xmark.circle")
+                    }
+                }
+                .padding()
+                .background(Color.gray.opacity(0.2))
             }
             
             if showingFilePicker {
@@ -159,12 +186,14 @@ struct ChannelView: View {
             }
             
             HStack {
-                TextField("Message \(currentchannelname)", text: $message)
+                TextField("\((editMessage == nil) ? "Message" : "Editing Message in ") \(currentchannelname)", text: $message)
                     .padding()
+                #if !os(macOS)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
                             .fill(Color(UIColor.systemGray5))
                     )
+                #endif
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(Color.gray, lineWidth: 1)
@@ -174,15 +203,12 @@ struct ChannelView: View {
                     .onDisappear(perform: handleOnDisappear)
                     .onChange(of: message) { newValue in
                         if message.count > 3 {
-                            // Cancel any existing pending task
                             typingWorkItem?.cancel()
 
-                            // Create a new debounced task
                             typingWorkItem = DispatchWorkItem {
                                 sendtyping(token: webSocketService.token, channel: currentid)
                             }
 
-                            // Execute the task after 1 second
                             DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: typingWorkItem!)
                         }
                     }
@@ -233,6 +259,32 @@ struct ChannelView: View {
                 }
                 
             })
+            #if os(macOS)
+            .detectTabChanges { isActive in
+                print("Tab is now \(isActive ? "active" : "inactive")")
+                
+                
+                if isActive {
+                    guard let token = keychain.get("token") else { return }
+                    webSocketService.currentchannel = currentid
+                    
+                    getDiscordMessages(token: token, webSocketService: webSocketService)
+                    
+                    
+                    if let currentGuild {
+                        getGuildRoles(guild: currentGuild) { guilds in
+                            self.webSocketService.currentroles = guilds
+                            
+                        }
+                    }
+                } else {
+                    webSocketService.currentchannel = ""
+                    webSocketService.data.removeAll(where: { $0.channelId == currentid })
+                    webSocketService.currentroles.removeAll()
+                }
+                // Perform any actions when tab changes
+            }
+            #endif
             .padding()
             .fileImporter(isPresented: $uploadfiles, allowedContentTypes: [.video, .audio, .image, .item]) { result in
                 switch result {
@@ -272,6 +324,11 @@ struct ChannelView: View {
         
         if let repliedMessage = repliedmessage {
             SendMessage(content: message, fileUrl: fileURL, token: token, channel: channel, messageReference: ["message_id": repliedMessage.messageId])
+        } else if let editMessages = editMessage {
+            var editedMessage = editMessages
+            
+            editedMessage.content = message
+            Stossycord.editMessage(message: editedMessage)
         } else {
             SendMessage(content: message, fileUrl: fileURL, token: token, channel: channel, messageReference: nil)
         }
@@ -279,23 +336,28 @@ struct ChannelView: View {
         // Clear variables after sending
         message = ""
         repliedmessage = nil
+        editMessage = nil
         fileURL = nil
         
         showingFilePicker = false
         
         clearTemporaryFolder()
     }
+    
+    
+    
 
     private func handleOnAppear() {
         guard let token = keychain.get("token") else { return }
+        print("test appear")
         webSocketService.currentchannel = currentid
         getDiscordMessages(token: token, webSocketService: webSocketService)
     }
 
     private func handleOnDisappear() {
         webSocketService.currentchannel = ""
-        webSocketService.data.removeAll()
-        
+        webSocketService.data.removeAll(where: { $0.channelId == currentid })
+        print("test dissapear")
         if currentchannelname.starts(with: "@") {
             guard let token = keychain.get("token") else { return }
             getDiscordDMs(token: token) { items in
@@ -327,7 +389,7 @@ struct ScrollLock: ViewModifier {
     var scrollViewProxy: ScrollViewProxy
 
     func body(content: Content) -> some View {
-        if #available(iOS 17.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             content
                 .defaultScrollAnchor(.bottom)
         } else {
@@ -348,3 +410,78 @@ extension View {
         self.modifier(ScrollLock(webSocketService: websocket, scrollViewProxy: scrollproxy))
     }
 }
+
+#if os(macOS)
+import AppKit
+import AppKit
+
+struct WindowTabObserver: ViewModifier {
+    @State private var isActiveTab = true
+    @State private var currentWindow: NSWindow?
+    let onTabChange: (Bool) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                // Store reference to the current window
+                DispatchQueue.main.async {
+                    currentWindow = NSApplication.shared.keyWindow
+                }
+                setupNotifications()
+            }
+            .onDisappear {
+                removeNotifications()
+            }
+    }
+    
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeMainNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            guard let window = notification.object as? NSWindow else { return }
+            
+            // Only trigger if it's the same window
+            if window == currentWindow {
+                isActiveTab = true
+                onTabChange(true)
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignMainNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            guard let window = notification.object as? NSWindow else { return }
+            
+            // Only trigger if it's the same window
+            if window == currentWindow {
+                isActiveTab = false
+                onTabChange(false)
+            }
+        }
+        
+    }
+    
+    private func removeNotifications() {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: NSWindow.didBecomeMainNotification,
+            object: nil
+        )
+        NotificationCenter.default.removeObserver(
+            self,
+            name: NSWindow.didResignMainNotification,
+            object: nil
+        )
+    }
+}
+
+extension View {
+    func detectTabChanges(onChange: @escaping (Bool) -> Void) -> some View {
+        modifier(WindowTabObserver(onTabChange: onChange))
+    }
+}
+#endif

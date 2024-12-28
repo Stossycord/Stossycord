@@ -8,7 +8,11 @@
 import SwiftUI
 import KeychainSwift
 import LocalAuthentication
+#if os(macOS)
+import AppKit
+#else
 import UIKit
+#endif
 
 struct SettingsView: View {
     @State var isspoiler: Bool = true
@@ -47,7 +51,17 @@ struct SettingsView: View {
                                 Text(keychain.get("token") ?? "")
                                     .contextMenu {
                                         Button {
+                                            #if os(macOS)
+                                            if let token = keychain.get("token") {
+                                                let pasteboard = NSPasteboard.general
+                                                pasteboard.clearContents() // Clear the pasteboard before writing
+                                                pasteboard.setString(token, forType: .string)
+                                            } else {
+                                                print("No token found in the keychain.")
+                                            }
+                                            #else
                                             UIPasteboard.general.string = keychain.get("token") ?? ""
+                                            #endif
                                         } label: {
                                             Text("Copy")
                                         }

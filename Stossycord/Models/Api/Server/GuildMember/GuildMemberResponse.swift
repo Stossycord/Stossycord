@@ -8,9 +8,26 @@
 
 import Foundation
 
-struct GuildMemberResponse: Codable {
-    let userId: String
-    let username: String
+struct GuildMember: Codable {
+    let user: User
+    let roles: [String]
     let joinedAt: String
-    let isPending: Bool
+    let deaf: Bool
+    let mute: Bool
+    let premiumSince: String?
+    let nick: String?
+    let pending: Bool
+    let communicationDisabledUntil: String?
+
+    enum CodingKeys: String, CodingKey {
+        case user
+        case roles
+        case joinedAt = "joined_at"
+        case deaf
+        case mute
+        case premiumSince = "premium_since"
+        case nick
+        case pending
+        case communicationDisabledUntil = "communication_disabled_until"
+    }
 }

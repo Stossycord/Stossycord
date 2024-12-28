@@ -9,7 +9,9 @@ import Foundation
 import AVFoundation
 import OggDecoder
 import SwiftUI
+#if !os(macOS)
 import Giffy
+#endif
 import AVKit
 
 struct MediaView: View {
@@ -58,6 +60,7 @@ struct MediaView: View {
                         }
                     }
                 } else if url2.pathExtension.lowercased() == "gif" {
+#if !os(macOS)
                     AsyncGiffy(url: url2) { phase in
                         switch phase {
                         case .loading: ProgressView()
@@ -67,6 +70,22 @@ struct MediaView: View {
                                 .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }
                         }
                     }
+#else
+                    AsyncImage(url: url2) { phase in
+                        switch phase {
+                        case .empty: ProgressView()
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: maxDimension, height: maxDimension)
+                                .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }
+                        case .failure: DownloadView(url: url2)
+                        @unknown default: EmptyView()
+                        }
+                    }
+#endif
+                    
                 } else if audioExtensions.contains(url2.pathExtension.lowercased()) {
                     AudioPlayer(url: url2)
                         .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }

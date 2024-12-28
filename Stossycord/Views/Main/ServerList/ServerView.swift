@@ -15,9 +15,23 @@ struct ServerView: View {
     @State var guildID = ""
     
     var body: some View {
-        NavigationView {
+        PlatformSpecificView {
             List {
                 ForEach(filteredGuilds, id: \.id) { guild in
+                    #if os(macOS)
+                    NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
+                        HStack {
+                            GuildIconView(iconURL: guild.iconUrl)
+                            VStack(alignment: .leading) {
+                                Text(guild.name)
+                                    .font(.headline)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    #else
                     if UIDevice.current.userInterfaceIdiom == .pad {
                         NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
                             HStack {
@@ -45,6 +59,7 @@ struct ServerView: View {
                             .padding(.vertical, 8)
                         }
                     }
+                    #endif
                 }
                 // .listRowBackground(Color(UIColor.systemGroupedBackground))
             }
@@ -53,7 +68,9 @@ struct ServerView: View {
             }
             .searchable(text: $searchTerm, prompt: Text("Search for a server"))
             .navigationTitle("Servers")
+            #if !os(macOS)
             .toolbar(.visible, for: .tabBar)
+            #endif
         }
     }
     
@@ -63,4 +80,19 @@ struct ServerView: View {
             searchTerm.isEmpty || guild.name.localizedCaseInsensitiveContains(searchTerm)
         }
     }
+}
+
+
+
+@ViewBuilder
+func PlatformSpecificView<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
+    #if os(macOS)
+    VStack {
+        content()
+    }
+    #else
+    NavigationView {
+        content()
+    }
+    #endif
 }

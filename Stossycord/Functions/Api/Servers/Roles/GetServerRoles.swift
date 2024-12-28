@@ -1,18 +1,21 @@
 //
-//  CurrentUser.swift
+//  GetServerRoles.swift
 //  Stossycord
 //
-//  Created by Stossy11 on 19/9/2024.
+//  Created by Stossy11 on 26/12/2024.
 //
 
 import Foundation
 
-func CurrentUser(token: String, completion: @escaping (User?) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/users/@me")!
-    var request = URLRequest(url: url)
+
+func getGuildRoles(guild: Guild, completion: @escaping ([AdvancedGuild.Role]) -> Void) {
+    
+    
+    let url = "https://discord.com/api/v10/guilds/\(guild.id)/roles"
+    var request = URLRequest(url: URL(string: url)!)
     request.httpMethod = "GET"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
+    request.addValue(WebSocketService.shared.token, forHTTPHeaderField: "Authorization")
     request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
     request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
     request.addValue("keep-alive", forHTTPHeaderField: "Connection")
@@ -20,40 +23,37 @@ func CurrentUser(token: String, completion: @escaping (User?) -> Void) {
     request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
     request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
     request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-    let Country: String = CurrentDeviceInfo.shared.Country
-    
-    let currentTimeZone = CurrentDeviceInfo.shared.currentTimeZone
-    
+
+    let currentTimeZone = TimeZone.current
     let timeZoneIdentifier = currentTimeZone.identifier
+    let country = Locale.current.region?.identifier ?? "US"
     
     let deviceInfo = CurrentDeviceInfo.shared.deviceInfo
     
     request.addValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
     request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
+    request.addValue("\(currentTimeZone)-\(country)", forHTTPHeaderField: "X-Discord-Locale")
     request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
     request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
 
     let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         if let error = error {
             print("Error: \(error)")
+            return
         } else if let data = data {
             do {
-                do {
-                    let discordUser = try JSONDecoder().decode(User.self, from: data)
-                    print(discordUser)
-                    print(String(data: data, encoding: .utf8) ?? "")
-                    completion(discordUser)
-                } catch {
-                    print("Failed to decode JSON: \(error)")
-                    completion(nil)
-                }
+                let guilds = try JSONDecoder().decode([AdvancedGuild.Role].self, from: data)
+                
+                let sorted = guilds.sorted { $0.position > $1.position }
+                
+                completion(sorted)
             } catch {
-                print("Error: \(error)")
-                completion(nil)
+                print("Error decoding JSON to get Guilds: \(error), data: \(data.utf8String)")
             }
         }
     }
 
     task.resume()
+    
+    
 }

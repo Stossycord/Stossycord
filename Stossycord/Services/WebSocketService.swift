@@ -22,6 +22,8 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
     @Published var isNetworkAvailable: Bool = true // Network status tracking
     @Published var Guilds: [Guild] = []
     @Published var currentguild: Guild = Guild(id: "", name: "", icon: "")
+    @Published var currentroles: [AdvancedGuild.Role] = []
+    @Published var currentMembers: [GuildMember] = []
     var socket: WebSocket!
     let keychain = KeychainSwift()
     @Published var token: String
@@ -38,8 +40,11 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
     private var reconnectionAttempts: Int = 0
     private var maxReconnectionAttempts: Int = 5
     private var reconnectionTimer: Timer?
+    
+    
+    static var shared = WebSocketService()
 
-    init() {
+    private init() {
         token = keychain.get("token") ?? ""
         currentUser = User(id: "", username: "", discriminator: "", avatar: "nil")
         
@@ -136,14 +141,15 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
             break
         }
     }
+    
 
     func scheduleReconnection() {
         if reconnectionAttempts < maxReconnectionAttempts {
             let delay = pow(2.0, Double(reconnectionAttempts)) // Exponential backoff
             reconnectionAttempts += 1
             print("Attempting to reconnect in \(delay) seconds...")
-            reconnectionTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
-                self?.connect()
+            reconnectionTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [self] _ in
+                self.connect()
             }
         } else {
             print("Max reconnection attempts reached. Stopping retries.")
@@ -152,7 +158,7 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
     
     private func setupNetworkMonitor() {
         monitor.pathUpdateHandler = { [self] path in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [self]
                 if path.status == .satisfied {
                     print("Network is available")
                     self.isNetworkAvailable = true
@@ -179,14 +185,9 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
                 handleChatMessage(json: json, eventType: t)
             case "MESSAGE_DELETE":
                 handleDeleteMessage(json: json)
-            case "VOICE_STATE_UPDATE":
-                break
-                // handleVoiceStateUpdate(json: json)
-            case "VOICE_SERVER_UPDATE":
-                break
-                // handleVoiceServerUpdate(json: json)
+            case "GUILD_MEMBERS_CHUNK":
+                handleGuildMembersChunk(json: json)
             default:
-                break
                 print("Unhandled event type: \(t)")
             }
         } else if let op = json["op"] as? Int {
@@ -198,8 +199,43 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
             case 1:
                 sendHeartbeat()
             default:
-                break
+                print("Unhandled operation code: \(op)")
             }
+        }
+    }
+
+    func requestGuildMembers(guildID: String, query: String = "", limit: Int = 0) {
+        let payload: [String: Any] = [
+            "op": 8,
+            "d": [
+                "guild_id": guildID,
+                "query": query, // Empty string fetches all members
+                "limit": limit, // 0 means no limit
+            ]
+        ]
+        sendJSON(payload)
+    }
+    
+    private func handleGuildMembersChunk(json: [String: Any]) {
+        guard let data = json["d"] as? [String: Any],
+              let members = data["members"] as? [[String: Any]] else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            let parsedMembers = members.compactMap { memberData -> GuildMember? in
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: memberData, options: [])
+                    let decoder = JSONDecoder()
+                    return try decoder.decode(GuildMember.self, from: jsonData)
+                } catch {
+                    print("Failed to decode member: \(error) data: \(memberData)")
+                    return nil
+                }
+            }
+            
+            
+            self.currentMembers = parsedMembers
         }
     }
     
@@ -275,7 +311,7 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
                 }
             } else if eventType == "MESSAGE_UPDATE" {
                 if let index = self.data.firstIndex(where: { $0.messageId == currentmessage.messageId }) {
-                    self.data[index].content = currentmessage.content
+                    self.data[index].content = currentmessage.content.appending(" (edited)")
                 }
             }
         }

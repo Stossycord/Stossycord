@@ -24,7 +24,7 @@ struct LoginView: View {
             
             WebView(url: URL(string: "https://discord.com/login")!) { newToken in
                 self.token = newToken
-                
+                print(newToken)
                 keychain.set(token, forKey: "token")
                 
                 if !token.isEmpty {
@@ -57,12 +57,72 @@ struct LoginView: View {
              }
              */
         }
+        .padding()
     }
 }
 
 
 
 
+
+#if os(macOS)
+struct WebView: NSViewRepresentable {
+    let url: URL
+    var onTokenDetected: ((String) -> Void)?
+
+    func makeNSView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.navigationDelegate = context.coordinator
+
+        // Load the Discord login page
+        webView.load(URLRequest(url: url))
+        return webView
+    }
+
+    func updateNSView(_ nsView: WKWebView, context: Context) { }
+
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(onTokenDetected: onTokenDetected)
+    }
+
+    class Coordinator: NSObject, WKNavigationDelegate {
+        var onTokenDetected: ((String) -> Void)?
+        var retryCount = 0
+
+        init(onTokenDetected: ((String) -> Void)?) {
+            self.onTokenDetected = onTokenDetected
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            checkForToken(in: webView)
+        }
+
+        func checkForToken(in webView: WKWebView) {
+            // JavaScript to retrieve token from localStorage
+            let js = """
+            (function() {
+              let a = [];
+              webpackChunkdiscord_app.push([[0],,e=>Object.keys(e.c).find(t=>(t=e(t)?.default?.getToken?.())&&a.push(t))]);
+              return a[0];
+            })();
+            """
+
+            // Execute JavaScript and retry if not found
+            webView.evaluateJavaScript(js) { result, error in
+                if let token = result as? String, !token.isEmpty {
+                    self.onTokenDetected?(token)
+                } else {
+                    self.retryCount += 1
+                    DispatchQueue.main.asyncAfter(deadline: .now()) {
+                        self.checkForToken(in: webView)
+                    }
+                }
+            }
+        }
+    }
+}
+
+#else
 struct WebView: UIViewRepresentable {
     let url: URL
     var onTokenDetected: ((String) -> Void)?
@@ -106,7 +166,7 @@ struct WebView: UIViewRepresentable {
 
             // Execute JavaScript and retry if not found
             webView.evaluateJavaScript(js) { result, error in
-                if let token = result as? String {
+                if let token = result as? String, !token.isEmpty {
                     self.onTokenDetected?(token)
                 } else {
                     self.retryCount += 1
@@ -118,5 +178,5 @@ struct WebView: UIViewRepresentable {
         }
     }
 }
-    
+#endif
 

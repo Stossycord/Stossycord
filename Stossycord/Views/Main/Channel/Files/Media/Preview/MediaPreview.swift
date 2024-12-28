@@ -9,7 +9,6 @@ import Foundation
 import AVFoundation
 import OggDecoder
 import SwiftUI
-import Giffy
 import AVKit
 
 struct MediaPreview: View {

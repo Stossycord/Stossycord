@@ -12,6 +12,8 @@ struct MessageView: View {
     let messageData: Message
     @Binding var reply: String
     @StateObject var webSocketService: WebSocketService
+    @State var guildMember: GuildMember? = nil
+    @State var roleColor: Int = 0
     
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -30,7 +32,7 @@ struct MessageView: View {
                     image.resizable()
                         .aspectRatio(contentMode: .fit)
                         .padding(7)
-                        .background(Circle().fill(Color(hex: "#5865F2") ?? Color.blue))
+                        .background(Circle().fill(Color(hex: 0x5865F2) ?? Color.blue))
                         .frame(width: 40, height: 40)
                         .clipShape(Circle())
                 } placeholder: {
@@ -67,26 +69,61 @@ struct MessageView: View {
                 }
                 
                 // Author display name
-                Text(messageData.author.currentname)
-                    .bold()
-                    .foregroundColor(.primary)
+                
+                if roleColor != 0  {
+                    Text(messageData.author.currentname)
+                        .bold()
+                        .foregroundColor(.init(hex: roleColor))
+                } else {
+                    Text(messageData.author.currentname)
+                        .bold()
+                        .foregroundColor(.primary)
+                }
                 
                 // Message bubble
                 Text(LocalizedStringKey(messageData.content))
                     .multilineTextAlignment(.leading)
                     .font(.system(size: 16))
                     .padding(10)
-                    .background(Color(.systemGray6))
+                #if os(macOS)
+                    .background(Color(.systemGray))
+                #else
+                    .background(Color(.systemGray2))
+                #endif
                     .cornerRadius(15)
+#if os(macOS)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 15)
+                            .stroke(Color(.systemGray), lineWidth: 1)
+                    )
+#else
                     .overlay(
                         RoundedRectangle(cornerRadius: 15)
                             .stroke(Color(.systemGray4), lineWidth: 1)
                     )
+#endif
                 
             }
             Spacer()
         }
         .padding(10)
+        .onAppear() {
+            self.guildMember = self.webSocketService.currentMembers.first(where: { $0.user.id == messageData.author.authorId})
+            
+            
+            if let roles = guildMember?.roles {
+                if let role = roles.compactMap({ roleId in
+                    webSocketService.currentroles.first(where: { $0.id == roleId && $0.color != 0 })
+                }).first {
+                    self.roleColor = role.color
+                    print(roleColor)
+                } else {
+                    self.roleColor = 0
+                }
+            } else {
+                print("No roles available.")
+            }
+        }
     }
 }
 
@@ -94,6 +131,9 @@ struct MessageSelfView: View {
     let messageData: Message
     @Binding var reply: String
     @StateObject var webSocketService: WebSocketService
+    @State var guildMember: GuildMember? = nil
+    @State var roleColor: Int = 0
+    
     
     var body: some View {
         HStack {
@@ -127,13 +167,19 @@ struct MessageSelfView: View {
                         }
                     }
                 }
-                // Author display name (if needed)
-                Text(messageData.author.currentname)
-                    .bold()
-                    .foregroundColor(.primary)
-                    .padding(.horizontal)
                 
-                // Message bubble
+                
+                if roleColor != 0  {
+                    Text(messageData.author.currentname)
+                        .bold()
+                        .foregroundColor(Color(hex: roleColor))
+                } else {
+                    Text(messageData.author.currentname)
+                        .bold()
+                        .foregroundColor(.primary)
+                }
+                
+               
                 Text(LocalizedStringKey(messageData.content))
                     .multilineTextAlignment(.trailing)
                     .accentColor(.white)
@@ -171,5 +217,26 @@ struct MessageSelfView: View {
             }
         }
         .padding(10)
+        .onAppear() {
+            self.guildMember = self.webSocketService.currentMembers.first(where: { $0.user.id == messageData.author.authorId})
+            
+            
+            if let roles = guildMember?.roles {
+                // Find the first role with a color different from 0
+                if let role = roles.compactMap({ roleId in
+                    webSocketService.currentroles.first(where: { $0.id == roleId && $0.color != 0 })
+                }).first {
+                    self.roleColor = role.color
+                    print(roleColor)
+                } else {
+                    // If no role with a color other than 0 is found
+                    self.roleColor = 0
+                    print("No role with color other than 0 found.")
+                }
+            } else {
+                print("No roles available.")
+            }
+
+        }
     }
 }

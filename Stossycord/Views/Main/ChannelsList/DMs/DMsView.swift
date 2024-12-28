@@ -13,16 +13,20 @@ struct DMsView: View {
     let keychain = KeychainSwift()
     @StateObject var webSocketService: WebSocketService
     var body: some View {
-        NavigationView {
+        PlatformSpecificView {
             List {
                 ForEach(webSocketService.dms, id: \.id) { channels in
                     if channels.type == 1 {
                         NavigationLink {
+                            #if os(macOS)
+                            ChannelView(webSocketService: webSocketService, currentchannelname: "@" + (channels.recipients?.first!.username)!, currentid: channels.id)
+                            #else
                             if UIDevice.current.userInterfaceIdiom == .pad {
                                 ChannelView(webSocketService: webSocketService, currentchannelname: "@" + (channels.recipients?.first!.username)!, currentid: channels.id)
                             } else {
                                 ChannelView(webSocketService: webSocketService, currentchannelname: "@" + (channels.recipients?.first!.username)!, currentid: channels.id).toolbar(.hidden, for: .tabBar)
                             }
+                            #endif
                         } label: {
                             HStack {
                                 if let avatar = channels.recipients?.first?.avatar {
@@ -55,11 +59,29 @@ struct DMsView: View {
                         let namesString2 = otherrecipientNames.joined(separator: ", ")
                         
                         NavigationLink {
-                            if UIDevice.current.userInterfaceIdiom == .pad {
-                                ChannelView(webSocketService: webSocketService, currentchannelname: namesString2, currentid: channels.id)
+                            #if os(macOS)
+                            // Ensure `channels.recipients` is not empty before accessing first item
+                            if let firstRecipient = channels.recipients?.first {
+                                ChannelView(webSocketService: webSocketService, currentchannelname: "@" + firstRecipient.username, currentid: channels.id)
                             } else {
-                                ChannelView(webSocketService: webSocketService, currentchannelname: namesString2, currentid: channels.id).toolbar(.hidden, for: .tabBar)
+                                // Handle case when there are no recipients
+                                Text("No recipients available.")
                             }
+                            #else
+                            if UIDevice.current.userInterfaceIdiom == .pad {
+                                if let firstRecipient = channels.recipients?.first {
+                                    ChannelView(webSocketService: webSocketService, currentchannelname: "@" + firstRecipient.username, currentid: channels.id)
+                                } else {
+                                    Text("No recipients available.")
+                                }
+                            } else {
+                                if let firstRecipient = channels.recipients?.first {
+                                    ChannelView(webSocketService: webSocketService, currentchannelname: "@" + firstRecipient.username, currentid: channels.id).toolbar(.hidden, for: .tabBar)
+                                } else {
+                                    Text("No recipients available.")
+                                }
+                            }
+                            #endif
                         } label: {
                             let recipientNames = channels.recipients?.prefix(3).map { $0.global_name ?? $0.username } ?? []
                             let namesString = recipientNames.joined(separator: ", ")
@@ -67,6 +89,7 @@ struct DMsView: View {
                                 .font(.headline)
                                 .foregroundColor(.primary) // Apple-like text color
                         }
+
                     }
                 }
             }

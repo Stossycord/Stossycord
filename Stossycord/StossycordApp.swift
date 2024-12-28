@@ -10,7 +10,7 @@ import KeychainSwift
 
 @main
 struct StossycordApp: App {
-    @StateObject var webSocketService = WebSocketService()
+    @StateObject var webSocketService = WebSocketService.shared
     let keychain = KeychainSwift()
     @State var isPresented: Bool = false
     @State var isfirst: Bool = false
@@ -26,7 +26,9 @@ struct StossycordApp: App {
                             isfirst = true
                         } else {
                             webSocketService.connect()
-                            // Handle app opened
+                            if !webSocketService.currentchannel.isEmpty {
+                                getDiscordMessages(token: webSocketService.token, webSocketService: webSocketService)
+                            }
                             print("App opened")
                         }
                     case .inactive:

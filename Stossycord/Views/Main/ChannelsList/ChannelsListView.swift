@@ -15,34 +15,57 @@ struct ChannelsListView: View {
     @StateObject var webSocketService: WebSocketService
     
     var body: some View {
-        List {
-            // Check if there are any channels to display
-            if webSocketService.channels.isEmpty {
-                Text("No channels available.")
-                    .foregroundColor(.gray)
-            } else {
-                // Iterate over the categories
-                ForEach(webSocketService.channels, id: \.id) { Category in
-                    Section(header: Text(Category.name)
+        NavigationView {
+            List {
+                // Check if there are any channels to display
+                if webSocketService.channels.isEmpty {
+                    Text("No channels available.")
+                        .foregroundColor(.gray)
+                } else {
+                    // Iterate over the categories
+                    ForEach(webSocketService.channels, id: \.id) { Category in
+                        if !Category.name.isEmpty {
+                            Section(header: Text(Category.name)
                                 .font(.title)
                                 .foregroundColor(.primary)
                                 .padding(.top)) {
-                        
-                        // Iterate over the channels within each Category
-                        ForEach(Category.channels, id: \.id) { channel in
-                            if channel.type == 0 || channel.type == 5 {
-                                NavigationLink {
-                                    ChannelView(webSocketService: webSocketService, currentchannelname: channel.name, currentid: channel.id)
-                                } label: {
-                                    Text("# " + channel.name)
-                                        .font(.headline)
-                                        .foregroundColor(.primary) // Apple-like text color
+                                    
+                                    // Iterate over the channels within each Category
+                                    ForEach(Category.channels, id: \.id) { channel in
+                                        if channel.type == 0 || channel.type == 5 {
+                                            NavigationLink {
+                                                ChannelView(webSocketService: webSocketService, currentchannelname: channel.name, currentid: channel.id, currentGuild: guild)
+                                            } label: {
+                                                Text("# " + channel.name)
+                                                    .font(.headline)
+                                                    .foregroundColor(.primary) // Apple-like text color
+                                            }
+                                        } else {
+                                            Text(channel.name)
+                                                .font(.headline)
+                                                .foregroundColor(.primary) // Apple-like text color
+                                                .disabled(true)
+                                        }
+                                    }
                                 }
-                            } else {
-                                Text(channel.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary) // Apple-like text color
-                                    .disabled(true)
+                        } else {
+                            Section {
+                                ForEach(Category.channels, id: \.id) { channel in
+                                    if channel.type == 0 || channel.type == 5 {
+                                        NavigationLink {
+                                            ChannelView(webSocketService: webSocketService, currentchannelname: channel.name, currentid: channel.id, currentGuild: guild)
+                                        } label: {
+                                            Text("# " + channel.name)
+                                                .font(.headline)
+                                                .foregroundColor(.primary) // Apple-like text color
+                                        }
+                                    } else {
+                                        Text(channel.name)
+                                            .font(.headline)
+                                            .foregroundColor(.primary) // Apple-like text color
+                                            .disabled(true)
+                                    }
+                                }
                             }
                         }
                     }
@@ -56,6 +79,15 @@ struct ChannelsListView: View {
                 
                 if let token = keychain.get("token") {
                     channels(token: token)
+                    webSocketService.requestGuildMembers(guildID: guild.id)
+                    
+                    Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { timer in
+                        getGuildRoles(guild: guild) { roles in
+                            DispatchQueue.main.async {
+                                webSocketService.currentroles = roles
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -79,8 +111,19 @@ struct ChannelsListView: View {
                 categories.append(Category)
             }
             
+            
+            
+            let channelswithoutCategories = recievedChannels.filter { $0.parent_id == nil }
+            
+            
+            let noChannelCategory = Category(id: "0", name: "", type: 4, position: 0, channels: channelswithoutCategories)
+            
+            
+            
             // Sort categories by position if available
-            let sortedcategories = categories.sorted { ($0.position ?? 0) < ($1.position ?? 0) }
+            var sortedcategories = categories.sorted { ($0.position ?? 0) < ($1.position ?? 0) }
+            
+            sortedcategories.insert(noChannelCategory, at: 0)
             
             DispatchQueue.main.async {
                 webSocketService.channels = sortedcategories

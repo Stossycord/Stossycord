@@ -12,6 +12,27 @@ struct NavView: View {
     @State private var selectedTab = 0
     
     var body: some View {
+        #if os(macOS)
+        NavigationView {
+            TabView(selection: $selectedTab) {
+                ServerView(webSocketService: webSocketService)
+                    .tabItem {
+                        Label("Servers", systemImage: "house")
+                    }
+                    .tag(0)
+                DMsView(webSocketService: webSocketService)
+                    .tabItem {
+                        Label("DMs", systemImage: "envelope")
+                    }
+                    .tag(1)
+                SettingsView()
+                    .tabItem {
+                        Label("Settings", systemImage: "gear")
+                    }
+                    .tag(2)
+            }
+        }
+    #else
         TabView(selection: $selectedTab) {
             ServerView(webSocketService: webSocketService)
                 .tabItem {
@@ -29,6 +50,7 @@ struct NavView: View {
                 }
                 .tag(2)
         }
+    #endif
     }
 }
 

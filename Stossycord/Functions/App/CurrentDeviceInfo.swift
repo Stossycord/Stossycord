@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if os(macOS)
+import AppKit
+#else
 import UIKit
+#endif
 
 
 class CurrentDeviceInfo {
@@ -24,15 +28,21 @@ class CurrentDeviceInfo {
     
     let preferredLanguages = Locale.preferredLanguages
     
+    #if os(macOS)
+    let systemVersion = ProcessInfo.processInfo.operatingSystemVersionString
+    #else
+    let systemVersion = UIDevice.current.systemVersion
+    #endif
+    
     public var deviceInfo: DeviceInfo {
         let deviceInfo = DeviceInfo(
             os: "Mac OS X",
             browser: "Safari",
             device: "",
             systemLocale: "\(currentTimeZone)-\(Country))",
-            browserUserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X \(UIDevice.current.systemVersion)) AppleWebKit/\(getWebKitVersion()) (KHTML, like Gecko) Version/17.4 Safari/\(getWebKitVersion())",
+            browserUserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X \(self.systemVersion)) AppleWebKit/\(getWebKitVersion()) (KHTML, like Gecko) Version/17.4 Safari/\(getWebKitVersion())",
             browserVersion: "17.4",
-            osVersion: UIDevice.current.systemVersion,
+            osVersion: self.systemVersion,
             referrer: "",
             referringDomain: "",
             referrerCurrent: "",
