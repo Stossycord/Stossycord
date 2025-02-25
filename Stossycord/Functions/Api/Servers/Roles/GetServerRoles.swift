@@ -46,7 +46,9 @@ func getGuildRoles(guild: Guild, completion: @escaping ([AdvancedGuild.Role]) ->
                 
                 let sorted = guilds.sorted { $0.position > $1.position }
                 
-                completion(sorted)
+                DispatchQueue.main.async {
+                    completion(sorted)
+                }
             } catch {
                 print("Error decoding JSON to get Guilds: \(error), data: \(data.utf8String)")
             }

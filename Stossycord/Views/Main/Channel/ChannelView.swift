@@ -283,9 +283,13 @@ struct ChannelView: View {
                     // webSocketService.data.removeAll(where: { $0.channelId == currentid })
                     webSocketService.currentroles.removeAll()
                 }
-                // Perform any actions when tab changes
             }
             #endif
+#if os(macOS)
+            .frame(maxWidth: NSScreen.main?.frame.width)
+#elseif os(iOS)
+            .frame(maxWidth: UIScreen.main.bounds.width)
+#endif
             .padding()
             .fileImporter(isPresented: $uploadfiles, allowedContentTypes: [.video, .audio, .image, .item]) { result in
                 switch result {
@@ -351,8 +355,10 @@ struct ChannelView: View {
     private func handleOnAppear() {
         guard let token = keychain.get("token") else { return }
         print("test appear")
-        webSocketService.currentchannel = currentid
-        getDiscordMessages(token: token, webSocketService: webSocketService)
+        DispatchQueue.main.async {
+            webSocketService.currentchannel = currentid
+            getDiscordMessages(token: token, webSocketService: webSocketService)
+        }
     }
 
     private func handleOnDisappear() {
@@ -424,7 +430,6 @@ struct WindowTabObserver: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear {
-                // Store reference to the current window
                 DispatchQueue.main.async {
                     currentWindow = NSApplication.shared.keyWindow
                 }
