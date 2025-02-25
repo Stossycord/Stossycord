@@ -121,7 +121,7 @@ struct ChannelView: View {
                         }
                     }
                     MediaPreview(file: fileURL)
-                        
+                    
                 }
             }
             
@@ -189,13 +189,13 @@ struct ChannelView: View {
                 TextField("\((editMessage == nil) ? "Message" : "Editing Message in ") \(currentchannelname)", text: $message)
                     .padding()
                     .textFieldStyle(.plain)
-
-                #if !os(macOS)
+                
+#if !os(macOS)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
                             .fill(Color(UIColor.systemGray5))
                     )
-                #endif
+#endif
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(Color.gray, lineWidth: 1)
@@ -206,11 +206,11 @@ struct ChannelView: View {
                     .onChange(of: message) { newValue in
                         if message.count > 3 {
                             typingWorkItem?.cancel()
-
+                            
                             typingWorkItem = DispatchWorkItem {
                                 sendtyping(token: webSocketService.token, channel: currentid)
                             }
-
+                            
                             DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: typingWorkItem!)
                         }
                     }
@@ -262,7 +262,7 @@ struct ChannelView: View {
                 }
                 
             })
-            #if os(macOS)
+#if os(macOS)
             .detectTabChanges { isActive in
                 print("Tab is now \(isActive ? "active" : "inactive")")
                 
@@ -287,7 +287,7 @@ struct ChannelView: View {
                     webSocketService.currentroles.removeAll()
                 }
             }
-            #endif
+#endif
 #if os(macOS)
             .frame(maxWidth: NSScreen.main?.frame.width)
 #elseif os(iOS)
@@ -322,12 +322,6 @@ struct ChannelView: View {
             }
             
         }
-        #if os(macOS)
-        .frame(maxWidth: NSScreen.main?.frame.width, maxHeight: NSScreen.main?.frame.height)
-        #elseif os(iOS)
-        .frame(maxWidth: UIScreen.main.bounds.width, maxHeight: UIScreen.main.bounds.height)
-        #endif
-
     }
     
     private func handleMessageSubmit() {
