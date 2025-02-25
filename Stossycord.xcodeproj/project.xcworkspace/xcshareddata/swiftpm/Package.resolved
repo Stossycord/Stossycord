@@ -1,5 +1,5 @@
 {
-  "originHash" : "7275fef87d9516b367efe39f04bb28e88970297180a808c342fc20f11f9bc848",
+  "originHash" : "3843012b9f99ba2c938c341b95aa6df3b68b48ec161a748f3725936c8c159524",
   "pins" : [
     {
       "identity" : "cocoaasyncsocket",
@@ -38,6 +38,15 @@
       }
     },
     {
+      "identity" : "networkimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/NetworkImage",
+      "state" : {
+        "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
+        "version" : "6.0.1"
+      }
+    },
+    {
       "identity" : "oggdecoder",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/arkasas/OggDecoder.git",
@@ -53,6 +62,24 @@
       "state" : {
         "revision" : "c6bfd1af48efcc9a9ad203665db12375ba6b145a",
         "version" : "4.0.8"
+      }
+    },
+    {
+      "identity" : "swift-cmark",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-cmark",
+      "state" : {
+        "revision" : "3ccff77b2dc5b96b77db3da0d68d28068593fa53",
+        "version" : "0.5.0"
+      }
+    },
+    {
+      "identity" : "swift-markdown-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/swift-markdown-ui.git",
+      "state" : {
+        "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
+        "version" : "2.4.1"
       }
     }
   ],
