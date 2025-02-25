@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import MarkdownUI
 
 struct MessageView: View {
     let messageData: Message
@@ -90,14 +91,14 @@ struct MessageView: View {
                 }
                 
                 // Message bubble
-                Text(LocalizedStringKey(messageData.content))
+                Markdown(messageData.content)
                     .multilineTextAlignment(.leading)
                     .font(.system(size: 16))
                     .padding(10)
                 #if os(macOS)
-                    .background(Color(.systemGray))
+                    .background(.gray.opacity(0.25))
                 #else
-                    .background(Color(.systemGray2))
+                    .background(.gray.opacity(0.25))
                 #endif
                     .cornerRadius(15)
                     .onAppear() {

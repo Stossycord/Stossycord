@@ -33,29 +33,27 @@ struct LoginView: View {
                 }
                 
             }
+            
             .interactiveDismissDisabled()
-            /*
-             TextField("Discord Token", text: $token)
-             .padding()
-             .background(
-             RoundedRectangle(cornerRadius: 10)
-             .fill(Color(UIColor.systemGray5))
-             )
-             .overlay(
-             RoundedRectangle(cornerRadius: 10)
-             .stroke(Color.gray, lineWidth: 1)
-             )
-             .onSubmit {
-             keychain.set(token, forKey: "token")
-             
-             if !token.isEmpty {
-             dismiss()
-             webSocketService.connect()
-             }
-             }
-             .padding(.horizontal)
-             }
-             */
+            TextField("Discord Token", text: $token)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(.gray)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray, lineWidth: 1)
+                )
+                .onSubmit {
+                    keychain.set(token, forKey: "token")
+                    
+                    if !token.isEmpty {
+                        dismiss()
+                        webSocketService.connect()
+                    }
+                }
+                .padding(.horizontal)
         }
         .padding()
     }

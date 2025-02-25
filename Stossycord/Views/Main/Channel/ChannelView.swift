@@ -188,6 +188,8 @@ struct ChannelView: View {
             HStack {
                 TextField("\((editMessage == nil) ? "Message" : "Editing Message in ") \(currentchannelname)", text: $message)
                     .padding()
+                    .textFieldStyle(.plain)
+
                 #if !os(macOS)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
@@ -222,6 +224,7 @@ struct ChannelView: View {
                         .foregroundColor(.blue)
                 }
                 .padding(.leading, 5)
+                .buttonStyle(.plain)
             }
             .popover(isPresented: $showcurrentuser, content: {
                 VStack {
@@ -315,6 +318,12 @@ struct ChannelView: View {
             }
             
         }
+        #if os(macOS)
+        .frame(maxWidth: NSScreen.main?.frame.width, maxHeight: NSScreen.main?.frame.height)
+        #elseif os(iOS)
+        .frame(maxWidth: UIScreen.main.bounds.width, maxHeight: UIScreen.main.bounds.height)
+        #endif
+
     }
     
     private func handleMessageSubmit() {
