@@ -9,7 +9,7 @@ import Foundation
 
 
 func joinDiscordGuild(token: String, guildId: String, lurker: Bool? = nil, sessionId: String? = nil, location: String? = nil, recommendationLoadId: String? = nil, completion: @escaping (String?) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/guilds/\(guildId)/members/@me")!
+    let url = URL(string: "https://discord.com/api/v10/guilds/\(guildId)/members/@me")!
     var request = URLRequest(url: url)
     request.httpMethod = "PUT"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")

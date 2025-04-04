@@ -7,36 +7,58 @@
 
 import SwiftUI
 
-struct GuildIconView: View {
+struct ServerIconView: View {
     let iconURL: String?
-
+    
     var body: some View {
-        if let iconURL = iconURL, let url = URL(string: iconURL) {
-            AsyncImage(url: url) { image in
-                image.resizable()
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                    .shadow(radius: 2)
-            } placeholder: {
-                Circle()
-                    .fill(Color.gray)
-                    .frame(width: 40, height: 40)
-                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                    .shadow(radius: 2)
-                    .overlay {
+        Group {
+            if let iconURL = iconURL, let url = URL(string: iconURL) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable()
+                             .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        placeholderIcon(letter: "!")
+                    case .empty:
                         ProgressView()
+                    @unknown default:
+                        placeholderIcon(letter: "?")
                     }
-                    .contextMenu {
-                        Text("Image Loading or Failed to Load")
-                    }
+                }
+            } else {
+                placeholderIcon(letter: "")
             }
-        } else {
-            Circle()
-                .fill(Color.gray)
-                .frame(width: 40, height: 40)
-                .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                .shadow(radius: 2)
         }
+        .frame(width: 44, height: 44)
+        .clipShape(Circle())
+        .overlay(
+            Circle()
+                .stroke(Color(.systemBackground), lineWidth: 2)
+        )
+        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+    }
+    
+    @ViewBuilder
+    private func placeholderIcon(letter: String) -> some View {
+        ZStack {
+            Circle()
+                .fill(Color.secondary.opacity(0.3))
+            
+            if !letter.isEmpty {
+                Text(letter)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct ServerRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
     }
 }

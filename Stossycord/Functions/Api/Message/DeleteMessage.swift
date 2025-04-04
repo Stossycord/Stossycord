@@ -1,22 +1,20 @@
 //
-//  GetDMs.swift
+//  DeleteMessage.swift
 //  Stossycord
 //
-//  Created by Stossy11 on 21/9/2024.
+//  Created by Stossy11 on 24/03/2025.
 //
 
 import Foundation
 
-func getDiscordDMs(token: String, completion: @escaping ([DMs]) -> Void) {
-    guard let url = URL(string: "https://discord.com/api/v10/users/@me/channels") else {
-        // print("Invalid URL")
-        return
-    }
-
+func deleteMessage(message: Message) {
+    let webSocketService = WebSocketService.shared
+    let url = URL(string: "https://discord.com/api/v10/channels/\(message.channelId)/messages/\(message.messageId)")!
+    
     var request = URLRequest(url: url)
-    request.httpMethod = "GET"
+    request.httpMethod = "DELETE"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
+    request.addValue(WebSocketService.shared.token, forHTTPHeaderField: "Authorization")
     request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
     request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
     request.addValue("keep-alive", forHTTPHeaderField: "Connection")
@@ -37,28 +35,11 @@ func getDiscordDMs(token: String, completion: @escaping ([DMs]) -> Void) {
     request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
     request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
     request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
-
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let error = error {
-            // print("Error: \(error)")
-        } else if let data = data {
-            do {
-                
-                
-                var channels: [DMs] = []
-                
-                channels = try JSONDecoder().decode([DMs].self, from: data)
-
-                channels.sort { $0.position > $1.position }
-                DispatchQueue.main.async {
-                    completion(channels)
-                }
-            } catch {
-                print(String(data: data, encoding: .utf8))
-                print("Error: \(error)")
-            }
-        }
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        print("wow")
     }
-
+    
     task.resume()
+    
 }

@@ -8,7 +8,7 @@
 import Foundation
 
 func CurrentUser(token: String, completion: @escaping (User?) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/users/@me")!
+    let url = URL(string: "https://discord.com/api/v10/users/@me")!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -10,258 +10,343 @@ import Foundation
 import MarkdownUI
 
 struct MessageView: View {
+    // MARK: - Properties
     let messageData: Message
     @Binding var reply: String
     @StateObject var webSocketService: WebSocketService
-    @State var guildMember: GuildMember? = nil
-    @State var roleColor: Int = 0
+    @State private var guildMember: GuildMember? = nil
+    @State private var roleColor: Int = 0
     
+    // MARK: - Body
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            
             // Avatar
-            if let avatar = messageData.author.avatarHash {
-                AsyncImage(url: URL(string: "https://cdn.discordapp.com/avatars/\(messageData.author.authorId)/\(avatar).png")) { image in
-                    image.resizable()
-                        .frame(width: 40, height: 40)
+            avatarView(for: messageData.author)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                // Reply reference
+                if let replyId = messageData.messageReference?.messageId {
+                    replyIndicatorView(for: replyId)
+                }
+                
+                // Author and edit info
+                HStack(spacing: 4) {
+                    Text(messageData.author.currentname)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(roleColor != 0 ? Color(hex: roleColor) : .primary)
+                    
+                    if messageData.editedtimestamp != nil {
+                        Text("(edited)")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Message content
+                messageContentView(content: messageData.content)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 6)
+        .onAppear(perform: loadMemberInfo)
+    }
+    
+    // MARK: - Component Views
+    private func avatarView(for author: Author) -> some View {
+        Group {
+            if let avatar = author.avatarHash {
+                AsyncImage(url: URL(string: "https://cdn.discordapp.com/avatars/\(author.authorId)/\(avatar).png")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 38, height: 38)
                         .clipShape(Circle())
                 } placeholder: {
-                    ProgressView()
+                    Circle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 38, height: 38)
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        )
                 }
             } else {
                 AsyncImage(url: URL(string: "https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a6cc3c481a15a141738_icon_clyde_white_RGB.png")) { image in
-                    image.resizable()
+                    image
+                        .resizable()
                         .aspectRatio(contentMode: .fit)
                         .padding(7)
+                        .frame(width: 38, height: 38)
                         .background(Circle().fill(Color(hex: 0x5865F2) ?? Color.blue))
-                        .frame(width: 40, height: 40)
                         .clipShape(Circle())
                 } placeholder: {
-                    ProgressView()
+                    Circle()
+                        .fill(Color(hex: 0x5865F2) ?? Color.blue)
+                        .frame(width: 38, height: 38)
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        )
                 }
             }
-            
-            VStack(alignment: .leading, spacing: 5) {
-                
-                // Author name and reply indicator
-                if let beansman = messageData.messageReference?.messageId {
-                    if let matchingMessage = webSocketService.data.first(where: { $0.messageId == beansman }) {
-                        HStack {
-                            Image(systemName: "arrow.turn.up.right")
-                                .font(.system(size: 8)) // Smaller arrow size
-                                .foregroundColor(.gray)
-                            Text("\(matchingMessage.author.currentname): \(matchingMessage.content)")
-                                .font(.system(size: 10)) // Same size for the text
-                                .foregroundColor(.gray)
-                        }
-                        .onTapGesture {
-                            reply = matchingMessage.messageId
-                        }
-                    } else {
-                        HStack {
-                            Image(systemName: "arrow.turn.up.right")
-                                .font(.system(size: 8)) // Smaller arrow size
-                                .foregroundColor(.gray)
-                            Text("Unable to get reply")
-                                .font(.system(size: 10)) // Same size for the text
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                
-                HStack {
-                    if messageData.editedtimestamp != nil {
-                        HStack {
-                            Text("(edited)")
-                                .font(.system(size: 10)) // Same size for the text
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    
-                    
-                    if roleColor != 0  {
-                        Text(messageData.author.currentname)
-                            .bold()
-                            .foregroundColor(.init(hex: roleColor))
-                    } else {
-                        Text(messageData.author.currentname)
-                            .bold()
-                            .foregroundColor(.primary)
-                    }
-                }
-                
-                // Message bubble
-                Markdown(messageData.content)
-                    .multilineTextAlignment(.leading)
-                    .font(.system(size: 16))
-                    .padding(10)
-                #if os(macOS)
-                    .background(.gray.opacity(0.25))
-                #else
-                    .background(.gray.opacity(0.25))
-                #endif
-                    .cornerRadius(15)
-                    .onAppear() {
-                        print(messageData.editedtimestamp)
-                    }
-#if os(macOS)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(Color(.systemGray), lineWidth: 1)
-                    )
-#else
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
-#endif
-                
-                
-            }
-            Spacer()
         }
-        .padding(10)
-        .onAppear() {
-            self.guildMember = self.webSocketService.currentMembers.first(where: { $0.user.id == messageData.author.authorId})
-            
-            
-            if let roles = guildMember?.roles {
-                if let role = roles.compactMap({ roleId in
-                    webSocketService.currentroles.first(where: { $0.id == roleId && $0.color != 0 })
-                }).first {
-                    self.roleColor = role.color
-                    print(roleColor)
-                } else {
-                    self.roleColor = 0
+    }
+    
+    private func replyIndicatorView(for messageId: String) -> some View {
+        Group {
+            if let referencedMessage = webSocketService.data.first(where: { $0.messageId == messageId }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrowshape.turn.up.right")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                    
+                    Text("\(referencedMessage.author.currentname)")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Text(referencedMessage.content)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                .padding(.vertical, 2)
+                .padding(.horizontal, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.secondary.opacity(0.1))
+                )
+                .onTapGesture {
+                    reply = messageId
                 }
             } else {
-                print("No roles available.")
+                HStack(spacing: 6) {
+                    Image(systemName: "arrowshape.turn.up.right")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                    
+                    Text("Referenced message unavailable")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                .padding(.horizontal, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.secondary.opacity(0.1))
+                )
+            }
+        }
+    }
+    
+    private func messageContentView(content: String) -> some View {
+        Markdown(content)
+            .markdownTheme(.basic)
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemGray6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+            )
+    }
+    
+    // MARK: - Methods
+    private func loadMemberInfo() {
+        // Get member info
+        self.guildMember = self.webSocketService.currentMembers.first(where: {
+            $0.user.id == messageData.author.authorId
+        })
+        
+        // Get role color
+        if let roles = guildMember?.roles {
+            if let role = roles.compactMap({ roleId in
+                webSocketService.currentroles.first(where: { $0.id == roleId && $0.color != 0 })
+            }).first {
+                self.roleColor = role.color
+            } else {
+                self.roleColor = 0
             }
         }
     }
 }
 
 struct MessageSelfView: View {
+    // MARK: - Properties
     let messageData: Message
     @Binding var reply: String
     @StateObject var webSocketService: WebSocketService
-    @State var guildMember: GuildMember? = nil
-    @State var roleColor: Int = 0
+    @State private var guildMember: GuildMember? = nil
+    @State private var roleColor: Int = 0
     
-    
+    // MARK: - Body
     var body: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 10) {
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 5) {
-                // Optional reply indicator
-                if let beansman = messageData.messageReference?.messageId {
-                    if let matchingMessage = webSocketService.data.first(where: { $0.messageId == beansman }) {
-                        HStack {
-                            Text("\(matchingMessage.author.currentname): \(matchingMessage.content)")
-                                .font(.system(size: 10)) // Same size for the text
-                                .foregroundColor(.gray)
-                                .multilineTextAlignment(.trailing)
-                            Image(systemName: "arrow.turn.up.left")
-                                .font(.system(size: 8)) // Smaller arrow size
-                                .foregroundColor(.gray)
-                        }
-                        .onTapGesture {
-                            reply = matchingMessage.messageId
-                        }
-                    } else {
-                        HStack {
-                            Text("Unable to get reply")
-                                .font(.system(size: 10)) // Same size for the text
-                                .foregroundColor(.gray)
-                                .multilineTextAlignment(.trailing)
-                            Image(systemName: "arrow.turn.up.left")
-                                .font(.system(size: 8)) // Smaller arrow size
-                                .foregroundColor(.gray)
-                        }
-                    }
+            VStack(alignment: .trailing, spacing: 4) {
+                // Reply reference
+                if let replyId = messageData.messageReference?.messageId {
+                    replyIndicatorView(for: replyId)
                 }
                 
-                
-
-                
-                HStack {
+                // Author and edit info
+                HStack(spacing: 4) {
                     if messageData.editedtimestamp != nil {
-                        HStack {
-                            Text("(edited)")
-                                .font(.system(size: 10)) // Same size for the text
-                                .foregroundColor(.gray)
-                        }
+                        Text("(edited)")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
                     }
                     
-                    if roleColor != 0  {
-                        Text(messageData.author.currentname)
-                            .bold()
-                            .foregroundColor(Color(hex: roleColor))
-                    } else {
-                        Text(messageData.author.currentname)
-                            .bold()
-                            .foregroundColor(.primary)
-                    }
+                    Text(messageData.author.currentname)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(roleColor != 0 ? Color(hex: roleColor) : .primary)
                 }
-               
-                Text(LocalizedStringKey(messageData.content))
-                    .multilineTextAlignment(.trailing)
-                    .accentColor(.white)
-                    .font(.system(size: 16))
-                    .padding(10)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(15)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(Color.blue, lineWidth: 1)
-                    )
+                
+                // Message content
+                messageContentView(content: messageData.content)
             }
             
-            // Avatar on the right for your messages
-            if let avatar = messageData.author.avatarHash {
-                AsyncImage(url: URL(string: "https://cdn.discordapp.com/avatars/\(messageData.author.authorId)/\(avatar).png")) { image in
-                    image.resizable()
-                        .frame(width: 40, height: 40)
+            // Avatar
+            avatarView(for: messageData.author)
+        }
+        .padding(.vertical, 6)
+        .onAppear(perform: loadMemberInfo)
+    }
+    
+    // MARK: - Component Views
+    private func avatarView(for author: Author) -> some View {
+        Group {
+            if let avatar = author.avatarHash {
+                AsyncImage(url: URL(string: "https://cdn.discordapp.com/avatars/\(author.authorId)/\(avatar).png")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 38, height: 38)
                         .clipShape(Circle())
                 } placeholder: {
-                    ProgressView()
+                    Circle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 38, height: 38)
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        )
                 }
             } else {
                 AsyncImage(url: URL(string: "https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a6cc3c481a15a141738_icon_clyde_white_RGB.png")) { image in
-                    image.resizable()
+                    image
+                        .resizable()
                         .aspectRatio(contentMode: .fit)
                         .padding(7)
+                        .frame(width: 38, height: 38)
                         .background(Circle().fill(Color.blue))
-                        .frame(width: 40, height: 40)
                         .clipShape(Circle())
                 } placeholder: {
-                    ProgressView()
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 38, height: 38)
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        )
                 }
             }
         }
-        .padding(10)
-        .onAppear() {
-            self.guildMember = self.webSocketService.currentMembers.first(where: { $0.user.id == messageData.author.authorId})
-            
-            
-            if let roles = guildMember?.roles {
-                // Find the first role with a color different from 0
-                if let role = roles.compactMap({ roleId in
-                    webSocketService.currentroles.first(where: { $0.id == roleId && $0.color != 0 })
-                }).first {
-                    self.roleColor = role.color
-                    print(roleColor)
-                } else {
-                    // If no role with a color other than 0 is found
-                    self.roleColor = 0
-                    print("No role with color other than 0 found.")
+    }
+    
+    private func replyIndicatorView(for messageId: String) -> some View {
+        Group {
+            if let referencedMessage = webSocketService.data.first(where: { $0.messageId == messageId }) {
+                HStack(spacing: 6) {
+                    Text(referencedMessage.content)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    
+                    Text("\(referencedMessage.author.currentname)")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Image(systemName: "arrowshape.turn.up.left")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                .padding(.horizontal, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.secondary.opacity(0.1))
+                )
+                .onTapGesture {
+                    reply = messageId
                 }
             } else {
-                print("No roles available.")
+                HStack(spacing: 6) {
+                    Text("Referenced message unavailable")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    
+                    Image(systemName: "arrowshape.turn.up.left")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                .padding(.horizontal, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.secondary.opacity(0.1))
+                )
             }
-
         }
+    }
+    
+    private func messageContentView(content: String) -> some View {
+        Text(LocalizedStringKey(content))
+            .multilineTextAlignment(.trailing)
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.blue)
+            )
+            .foregroundColor(.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+            )
+    }
+    
+    // MARK: - Methods
+    private func loadMemberInfo() {
+        // Get member info
+        self.guildMember = self.webSocketService.currentMembers.first(where: {
+            $0.user.id == messageData.author.authorId
+        })
+        
+        // Get role color
+        if let roles = guildMember?.roles {
+            if let role = roles.compactMap({ roleId in
+                webSocketService.currentroles.first(where: { $0.id == roleId && $0.color != 0 })
+            }).first {
+                self.roleColor = role.color
+            } else {
+                self.roleColor = 0
+            }
+        }
+    }
+}
+
+// MARK: - Color extension for hex support
+extension Color {
+    init?(hex: Int) {
+        let red = Double((hex >> 16) & 0xFF) / 255.0
+        let green = Double((hex >> 8) & 0xFF) / 255.0
+        let blue = Double(hex & 0xFF) / 255.0
+        
+        self.init(red: red, green: green, blue: blue)
     }
 }

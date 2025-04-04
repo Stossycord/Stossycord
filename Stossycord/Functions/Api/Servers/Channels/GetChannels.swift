@@ -8,7 +8,7 @@
 import Foundation
 
 func getDiscordChannels(serverId: String, token: String, completion: @escaping ([Channel]) -> Void) {
-    guard let url = URL(string: "https://discord.com/api/v9/guilds/\(serverId)/channels?channel_limit=100") else {
+    guard let url = URL(string: "https://discord.com/api/v10/guilds/\(serverId)/channels?channel_limit=100") else {
         // print("Invalid URL")
         return
     }

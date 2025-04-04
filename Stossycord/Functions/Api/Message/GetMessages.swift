@@ -18,7 +18,7 @@ func getDiscordMessages(token: String, webSocketService: WebSocketService) {
         messageLimit = 25
     }
     
-    let url = URL(string: "https://discord.com/api/v9/channels/\(webSocketService.currentchannel)/messages?limit=\(messageLimit ?? 25)")!
+    let url = URL(string: "https://discord.com/api/v10/channels/\(webSocketService.currentchannel)/messages?limit=\(messageLimit ?? 25)")!
     
     var request = URLRequest(url: url)
     request.httpMethod = "GET"

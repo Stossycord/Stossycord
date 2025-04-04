@@ -9,7 +9,7 @@ import Foundation
 
 
 func getDiscordGuilds(token: String, completion: @escaping ([Guild]) -> Void) {
-    let url = URL(string: "https://discord.com/api/v9/users/@me/guilds")!
+    let url = URL(string: "https://discord.com/api/v10/users/@me/guilds")!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")

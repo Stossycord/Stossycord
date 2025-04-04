@@ -240,20 +240,16 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
     }
     
     func handleDeleteMessage(json: [String: Any]) {
+        guard let data = json["d"] as? [String: Any],  let messageID = data["channel_id"] as? String else {
+            
+            print("ohno")
+            return
+        }
+        
+        print(messageID)
+        
         DispatchQueue.main.async {
-            var currentmessage: MessageReference
-            
-            
-            do {
-                let jsonData = try JSONSerialization.data(withJSONObject: json, options: [])
-                let decoder = JSONDecoder()
-                currentmessage = try decoder.decode(MessageReference.self, from: jsonData)
-            } catch {
-                print("Error decoding JSON:", error)
-                return
-            }
-
-            self.data.removeAll { $0.messageId == currentmessage.messageId }
+            self.data.removeAll { $0.messageId == messageID }
         }
     }
     

@@ -8,7 +8,7 @@
 import Foundation
 
 func sendtyping(token: String, channel: String) {
-    let url = URL(string: "https://discord.com/api/v9/channels/\(channel)/typing")!
+    let url = URL(string: "https://discord.com/api/v10/channels/\(channel)/typing")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     

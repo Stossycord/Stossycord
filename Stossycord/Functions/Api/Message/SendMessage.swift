@@ -8,7 +8,7 @@
 import Foundation
 
 func SendMessage(content: String, fileUrl: URL?, token: String, channel: String, messageReference: [String: String]?) {
-    let url = URL(string: "https://discord.com/api/v9/channels/\(channel)/messages")!
+    let url = URL(string: "https://discord.com/api/v10/channels/\(channel)/messages")!
     var request = URLRequest(url: url)
     var data = Data()
     request.httpMethod = "POST"

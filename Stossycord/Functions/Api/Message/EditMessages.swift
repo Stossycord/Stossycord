@@ -11,7 +11,7 @@ func editMessage(message: Message) {
     
     let webSocketService = WebSocketService.shared
     
-    let url = URL(string: "https://discord.com/api/v9/channels/\(message.channelId)/messages/\(message.messageId)")!
+    let url = URL(string: "https://discord.com/api/v10/channels/\(message.channelId)/messages/\(message.messageId)")!
     
     
     var request = URLRequest(url: url)
