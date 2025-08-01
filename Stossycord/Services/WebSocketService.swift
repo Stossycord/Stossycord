@@ -45,7 +45,7 @@ class WebSocketService: ObservableObject {
 
     private init() {
         token = keychain.get("token") ?? ""
-        currentUser = User(id: "", username: "", discriminator: "", avatar: "nil")
+        currentUser = User(id: "", username: "", discriminator: "", avatar: "")
         
         // Configure URLSession
         let config = URLSessionConfiguration.default
@@ -108,7 +108,7 @@ class WebSocketService: ObservableObject {
                 "capabilities": 30717,
                 "properties": [
                     "os": deviceInfo.os,
-                    "device": "",
+                    "device": deviceInfo.device,
                     "browser_version": deviceInfo.browserVersion,
                     "os_version": deviceInfo.osVersion,
                 ]

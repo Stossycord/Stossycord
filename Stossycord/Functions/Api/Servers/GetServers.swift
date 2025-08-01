@@ -43,7 +43,7 @@ func getDiscordGuilds(token: String, completion: @escaping ([Guild]) -> Void) {
                 let guilds = try JSONDecoder().decode([Guild].self, from: data)
                 completion(guilds)
             } catch {
-                print("Error decoding JSON to get Guilds: \(error)")
+                print("Error decoding JSON to get Guilds: \(error.localizedDescription), data: \(data.utf8String)")
             }
         }
     }

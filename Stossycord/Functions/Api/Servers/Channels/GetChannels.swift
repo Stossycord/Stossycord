@@ -60,3 +60,22 @@ func getDiscordChannels(serverId: String, token: String, completion: @escaping (
 
     task.resume()
 }
+
+
+@available(iOS, introduced: 8.0, deprecated: 16.0, message: "Use system Locale.region on iOS 16+")
+extension Locale {
+    struct CompatRegion {
+        let identifier: String
+    }
+    
+    var region: CompatRegion? {
+        struct Region {
+            let identifier: String
+        }
+        
+        if let regionCode = self.regionCode {
+            return CompatRegion(identifier: regionCode)
+        }
+        return nil
+    }
+}

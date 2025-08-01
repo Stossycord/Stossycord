@@ -43,9 +43,16 @@ struct MessageView: View {
                 )
                 
                 MessageContentView(
-                    content: messageData.content,
+                    messageData: messageData,
                     isCurrentUser: isCurrentUser
                 )
+                
+                if let attachments = messageData.attachments, !attachments.isEmpty {
+                    HStack {
+                        attachmentsView(attachments: attachments)
+                    }
+                    .padding()
+                }
             }
             .frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
             
@@ -58,6 +65,16 @@ struct MessageView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .onAppear { loadRoleColor() }
+    }
+    
+    private func attachmentsView(attachments: [Attachment]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(attachments, id: \.id) { attachment in
+                MediaView(url: attachment.url, isCurrentUser: isCurrentUser)
+                    .cornerRadius(8)
+                    .frame(maxHeight: 300)
+            }
+        }
     }
     
     private func loadRoleColor() {
@@ -199,32 +216,36 @@ struct ReplyIndicatorView: View {
 }
 
 struct MessageContentView: View {
-    let content: String
+    let messageData: Message
     let isCurrentUser: Bool
     
     var body: some View {
-        Group {
-            if isCurrentUser {
-                Text(content)
-                    .multilineTextAlignment(.trailing)
-                    .foregroundColor(.white)
-            } else {
-                Markdown(content)
-                    .markdownTheme(.basic)
+        VStack(alignment: isCurrentUser ? .trailing : .leading) {
+            Group {
+                if isCurrentUser {
+                    Text(messageData.content)
+                        .multilineTextAlignment(.trailing)
+                        .foregroundColor(.white)
+                } else {
+                    Markdown(messageData.content)
+                        .markdownTheme(.basic)
+                        .multilineTextAlignment(.leading)
+                        .foregroundColor(.white)
+                }
             }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isCurrentUser ? Color.blue : Color(.systemGray6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        isCurrentUser ? Color.blue.opacity(0.3) : Color.secondary.opacity(0.2),
+                        lineWidth: 1
+                    )
+            )
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(isCurrentUser ? Color.blue : Color(.systemGray6))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(
-                    isCurrentUser ? Color.blue.opacity(0.3) : Color.secondary.opacity(0.2),
-                    lineWidth: 1
-                )
-        )
     }
 }
 

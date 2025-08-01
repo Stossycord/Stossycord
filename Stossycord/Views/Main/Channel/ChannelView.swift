@@ -146,13 +146,6 @@ struct ChannelView: View {
                         Label("Reply", systemImage: "arrowshape.turn.up.left")
                     }
                 }
-            
-            if let attachments = messageData.attachments, !attachments.isEmpty {
-                HStack {
-                    Spacer()
-                    attachmentsView(attachments: attachments)
-                }
-            }
         }
     }
     
@@ -164,23 +157,6 @@ struct ChannelView: View {
                         Label("Reply", systemImage: "arrowshape.turn.up.right")
                     }
                 }
-            
-            if let attachments = messageData.attachments, !attachments.isEmpty {
-                HStack {
-                    attachmentsView(attachments: attachments)
-                    Spacer()
-                }
-            }
-        }
-    }
-    
-    private func attachmentsView(attachments: [Attachment]) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(attachments, id: \.id) { attachment in
-                MediaView(url: attachment.url)
-                    .cornerRadius(8)
-                    .frame(maxHeight: 200)
-            }
         }
     }
     

@@ -50,7 +50,7 @@ func getGuildRoles(guild: Guild, completion: @escaping ([AdvancedGuild.Role]) ->
                     completion(sorted)
                 }
             } catch {
-                print("Error decoding JSON to get Guilds: \(error), data: \(data.utf8String)")
+                print("Error decoding JSON to get Guilds: \(error.localizedDescription), data: \(data.utf8String)")
             }
         }
     }

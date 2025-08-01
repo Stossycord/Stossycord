@@ -16,6 +16,7 @@ import AVKit
 
 struct MediaView: View {
     @State var savefile = false
+    let isCurrentUser: Bool?
     let url: String
     var urlToExport: URL? { URL(string: url) }
     let videoExtensions = ["mp4", "mov", "avi", "mkv", "flv", "wmv"]
@@ -34,65 +35,98 @@ struct MediaView: View {
             return CGSize(width: maxDimension * aspectRatio, height: maxDimension)
         }
     }
+    
+    init(url: String, isCurrentUser: Bool? = nil) {
+        self.url = url
+        self.isCurrentUser = isCurrentUser
+    }
 
     var body: some View {
         if let url2 = URL(string: url) {
-            Group {
+            VStack {
                 if videoExtensions.contains(url2.pathExtension.lowercased()) {
                     FSVideoPlayer(url: url2)
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: maxDimension, height: maxDimension)
+                        .frame(maxWidth: maxDimension, maxHeight: maxDimension)
+                        .clipped()
                         .contextMenu {
                             Button { savefile = true } label: { Text("Save to photos") }
                         }
                 } else if imageExtensions.contains(url2.pathExtension.lowercased()) {
                     AsyncImage(url: url2) { phase in
                         switch phase {
-                        case .empty: ProgressView()
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 50, height: 50)
                         case .success(let image):
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: maxDimension, height: maxDimension)
-                                .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }
-                        case .failure: DownloadView(url: url2)
-                        @unknown default: EmptyView()
+                                .frame(maxWidth: maxDimension, maxHeight: maxDimension)
+                                .clipped()
+                                .contextMenu {
+                                    Button { savefile = true } label: { Text("Save to photos") }
+                                }
+                        case .failure:
+                            DownloadView(url: url2)
+                        @unknown default:
+                            EmptyView()
                         }
                     }
                 } else if url2.pathExtension.lowercased() == "gif" {
 #if !os(macOS)
                     AsyncGiffy(url: url2) { phase in
                         switch phase {
-                        case .loading: ProgressView()
-                        case .error: DownloadView(url: url2)
+                        case .loading:
+                            ProgressView()
+                                .frame(width: 50, height: 50)
+                        case .error:
+                            DownloadView(url: url2)
                         case .success(let giffy):
-                            giffy.frame(width: 32, height: 32).clipShape(Circle())
-                                .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }
+                            giffy
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: maxDimension, maxHeight: maxDimension)
+                                .clipped()
+                                .contextMenu {
+                                    Button { savefile = true } label: { Text("Save to photos") }
+                                }
                         }
                     }
 #else
                     AsyncImage(url: url2) { phase in
                         switch phase {
-                        case .empty: ProgressView()
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 50, height: 50)
                         case .success(let image):
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: maxDimension, height: maxDimension)
-                                .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }
-                        case .failure: DownloadView(url: url2)
-                        @unknown default: EmptyView()
+                                .frame(maxWidth: maxDimension, maxHeight: maxDimension)
+                                .clipped()
+                                .contextMenu {
+                                    Button { savefile = true } label: { Text("Save to photos") }
+                                }
+                        case .failure:
+                            DownloadView(url: url2)
+                        @unknown default:
+                            EmptyView()
                         }
                     }
 #endif
-                    
                 } else if audioExtensions.contains(url2.pathExtension.lowercased()) {
                     AudioPlayer(url: url2)
-                        .contextMenu { Button { savefile = true } label: { Text("Save to photos") } }
+                        .contextMenu {
+                            Button { savefile = true } label: { Text("Save to photos") }
+                        }
                 } else {
                     DownloadView(url: url2)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: isCurrentUser == nil ? .center : (isCurrentUser == true ? .trailing : .leading))
+        } else {
+            Text("Invalid URL")
+                .foregroundColor(.secondary)
         }
     }
 }
