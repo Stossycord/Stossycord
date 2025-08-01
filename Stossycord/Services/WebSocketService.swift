@@ -93,6 +93,7 @@ class WebSocketService: ObservableObject {
         request.setValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
         
         webSocketTask = urlSession.webSocketTask(with: request)
+        webSocketTask?.maximumMessageSize = 9999999
         webSocketTask?.resume()
         
         DispatchQueue.main.async {
