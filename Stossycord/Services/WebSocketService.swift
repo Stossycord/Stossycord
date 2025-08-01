@@ -18,7 +18,7 @@ class WebSocketService: ObservableObject {
     @Published var channels: [Category] = []
     @Published var dms: [DMs] = []
     @Published var currentchannel: String = ""
-    @Published var isNetworkAvailable: Bool = true // Network status tracking
+    @Published var isNetworkAvailable: Bool = true
     @Published var Guilds: [Guild] = []
     @Published var currentguild: Guild = Guild(id: "", name: "", icon: "")
     @Published var currentroles: [AdvancedGuild.Role] = []
@@ -41,16 +41,20 @@ class WebSocketService: ObservableObject {
     private var maxReconnectionAttempts: Int = 5
     private var reconnectionTimer: Timer?
     
+    // Add sequence number tracking for proper Discord protocol
+    private var sequenceNumber: Int?
+    
     static var shared = WebSocketService()
 
     private init() {
         token = keychain.get("token") ?? ""
         currentUser = User(id: "", username: "", discriminator: "", avatar: "")
         
-        // Configure URLSession
+        // Configure URLSession with more lenient timeouts
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 10
-        config.timeoutIntervalForResource = 30
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        config.waitsForConnectivity = true
         urlSession = URLSession(configuration: config)
         
         setupNetworkMonitor()
@@ -61,11 +65,26 @@ class WebSocketService: ObservableObject {
     }
     
     func connect() {
+        // Don't attempt to connect if already connected or connecting
+        guard !isConnected && webSocketTask == nil else {
+            print("Already connected or connecting, skipping connect()")
+            return
+        }
+        
         token = keychain.get("token") ?? ""
         guard !token.isEmpty else {
             print("Token is empty!")
             return
         }
+        
+        print("Starting new WebSocket connection...")
+        
+        // Clean up any existing connection
+        disconnect()
+        
+        // Reset connection state
+        sequenceNumber = nil
+        lastHeartbeatAck = true
         
         CurrentUser(token: token) { user in
             DispatchQueue.main.async {
@@ -91,73 +110,68 @@ class WebSocketService: ObservableObject {
         var request = URLRequest(url: url)
         request.setValue("https://discord.com", forHTTPHeaderField: "Origin")
         request.setValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
+        request.timeoutInterval = 30
         
         webSocketTask = urlSession.webSocketTask(with: request)
         webSocketTask?.maximumMessageSize = 9999999
         webSocketTask?.resume()
         
-        DispatchQueue.main.async {
-            self.isConnected = true
-            self.reconnectionAttempts = 0
-        }
+        print("WebSocket connection initiated")
         
-        // Send initial identification payload
-        let payload: [String: Any] = [
-            "op": 2,
-            "d": [
-                "token": token,
-                "capabilities": 30717,
-                "properties": [
-                    "os": deviceInfo.os,
-                    "device": deviceInfo.device,
-                    "browser_version": deviceInfo.browserVersion,
-                    "os_version": deviceInfo.osVersion,
-                ]
-            ]
-        ]
-        sendJSON(payload)
+        // Don't set isConnected = true here, wait for successful identification
+        self.reconnectionAttempts = 0
         
-        // Start listening for messages
+        // Start listening for messages first
         receiveMessage()
     }
     
     func disconnect() {
+        print("Disconnecting WebSocket")
         reconnectionTimer?.invalidate()
+        reconnectionTimer = nil
         heartbeatTimer?.invalidate()
+        heartbeatTimer = nil
         
-        if isConnected {
+        if webSocketTask != nil {
             webSocketTask?.cancel(with: .goingAway, reason: nil)
             webSocketTask = nil
-            DispatchQueue.main.async {
-                self.isConnected = false
-            }
+        }
+        
+        DispatchQueue.main.async {
+            self.isConnected = false
         }
     }
     
     private func receiveMessage() {
         webSocketTask?.receive { [weak self] result in
+            guard let self = self else { return }
+            
             switch result {
             case .success(let message):
                 switch message {
                 case .string(let text):
-                    self?.handleMessage(text)
+                    self.handleMessage(text)
                 case .data(let data):
                     if let string = String(data: data, encoding: .utf8) {
-                        self?.handleMessage(string)
+                        self.handleMessage(string)
                     }
                 @unknown default:
                     break
                 }
                 // Continue listening for the next message
-                self?.receiveMessage()
+                self.receiveMessage()
                 
             case .failure(let error):
                 print("WebSocket receive error: \(error)")
                 DispatchQueue.main.async {
-                    self?.isConnected = false
+                    self.isConnected = false
                 }
-                if self?.isNetworkAvailable == true {
-                    self?.scheduleReconnection()
+                
+                // Only attempt reconnection if we have network and haven't exceeded max attempts
+                if self.isNetworkAvailable && self.reconnectionAttempts < self.maxReconnectionAttempts {
+                    self.scheduleReconnection()
+                } else {
+                    print("Not attempting reconnection - network: \(self.isNetworkAvailable), attempts: \(self.reconnectionAttempts)")
                 }
             }
         }
@@ -174,6 +188,7 @@ class WebSocketService: ObservableObject {
         webSocketTask?.send(message) { error in
             if let error = error {
                 print("WebSocket send error: \(error)")
+                // Don't immediately disconnect on send errors
             }
         }
     }
@@ -183,16 +198,26 @@ class WebSocketService: ObservableObject {
     }
 
     func scheduleReconnection() {
+        // Cancel any existing reconnection timer
+        reconnectionTimer?.invalidate()
+        
         guard reconnectionAttempts < maxReconnectionAttempts else {
             print("Max reconnection attempts reached. Stopping retries.")
             return
         }
         
-        let delay = pow(2.0, Double(reconnectionAttempts)) // Exponential backoff
+        // Don't schedule if already connected or connecting
+        guard !isConnected && webSocketTask == nil else {
+            print("Already connected or connecting, skipping reconnection")
+            return
+        }
+        
+        let delay = min(pow(2.0, Double(reconnectionAttempts)), 30.0) // Cap at 30 seconds
         reconnectionAttempts += 1
-        print("Attempting to reconnect in \(delay) seconds...")
+        print("Attempting to reconnect in \(delay) seconds... (attempt \(reconnectionAttempts)/\(maxReconnectionAttempts))")
         
         reconnectionTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            print("Executing reconnection attempt")
             self?.connect()
         }
     }
@@ -202,17 +227,22 @@ class WebSocketService: ObservableObject {
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 
-                if path.status == .satisfied {
-                    print("Network is available")
-                    self.isNetworkAvailable = true
-                    // If previously disconnected, attempt to reconnect
-                    if !self.isConnected {
-                        print("Attempting to reconnect after regaining network...")
-                        self.connect()
+                let wasAvailable = self.isNetworkAvailable
+                self.isNetworkAvailable = (path.status == .satisfied)
+                
+                if self.isNetworkAvailable && !wasAvailable {
+                    print("Network restored, attempting to reconnect...")
+                    // Reset reconnection attempts when network is restored
+                    self.reconnectionAttempts = 0
+                    if !self.isConnected && self.webSocketTask == nil {
+                        // Small delay to ensure network is fully stable
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            self.connect()
+                        }
                     }
-                } else {
-                    print("Network is unavailable")
-                    self.isNetworkAvailable = false
+                } else if !self.isNetworkAvailable {
+                    print("Network lost")
+                    self.disconnect()
                 }
             }
         }
@@ -220,10 +250,24 @@ class WebSocketService: ObservableObject {
     }
     
     func handleMessage(_ string: String) {
-        guard let data = string.data(using: .utf8), let json = getJSONfromData(data: data) else { return }
+        guard let data = string.data(using: .utf8),
+              let json = getJSONfromData(data: data) else {
+            print("Failed to parse message: \(string)")
+            return
+        }
+        
+        // Update sequence number if present
+        if let s = json["s"] as? Int {
+            sequenceNumber = s
+        }
         
         if let t = json["t"] as? String {
             switch t {
+            case "READY":
+                print("WebSocket connection ready!")
+                DispatchQueue.main.async {
+                    self.isConnected = true
+                }
             case "MESSAGE_CREATE", "MESSAGE_UPDATE":
                 handleChatMessage(json: json, eventType: t)
             case "MESSAGE_DELETE":
@@ -231,16 +275,26 @@ class WebSocketService: ObservableObject {
             case "GUILD_MEMBERS_CHUNK":
                 handleGuildMembersChunk(json: json)
             default:
-                print("Unhandled event type: \(t)")
+                // Don't print for every unhandled event to reduce noise
+                break
             }
         } else if let op = json["op"] as? Int {
             switch op {
-            case 10:
+            case 10: // Hello
                 handleHello(json: json)
-            case 11:
+            case 11: // Heartbeat ACK
                 lastHeartbeatAck = true
-            case 1:
+                print("Heartbeat ACK received")
+            case 1: // Heartbeat request
                 sendHeartbeat()
+            case 7: // Reconnect
+                print("Server requested reconnect")
+                disconnect()
+                scheduleReconnection()
+            case 9: // Invalid session
+                print("Invalid session, reconnecting...")
+                disconnect()
+                scheduleReconnection()
             default:
                 print("Unhandled operation code: \(op)")
             }
@@ -252,8 +306,8 @@ class WebSocketService: ObservableObject {
             "op": 8,
             "d": [
                 "guild_id": guildID,
-                "query": query, // Empty string fetches all members
-                "limit": limit, // 0 means no limit
+                "query": query,
+                "limit": limit,
             ]
         ]
         sendJSON(payload)
@@ -272,7 +326,7 @@ class WebSocketService: ObservableObject {
                     let decoder = JSONDecoder()
                     return try decoder.decode(GuildMember.self, from: jsonData)
                 } catch {
-                    print("Failed to decode member: \(error) data: \(memberData)")
+                    print("Failed to decode member: \(error)")
                     return nil
                 }
             }
@@ -282,7 +336,8 @@ class WebSocketService: ObservableObject {
     }
     
     func handleDeleteMessage(json: [String: Any]) {
-        guard let data = json["d"] as? [String: Any],  let messageID = data["id"] as? String else {
+        guard let data = json["d"] as? [String: Any],
+              let messageID = data["id"] as? String else {
             print("Failed to get message ID for deletion")
             return
         }
@@ -295,33 +350,64 @@ class WebSocketService: ObservableObject {
     }
     
     func handleHello(json: [String: Any]) {
-        if let d = json["d"] as? [String: Any], let interval = d["heartbeat_interval"] as? Double {
-            heartbeatInterval = interval / 1000
-            startHeartbeat()
+        guard let d = json["d"] as? [String: Any],
+              let interval = d["heartbeat_interval"] as? Double else {
+            print("Failed to get heartbeat interval")
+            return
         }
+        
+        heartbeatInterval = interval / 1000
+        print("Starting heartbeat with interval: \(heartbeatInterval)s")
+        
+        // Send identification payload after receiving Hello
+        let payload: [String: Any] = [
+            "op": 2,
+            "d": [
+                "token": token,
+                "capabilities": 30717,
+                "properties": [
+                    "os": deviceInfo.os,
+                    "device": deviceInfo.device,
+                    "browser_version": deviceInfo.browserVersion,
+                    "os_version": deviceInfo.osVersion,
+                ]
+            ]
+        ]
+        sendJSON(payload)
+        
+        startHeartbeat()
     }
 
     func sendHeartbeat() {
-        let payload: [String: Any] = ["op": 1, "d": Int(Date().timeIntervalSince1970 * 1000)]
+        let payload: [String: Any] = ["op": 1, "d": sequenceNumber as Any]
         sendJSON(payload)
+        print("Heartbeat sent with sequence: \(sequenceNumber ?? -1)")
     }
 
     func startHeartbeat() {
         heartbeatTimer?.invalidate()
         lastHeartbeatAck = true
+        
         heartbeatTimer = Timer.scheduledTimer(withTimeInterval: heartbeatInterval, repeats: true) { [weak self] _ in
             guard let self = self else { return }
+            
             if self.lastHeartbeatAck {
                 self.lastHeartbeatAck = false
                 self.sendHeartbeat()
             } else {
+                print("Heartbeat ACK not received, disconnecting...")
                 self.disconnect()
+                if self.isNetworkAvailable {
+                    self.scheduleReconnection()
+                }
             }
         }
     }
     
     func handleChatMessage(json: [String: Any], eventType: String) {
-        guard let json = json["d"] as? [String: Any], let channelId = json["channel_id"] as? String, channelId == currentchannel else { return }
+        guard let json = json["d"] as? [String: Any],
+              let channelId = json["channel_id"] as? String,
+              channelId == currentchannel else { return }
         
         var currentmessage: Message
         var jsonData: Data = Data()
