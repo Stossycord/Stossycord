@@ -7,12 +7,11 @@
 
 import SwiftUI
 import Foundation
-import Starscream
 import AVFoundation
 import KeychainSwift
 import Network
 
-class WebSocketService: WebSocketDelegate, ObservableObject {
+class WebSocketService: ObservableObject {
     @Published var currentUser: User
     @Published var isConnected: Bool = false
     @Published var data: [Message] = []
@@ -24,7 +23,9 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
     @Published var currentguild: Guild = Guild(id: "", name: "", icon: "")
     @Published var currentroles: [AdvancedGuild.Role] = []
     @Published var currentMembers: [GuildMember] = []
-    var socket: WebSocket!
+    
+    private var webSocketTask: URLSessionWebSocketTask?
+    private var urlSession: URLSession!
     let keychain = KeychainSwift()
     @Published var token: String
     var deviceInfo: DeviceInfo = CurrentDeviceInfo.shared.deviceInfo
@@ -35,18 +36,24 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue.global(qos: .background)
 
-
     // Reconnection properties
     private var reconnectionAttempts: Int = 0
     private var maxReconnectionAttempts: Int = 5
     private var reconnectionTimer: Timer?
-    
     
     static var shared = WebSocketService()
 
     private init() {
         token = keychain.get("token") ?? ""
         currentUser = User(id: "", username: "", discriminator: "", avatar: "nil")
+        
+        // Configure URLSession
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 10
+        config.timeoutIntervalForResource = 30
+        urlSession = URLSession(configuration: config)
+        
+        setupNetworkMonitor()
         
         if !token.isEmpty {
             connect()
@@ -70,35 +77,103 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
             }
         }
         
-        
         getDiscordGuilds(token: token) { result in
             DispatchQueue.main.async {
                 self.Guilds = result
             }
         }
 
-        var request = URLRequest(url: URL(string: "wss://gateway.discord.gg/?encoding=json&v=9")!)
-        request.timeoutInterval = 10
+        guard let url = URL(string: "wss://gateway.discord.gg/?encoding=json&v=9") else {
+            print("Invalid WebSocket URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
         request.setValue("https://discord.com", forHTTPHeaderField: "Origin")
-        request.setValue("websocket", forHTTPHeaderField: "Upgrade")
         request.setValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
-
-        socket = WebSocket(request: request)
-        socket.delegate = self
-        socket.connect()
+        
+        webSocketTask = urlSession.webSocketTask(with: request)
+        webSocketTask?.resume()
+        
+        DispatchQueue.main.async {
+            self.isConnected = true
+            self.reconnectionAttempts = 0
+        }
+        
+        // Send initial identification payload
+        let payload: [String: Any] = [
+            "op": 2,
+            "d": [
+                "token": token,
+                "capabilities": 30717,
+                "properties": [
+                    "os": deviceInfo.os,
+                    "device": "",
+                    "browser_version": deviceInfo.browserVersion,
+                    "os_version": deviceInfo.osVersion,
+                ]
+            ]
+        ]
+        sendJSON(payload)
+        
+        // Start listening for messages
+        receiveMessage()
     }
     
     func disconnect() {
         reconnectionTimer?.invalidate()
+        heartbeatTimer?.invalidate()
+        
         if isConnected {
-            socket.disconnect()
-            isConnected = false
+            webSocketTask?.cancel(with: .goingAway, reason: nil)
+            webSocketTask = nil
+            DispatchQueue.main.async {
+                self.isConnected = false
+            }
+        }
+    }
+    
+    private func receiveMessage() {
+        webSocketTask?.receive { [weak self] result in
+            switch result {
+            case .success(let message):
+                switch message {
+                case .string(let text):
+                    self?.handleMessage(text)
+                case .data(let data):
+                    if let string = String(data: data, encoding: .utf8) {
+                        self?.handleMessage(string)
+                    }
+                @unknown default:
+                    break
+                }
+                // Continue listening for the next message
+                self?.receiveMessage()
+                
+            case .failure(let error):
+                print("WebSocket receive error: \(error)")
+                DispatchQueue.main.async {
+                    self?.isConnected = false
+                }
+                if self?.isNetworkAvailable == true {
+                    self?.scheduleReconnection()
+                }
+            }
         }
     }
     
     func sendJSON(_ request: [String: Any]) {
-        if let data = try? JSONSerialization.data(withJSONObject: request, options: []) {
-            socket.write(data: data)
+        guard let data = try? JSONSerialization.data(withJSONObject: request, options: []),
+              let string = String(data: data, encoding: .utf8) else {
+            print("Failed to serialize JSON")
+            return
+        }
+        
+        let message = URLSessionWebSocketTask.Message.string(string)
+        webSocketTask?.send(message) { error in
+            if let error = error {
+                print("WebSocket send error: \(error)")
+            }
         }
     }
     
@@ -106,59 +181,26 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
         return try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
     }
 
-    func didReceive(event: Starscream.WebSocketEvent, client: any Starscream.WebSocketClient) {
-        switch event {
-        case .connected:
-            isConnected = true
-            reconnectionAttempts = 0 // Reset reconnection attempts when successfully connected
-            let payload: [String: Any] = [
-                "op": 2,
-                "d": [
-                    "token": token,
-                    "capabilities": 30717,
-                    "properties": [
-                        "os": deviceInfo.os,
-                        "device": "",
-                        "browser_version": deviceInfo.browserVersion,
-                        "os_version": deviceInfo.osVersion,
-                    ]
-                ]
-            ]
-            sendJSON(payload)
-        case .disconnected(let reason, let code):
-            print("Disconnected: \(reason), Code: \(code), reconnecting")
-            if isNetworkAvailable {
-                scheduleReconnection()
-            }
-        case .error(let error):
-            print(error?.localizedDescription ?? "Unknown error")
-            scheduleReconnection()
-        case .text(let string):
-            handleMessage(string)
-        case .binary(let data):
-            print(data)
-        default:
-            break
-        }
-    }
-    
-
     func scheduleReconnection() {
-        if reconnectionAttempts < maxReconnectionAttempts {
-            let delay = pow(2.0, Double(reconnectionAttempts)) // Exponential backoff
-            reconnectionAttempts += 1
-            print("Attempting to reconnect in \(delay) seconds...")
-            reconnectionTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [self] _ in
-                self.connect()
-            }
-        } else {
+        guard reconnectionAttempts < maxReconnectionAttempts else {
             print("Max reconnection attempts reached. Stopping retries.")
+            return
+        }
+        
+        let delay = pow(2.0, Double(reconnectionAttempts)) // Exponential backoff
+        reconnectionAttempts += 1
+        print("Attempting to reconnect in \(delay) seconds...")
+        
+        reconnectionTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            self?.connect()
         }
     }
     
     private func setupNetworkMonitor() {
-        monitor.pathUpdateHandler = { [self] path in
-            DispatchQueue.main.async { [self]
+        monitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
                 if path.status == .satisfied {
                     print("Network is available")
                     self.isNetworkAvailable = true
@@ -234,19 +276,17 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
                 }
             }
             
-            
             self.currentMembers = parsedMembers
         }
     }
     
     func handleDeleteMessage(json: [String: Any]) {
-        guard let data = json["d"] as? [String: Any],  let messageID = data["channel_id"] as? String else {
-            
-            print("ohno")
+        guard let data = json["d"] as? [String: Any],  let messageID = data["id"] as? String else {
+            print("Failed to get message ID for deletion")
             return
         }
         
-        print(messageID)
+        print("Deleting message: \(messageID)")
         
         DispatchQueue.main.async {
             self.data.removeAll { $0.messageId == messageID }
@@ -265,7 +305,6 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
         sendJSON(payload)
     }
 
-
     func startHeartbeat() {
         heartbeatTimer?.invalidate()
         lastHeartbeatAck = true
@@ -275,11 +314,10 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
                 self.lastHeartbeatAck = false
                 self.sendHeartbeat()
             } else {
-                self.socket.disconnect()
+                self.disconnect()
             }
         }
     }
-    
     
     func handleChatMessage(json: [String: Any], eventType: String) {
         guard let json = json["d"] as? [String: Any], let channelId = json["channel_id"] as? String, channelId == currentchannel else { return }
@@ -296,13 +334,10 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
             return
         }
         
-    
-        
-        
         DispatchQueue.main.async {
             if eventType == "MESSAGE_CREATE" {
                 if self.currentchannel == currentmessage.channelId {
-                    print("Handling chat message: \(currentmessage) / \(jsonData)")
+                    print("Handling chat message: \(currentmessage)")
                     self.data.append(currentmessage)
                 }
             } else if eventType == "MESSAGE_UPDATE" {
@@ -311,5 +346,10 @@ class WebSocketService: WebSocketDelegate, ObservableObject {
                 }
             }
         }
+    }
+    
+    deinit {
+        monitor.cancel()
+        disconnect()
     }
 }

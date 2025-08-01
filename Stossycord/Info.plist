@@ -10,5 +10,7 @@
 		<string>remote-notification</string>
 		<string>voip</string>
 	</array>
+	<key>UIDesignRequiresCompatibility</key>
+	<true/>
 </dict>
 </plist>

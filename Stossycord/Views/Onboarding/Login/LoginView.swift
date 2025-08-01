@@ -127,6 +127,8 @@ struct WebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
+        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1"
+
         webView.navigationDelegate = context.coordinator
 
         // Load the Discord login page
@@ -156,16 +158,16 @@ struct WebView: UIViewRepresentable {
             // JavaScript to retrieve token from localStorage
             let js = """
             (function() {
-              let a = [];
-              webpackChunkdiscord_app.push([[0],,e=>Object.keys(e.c).find(t=>(t=e(t)?.default?.getToken?.())&&a.push(t))]);
-              return a[0];
+              const iframe = document.createElement("iframe");
+              return document.body.appendChild(iframe).contentWindow.localStorage.token;
             })();
             """
 
             // Execute JavaScript and retry if not found
             webView.evaluateJavaScript(js) { result, error in
                 if let token = result as? String, !token.isEmpty {
-                    self.onTokenDetected?(token)
+                    let cool = token.replacingOccurrences(of: "\"", with: "")
+                    self.onTokenDetected?(cool)
                 } else {
                     self.retryCount += 1
                     DispatchQueue.main.asyncAfter(deadline: .now()) {

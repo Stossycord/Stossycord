@@ -9,7 +9,7 @@ import Foundation
 import AVFoundation
 import OggDecoder
 import SwiftUI
-#if !os(macOS)
+#if os(iOS)
 import Giffy
 #endif
 import AVKit

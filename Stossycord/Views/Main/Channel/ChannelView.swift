@@ -14,13 +14,14 @@ struct ChannelView: View {
     @ObservedObject private var keyboard = KeyboardResponder()
     @State private var message: String = ""
     @State var currentchannelname: String
+    @State private var showingUploadPicker = false
     @State private var showingFilePicker = false
     @State private var showUserProfile = false
     @State var fileURL: URL?
     @State var repliedMessage: Message?
     @State var currentid: String
     @State var currentGuild: Guild?
-    @State var scrollToId: String = ""
+    @State var scrollToId: String? = nil
     @State var editMessage: Message?
     @State var typingWorkItem: DispatchWorkItem?
     @State private var shown = true
@@ -48,7 +49,7 @@ struct ChannelView: View {
                         }
                         
                         // File picker
-                        if showingFilePicker {
+                        if showingUploadPicker {
                             filePickerView
                         }
                         
@@ -110,11 +111,11 @@ struct ChannelView: View {
                 .padding(.top)
             }
             .onChange(of: scrollToId) { newValue in
-                if !scrollToId.isEmpty,
+                if let scrollToId,
                    let targetMessage = webSocketService.data.first(where: { $0.messageId == scrollToId }) {
                     withAnimation {
                         scrollViewProxy.scrollTo(targetMessage.messageId, anchor: .center)
-                        scrollToId = ""
+                        self.scrollToId = nil
                     }
                 }
             }
@@ -124,7 +125,7 @@ struct ChannelView: View {
     
     private func selfMessageView(messageData: Message) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
-            MessageSelfView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService)
+            MessageView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService, isCurrentUser: true)
                 .contextMenu {
                     Button(action: { showUserProfile = true }) {
                         Label("Show User", systemImage: "person")
@@ -157,7 +158,7 @@ struct ChannelView: View {
     
     private func otherMessageView(messageData: Message) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            MessageView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService)
+            MessageView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService, isCurrentUser: false)
                 .contextMenu {
                     Button(action: { repliedMessage = messageData }) {
                         Label("Reply", systemImage: "arrowshape.turn.up.right")
@@ -300,7 +301,7 @@ struct ChannelView: View {
                 
                 Spacer()
                 
-                Button(action: { showingFilePicker = false }) {
+                Button(action: { showingUploadPicker = false }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
@@ -314,7 +315,7 @@ struct ChannelView: View {
     private var messageInputView: some View {
         HStack(spacing: 12) {
             // Add attachment button
-            Button(action: { showingFilePicker = true }) {
+            Button(action: { showingUploadPicker = true }) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 22))
                     .foregroundColor(.blue)
