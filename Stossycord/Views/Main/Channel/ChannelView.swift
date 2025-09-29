@@ -56,19 +56,18 @@ struct ChannelView: View {
                         // Message input
                         messageInputView
                             .padding(.horizontal)
-                            .padding(.bottom, tabBarModifier.shown ?
-                                    keyboard.currentHeight :
-                                    keyboard.currentHeight - tabBarModifier.tabBarSize)
+                            // .padding(.bottom, tabBarModifier.shown ?
+                                   //  keyboard.currentHeight :
+                                   //  keyboard.currentHeight - tabBarModifier.tabBarSize)
                             .animation(.easeOut(duration: 0.16), value: keyboard.currentHeight)
                             .background(
                                 Rectangle()
                                     .fill(.thinMaterial)
-                                    .ignoresSafeArea()
                             )
                     }
                 }
         }
-        .ignoresSafeArea(.keyboard)
+        .ignoresSafeArea(.container)
         .sheet(isPresented: $showUserProfile) {
             userProfileView
                 .presentationDetents([.medium, .large])
@@ -310,6 +309,9 @@ struct ChannelView: View {
             )
             .onChange(of: message) { _ in
                 handleTypingIndicator()
+            }
+            .onSubmit {
+                handleMessageSubmit()
             }
             
             // Send button

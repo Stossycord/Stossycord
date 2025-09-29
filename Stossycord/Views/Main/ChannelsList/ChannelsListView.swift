@@ -96,7 +96,7 @@ struct ChannelsListView: View {
     func channels(token: String) {
         getDiscordChannels(serverId: guild.id, token: token) { channels in
             // Filter for both text channels and categories
-            let recievedChannels = channels.filter { $0.type == 0 }
+            let recievedChannels = channels.filter { $0.type == 0 || $0.type == 5 }
             
             // Get categories
             let recievedcategories = channels.filter { $0.type == 4 }

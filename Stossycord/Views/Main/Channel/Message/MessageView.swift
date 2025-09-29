@@ -221,30 +221,47 @@ struct MessageContentView: View {
     
     var body: some View {
         VStack(alignment: isCurrentUser ? .trailing : .leading) {
-            Group {
-                if isCurrentUser {
-                    Text(messageData.content)
-                        .multilineTextAlignment(.trailing)
-                        .foregroundColor(.white)
-                } else {
-                    Markdown(messageData.content)
-                        .markdownTheme(.basic)
-                        .multilineTextAlignment(.leading)
-                        .foregroundColor(.white)
+            if #available(iOS 19, *) {
+                Group {
+                    if isCurrentUser {
+                        Text(messageData.content)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(.white)
+                    } else {
+                        Markdown(messageData.content)
+                            .markdownTheme(.basic)
+                            .multilineTextAlignment(.leading)
+                            .foregroundColor(.white)
+                    }
                 }
+                .padding(12)
+                .glassEffect(.regular.tint(isCurrentUser ? .blue.opacity(0.6) : .init(uiColor: .darkGray).opacity(0.6)), in: .rect(cornerRadius: 16))
+            } else {
+                Group {
+                    if isCurrentUser {
+                        Text(messageData.content)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(.white)
+                    } else {
+                        Markdown(messageData.content)
+                            .markdownTheme(.basic)
+                            .multilineTextAlignment(.leading)
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(isCurrentUser ? Color.blue : Color(.systemGray6))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            isCurrentUser ? Color.blue.opacity(0.3) : Color.secondary.opacity(0.2),
+                            lineWidth: 1
+                        )
+                )
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isCurrentUser ? Color.blue : Color(.systemGray6))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        isCurrentUser ? Color.blue.opacity(0.3) : Color.secondary.opacity(0.2),
-                        lineWidth: 1
-                    )
-            )
         }
     }
 }
