@@ -140,7 +140,7 @@ struct LoginView: View {
                         .frame(width: 900)
                         .border(Color.red, width: 2)
                         .scaleEffect(0.2)
-                        .offset(x: 10000 ,y: 10000)
+                       //  .offset(x: 10000 ,y: 10000)
                 }
                 .padding(.horizontal)
             }
@@ -155,7 +155,8 @@ struct LoginView: View {
             }
         }
         .onDisappear() {
-            HiddenDiscordWebView.Coordinator.timer?.invalidate()
+            HiddenDiscordWebView.Coordinator.qrTimer?.invalidate()
+            HiddenDiscordWebView.Coordinator.backgroundTokenTimer?.invalidate()
         }
     }
 }
@@ -180,6 +181,7 @@ class LoginViewModel: ObservableObject {
         shouldSubmitLogin = true
     }
 }
+
 
 struct InteractiveDiscordWebView: UIViewRepresentable {
     @ObservedObject var viewModel: LoginViewModel
@@ -269,6 +271,9 @@ struct HiddenDiscordWebView: UIViewRepresentable {
         
         context.coordinator.viewModel?.webView = webView
         
+        // Start background token monitoring immediately
+        context.coordinator.startBackgroundTokenMonitoring()
+        
         return webView
     }
     
@@ -286,7 +291,8 @@ struct HiddenDiscordWebView: UIViewRepresentable {
     }
     
     class Coordinator: NSObject, WKNavigationDelegate {
-        static var timer: Timer? = nil
+        static var qrTimer: Timer? = nil
+        static var backgroundTokenTimer: Timer? = nil
         weak var webView: WKWebView?
         weak var viewModel: LoginViewModel?
         private var hasSetInitialUserAgent = false
@@ -309,6 +315,13 @@ struct HiddenDiscordWebView: UIViewRepresentable {
             webView.load(request)
         }
         
+        func startBackgroundTokenMonitoring() {
+            Self.backgroundTokenTimer?.invalidate()
+            Self.backgroundTokenTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+                self?.checkForChallengesOrToken()
+            }
+        }
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 self.extractQRCode(from: webView)
@@ -404,35 +417,120 @@ struct HiddenDiscordWebView: UIViewRepresentable {
                 // Check for token first
                 const iframe = document.createElement("iframe");
                 const token = document.body.appendChild(iframe).contentWindow.localStorage.token;
-                document.body.removeChild(iframe);
                 
                 if (token && token !== '""') {
                     return { type: 'token', value: token };
                 }
-                
-                // Check for 2FA
+
+                // Check for 2FA (language-agnostic + multilingual keywords)
                 const mfaText = document.body.innerText || '';
-                if (mfaText.includes('Multi') || mfaText.includes('factor') || 
-                    mfaText.includes('authentication') || mfaText.includes('2FA') ||
-                    document.querySelector('input[placeholder*="6-digit"]') ||
-                    document.querySelector('input[name="code"]')) {
+
+                const twoFAKeywords = [
+                    // English
+                    "Multi", "factor", "authentication", "2FA", "verification code",
+
+                    // Chinese
+                    "验证码", // verification code
+                    "双重验证", // two-factor authentication
+                    "两步验证", // two-step verification
+
+                    // Spanish
+                    "autenticación de dos factores",
+                    "código de verificación",
+                    "verificación en dos pasos",
+
+                    // French
+                    "authentification à deux facteurs",
+                    "code de vérification",
+                    "vérification en deux étapes",
+
+                    // German
+                    "Zwei-Faktor-Authentifizierung",
+                    "Bestätigungscode",
+                    "Zwei-Schritt-Verifizierung",
+
+                    // Japanese
+                    "二要素認証", // two-factor authentication
+                    "確認コード", // verification code
+                    "2段階認証", // two-step verification
+
+                    // Korean
+                    "이중 인증", // two-factor authentication
+                    "인증 코드", // verification code
+                    "2단계 인증", // two-step verification
+
+                    // Russian
+                    "двухфакторная аутентификация",
+                    "код подтверждения",
+                    "двухэтапная проверка",
+
+                    // Arabic
+                    "المصادقة الثنائية", // two-factor authentication
+                    "رمز التحقق", // verification code
+                    "التحقق بخطوتين", // two-step verification
+
+                    // Portuguese
+                    "autenticação de dois fatores",
+                    "código de verificação",
+                    "verificação em duas etapas"
+                ];
+
+                const hasKeyword = twoFAKeywords.some(word => mfaText.includes(word));
+
+                const twoFAField = document.querySelector(
+                    'input[placeholder*="6"], input[name*="code"], input[type="number"], input[type="tel"]'
+                );
+
+                const sixDigitRegex = /\\b\\d{6}\\b/;
+
+                if (hasKeyword || twoFAField || sixDigitRegex.test(mfaText)) {
                     return { type: '2fa' };
                 }
+
+                // Check for captcha - more comprehensive detection
+                const bodyText = document.body.innerText || '';
                 
-                // Check for captcha
-                if (document.querySelector('iframe[src*="captcha"]') || 
+                const captchaKeywords = [
+                    // English
+                    "are you human", "verify you", "verify that you", "human verification",
+                    "security check", "complete the security check", "prove you're human",
+                    "verify yourself", "verification required",
+                    
+                    // Common captcha text
+                    "hcaptcha", "recaptcha", "captcha", "I am human",
+                    
+                    // Other languages
+                    "você é humano", // Portuguese
+                    "eres humano", // Spanish  
+                    "êtes-vous humain", // French
+                    "bist du ein mensch", // German
+                    "あなたは人間ですか", // Japanese
+                    "你是人类吗", // Chinese
+                    "당신은 인간입니까" // Korean
+                ];
+                
+                const hasCaptchaText = captchaKeywords.some(keyword => 
+                    bodyText.toLowerCase().includes(keyword.toLowerCase())
+                );
+                
+                const hasCaptchaElement = document.querySelector('iframe[src*="captcha"]') || 
                     document.querySelector('[class*="captcha"]') ||
+                    document.querySelector('[class*="Captcha"]') ||
                     document.querySelector('iframe[src*="hcaptcha"]') ||
-                    document.querySelector('iframe[src*="recaptcha"]')) {
+                    document.querySelector('iframe[src*="recaptcha"]') ||
+                    document.querySelector('[id*="captcha"]') ||
+                    document.querySelector('div[class*="challenge"]');
+                
+                if (hasCaptchaText || hasCaptchaElement) {
                     return { type: 'captcha' };
                 }
-                
+
                 // Check for error messages
                 const errorElement = document.querySelector('[class*="error"], [class*="Error"]');
                 if (errorElement && errorElement.innerText) {
                     return { type: 'error', value: errorElement.innerText };
                 }
-                
+
                 return { type: 'none' };
             })();
             """
@@ -501,8 +599,11 @@ struct HiddenDiscordWebView: UIViewRepresentable {
             decisionHandler(.allow)
         }
         
+        
+        
         deinit {
             challengeCheckTimer?.invalidate()
+            Self.backgroundTokenTimer?.invalidate()
         }
     }
 }
@@ -534,7 +635,7 @@ extension HiddenDiscordWebView.Coordinator {
         DispatchQueue.main.asyncAfter(deadline: .now()) {
             let config = WKSnapshotConfiguration()
             
-            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+            Self.qrTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
                 webView.takeSnapshot(with: config) { [weak self] image, error in
                     if let image = image {
                         print("✅ Screenshot captured successfully")
@@ -544,8 +645,6 @@ extension HiddenDiscordWebView.Coordinator {
                         self?.retryQRExtraction(from: webView)
                     }
                 }
-                
-                Self.timer = timer
             }
         }
     }
