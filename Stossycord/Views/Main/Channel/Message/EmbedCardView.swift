@@ -3,10 +3,13 @@ import Foundation
 import MarkdownUI
 
 struct EmbedCardView: View {
+    @Environment(\.colorScheme) var colorScheme: ColorScheme
+
     let embed: Embed
     let isCurrentUser: Bool
 
     private var accentColor: Color {
+        print(embed)
         if let color = embed.color, let resolved = Color(hex: color) {
             return resolved
         }
@@ -94,11 +97,11 @@ struct EmbedCardView: View {
                 if let link = embed.url, let url = URL(string: link) {
                     Link(title, destination: url)
                         .font(.headline)
-                        .foregroundStyle(embed.color != nil ? accentColor : Color.primary)
+                        .foregroundStyle(Color.primary)
                 } else {
                     Text(title)
                         .font(.headline)
-                        .foregroundStyle(embed.color != nil ? accentColor : Color.primary)
+                        .foregroundStyle(Color.primary)
                 }
             }
             if let description = embed.description, !description.isEmpty {

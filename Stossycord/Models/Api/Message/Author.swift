@@ -19,6 +19,7 @@ struct Author: Codable, Equatable {
         guard let avatarHash = avatarHash else { return false }
         // example animated picture: https://cdn.discordapp.com/avatars/978750269481418792/a_66e1f94b4d89b555dece5e1db687b041.gif?size=1024&animated=true
         // @sayborduu is cool :P
+        // ok no more nitro for sayborduu, link still works btw
         return avatarHash.hasPrefix("a_")
     }
     

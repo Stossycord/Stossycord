@@ -1,4 +1,3 @@
-// @sayborduu | alexbadi.es
 // SearchView.swift
 
 import SwiftUI

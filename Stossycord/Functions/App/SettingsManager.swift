@@ -1,5 +1,4 @@
 // SettingsManager.swift
-// made by sayborduu
 
 import Foundation
 import Combine
