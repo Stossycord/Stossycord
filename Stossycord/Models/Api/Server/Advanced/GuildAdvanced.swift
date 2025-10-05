@@ -8,7 +8,7 @@
 import Foundation
 
 struct AdvancedGuild: Codable {
-    struct Role: Codable {
+    struct Role: Codable, Equatable {
         let id: String
         let name: String
         let description: String?

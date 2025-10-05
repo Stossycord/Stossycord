@@ -22,6 +22,8 @@ class WebSocketService: ObservableObject {
     @Published var currentguild: Guild = Guild(id: "", name: "", icon: "")
     @Published var currentroles: [AdvancedGuild.Role] = []
     @Published var currentMembers: [GuildMember] = []
+    @Published var userSettings: UserSettings? = nil
+    @Published var threadsByParent: [String: [Channel]] = [:]
     
     private var webSocketTask: URLSessionWebSocketTask?
     private var urlSession: URLSession!
@@ -321,6 +323,8 @@ class WebSocketService: ObservableObject {
     func getJSONfromData(data: Data) -> [String: Any]? {
         return try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
     }
+    
+
 
     func scheduleReconnection() {
         webSocketQueue.async { [weak self] in
@@ -462,6 +466,7 @@ class WebSocketService: ObservableObject {
         }
         
         if let t = json["t"] as? String {
+            //print(t)
             switch t {
             case "READY":
                 print("WebSocket connection ready!")
@@ -475,6 +480,8 @@ class WebSocketService: ObservableObject {
                 }
                 // Start keep-alive mechanism
                 startKeepAlive()
+            case "USER_SETTINGS_UPDATE":
+                handleUserSettingsUpdate(data)
             case "RESUMED":
                 print("WebSocket session resumed successfully!")
                 stateQueue.sync {
@@ -490,8 +497,18 @@ class WebSocketService: ObservableObject {
                 handleChatMessage(json: json, eventType: t)
             case "MESSAGE_DELETE":
                 handleDeleteMessage(json: json)
+            case "MESSAGE_POLL_VOTE_ADD":
+                handlePollVoteEvent(json: json, isAdd: true)
+            case "MESSAGE_POLL_VOTE_REMOVE":
+                handlePollVoteEvent(json: json, isAdd: false)
             case "GUILD_MEMBERS_CHUNK":
                 handleGuildMembersChunk(json: json)
+            case "THREAD_CREATE":
+                handleThreadCreate(json: json)
+            case "THREAD_UPDATE":
+                handleThreadUpdate(json: json)
+            case "THREAD_DELETE":
+                handleThreadDelete(json: json)
             default:
                 break
             }
@@ -526,6 +543,27 @@ class WebSocketService: ObservableObject {
             print("Failed to parse Ready event data")
             return
         }
+
+        do {            
+            if let userSettingsData = data["user_settings"] as? [String: Any] {
+                let settingsData = try JSONSerialization.data(withJSONObject: userSettingsData)
+                let settings = try JSONDecoder().decode(UserSettings.self, from: settingsData)
+                DispatchQueue.main.async {
+                    self.userSettings = settings
+                }
+            } else {
+                print("no user_settings found!")
+                DispatchQueue.main.async {
+                    self.userSettings = UserSettings()
+                }
+            }
+            
+        } catch {
+            print("error parsing ready event, usersettings: \(error)")
+            DispatchQueue.main.async {
+                self.userSettings = UserSettings()
+            }
+        }
         
         // Extract session information for resumption
         if let sessionId = data["session_id"] as? String {
@@ -540,6 +578,26 @@ class WebSocketService: ObservableObject {
                 self.resumeGatewayUrl = resumeGatewayUrl
             }
             print("Resume gateway URL received: \(resumeGatewayUrl)")
+        }
+    }
+
+    private func handleUserSettingsUpdate(_ data: Data) {
+        do {
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            if let settingsData = json?["d"] as? [String: Any] {
+                let data = try JSONSerialization.data(withJSONObject: settingsData)
+                let decodedSettings = try JSONDecoder().decode(UserSettings.self, from: data)
+                DispatchQueue.main.async {
+                    self.userSettings = decodedSettings
+                }
+            }
+        } catch {
+            print("error parsing user settings update: \(error)")
+            DispatchQueue.main.async {
+                if self.userSettings == nil {
+                    self.userSettings = UserSettings()
+                }
+            }
         }
     }
     
@@ -666,7 +724,7 @@ class WebSocketService: ObservableObject {
                 "op": 2,
                 "d": [
                     "token": token,
-                    "capabilities": 30717,
+                    "capabilities": 30205, // Removed USER_SETTINGS_PROTO (1 << 9 = 512) to get JSON instead of protobuf (ORIGINAL: 30717)
                     "properties": [
                         "os": deviceInfo.os,
                         "device": deviceInfo.device,
@@ -773,34 +831,228 @@ class WebSocketService: ObservableObject {
         }
     }
     
-    func handleChatMessage(json: [String: Any], eventType: String) {
-        guard let json = json["d"] as? [String: Any],
-              let channelId = json["channel_id"] as? String,
-              channelId == currentchannel else { return }
-        
-        var currentmessage: Message
-        var jsonData: Data = Data()
-        
+    private func handleMessageUpdate(payload: [String: Any]) {
+        guard let messageId = payload["id"] as? String else { return }
+
+        let content = payload["content"] as? String
+        let editedTimestamp = payload["edited_timestamp"] as? String
+        let embedsPayload = payload["embeds"] as? [[String: Any]]
+        let attachmentsPayload = payload["attachments"] as? [[String: Any]]
+        let pollPayload = payload["poll"] as? [String: Any]
+
+        let decodedEmbeds = embedsPayload.flatMap { decodeEmbeds(from: $0) }
+        let decodedAttachments = attachmentsPayload.flatMap { decodeAttachments(from: $0) }
+        let decodedPoll = pollPayload.flatMap { decodePoll(from: $0) }
+
+        DispatchQueue.main.async {
+            guard let index = self.data.firstIndex(where: { $0.messageId == messageId }) else { return }
+            if let content = content {
+                self.data[index].content = content
+            }
+            if let editedTimestamp = editedTimestamp {
+                self.data[index].editedtimestamp = editedTimestamp
+            }
+            if let embeds = decodedEmbeds {
+                self.data[index].embeds = embeds
+            }
+            if let attachments = decodedAttachments {
+                self.data[index].attachments = attachments
+            }
+            if let poll = decodedPoll {
+                self.data[index].poll = poll
+            }
+        }
+    }
+
+    private func decodeEmbeds(from payload: [[String: Any]]) -> [Embed]? {
         do {
-            jsonData = try JSONSerialization.data(withJSONObject: json, options: [])
-            let decoder = JSONDecoder()
-            currentmessage = try decoder.decode(Message.self, from: jsonData)
+            let data = try JSONSerialization.data(withJSONObject: payload, options: [])
+            return try JSONDecoder().decode([Embed].self, from: data)
         } catch {
-            print("Error decoding JSON:", error)
+            print("Error decoding embeds: \(error)")
+            return nil
+        }
+    }
+
+    private func decodeAttachments(from payload: [[String: Any]]) -> [Attachment]? {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: payload, options: [])
+            return try JSONDecoder().decode([Attachment].self, from: data)
+        } catch {
+            print("Error decoding attachments: \(error)")
+            return nil
+        }
+    }
+
+    private func decodePoll(from payload: [String: Any]) -> Poll? {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: payload, options: [])
+            return try JSONDecoder().decode(Poll.self, from: data)
+        } catch {
+            print("Error decoding poll: \(error)")
+            return nil
+        }
+    }
+
+    func updatePoll(messageId: String, mutate: @escaping (inout Poll) -> Void) {
+        DispatchQueue.main.async {
+            guard let index = self.data.firstIndex(where: { $0.messageId == messageId }) else { return }
+            guard var poll = self.data[index].poll else { return }
+            mutate(&poll)
+            self.data[index].poll = poll
+        }
+    }
+
+    private func handlePollVoteEvent(json: [String: Any], isAdd: Bool) {
+        guard let payload = json["d"] as? [String: Any],
+              let channelId = payload["channel_id"] as? String,
+              let messageId = payload["message_id"] as? String,
+              let answerId = payload["answer_id"] as? Int else {
             return
         }
-        
-        DispatchQueue.main.async {
-            if eventType == "MESSAGE_CREATE" {
-                if self.currentchannel == currentmessage.channelId {
-                    print("Handling chat message: \(currentmessage)")
-                    self.data.append(currentmessage)
-                }
-            } else if eventType == "MESSAGE_UPDATE" {
-                if let index = self.data.firstIndex(where: { $0.messageId == currentmessage.messageId }) {
-                    self.data[index].content = currentmessage.content
+
+        let currentChannelId = currentchannel
+        guard channelId == currentChannelId else { return }
+
+        let userId = payload["user_id"] as? String
+
+        updatePoll(messageId: messageId) { poll in
+            print(poll)
+            var results = poll.results ?? PollResults(isFinalized: poll.results?.isFinalized, totalVotes: 0, answerCounts: nil)
+            var counts = results.answerCounts ?? []
+
+            if let answers = poll.answers {
+                for answer in answers where !counts.contains(where: { $0.answerId == answer.answerId }) {
+                    counts.append(PollAnswerCount(answerId: answer.answerId, count: 0, meVoted: false))
                 }
             }
+
+            if counts.firstIndex(where: { $0.answerId == answerId }) == nil {
+                counts.append(PollAnswerCount(answerId: answerId, count: 0, meVoted: false))
+            }
+
+            guard let index = counts.firstIndex(where: { $0.answerId == answerId }) else { return }
+
+            let isCurrentUserVote = (userId == self.currentUser.id)
+            var currentCount = counts[index].count ?? 0
+            let meVotedBefore = counts[index].meVoted == true
+
+            if isAdd {
+                if isCurrentUserVote {
+                    if !meVotedBefore {
+                        currentCount += 1
+                    }
+                    counts[index].meVoted = true
+                } else {
+                    currentCount += 1
+                }
+            } else {
+                if isCurrentUserVote {
+                    if meVotedBefore && currentCount > 0 {
+                        currentCount = max(currentCount - 1, 0)
+                    }
+                    counts[index].meVoted = false
+                } else {
+                    if currentCount > 0 {
+                        currentCount = max(currentCount - 1, 0)
+                    }
+                }
+            }
+
+            counts[index].count = currentCount
+
+            results.answerCounts = counts
+            results.totalVotes = counts.compactMap { $0.count }.reduce(0, +)
+            poll.results = results
+        }
+    }
+
+    private func handleThreadCreate(json: [String: Any]) {
+        guard let payload = json["d"] as? [String: Any],
+              let parentId = payload["parent_id"] as? String,
+              let channel = decodeChannel(from: payload) else { return }
+
+        DispatchQueue.main.async {
+            var threads = self.threadsByParent[parentId] ?? []
+            if let index = threads.firstIndex(where: { $0.id == channel.id }) {
+                threads[index] = channel
+            } else {
+                threads.append(channel)
+            }
+            self.threadsByParent[parentId] = self.sortThreads(threads)
+        }
+    }
+
+    private func handleThreadUpdate(json: [String: Any]) {
+        guard let payload = json["d"] as? [String: Any],
+              let parentId = payload["parent_id"] as? String,
+              let channel = decodeChannel(from: payload) else { return }
+
+        DispatchQueue.main.async {
+            var threads = self.threadsByParent[parentId] ?? []
+            if let index = threads.firstIndex(where: { $0.id == channel.id }) {
+                threads[index] = channel
+            } else {
+                threads.append(channel)
+            }
+            self.threadsByParent[parentId] = self.sortThreads(threads)
+        }
+    }
+
+    private func handleThreadDelete(json: [String: Any]) {
+        guard let payload = json["d"] as? [String: Any],
+              let parentId = payload["parent_id"] as? String,
+              let threadId = payload["id"] as? String else { return }
+
+        DispatchQueue.main.async {
+            guard var threads = self.threadsByParent[parentId] else { return }
+            threads.removeAll { $0.id == threadId }
+            self.threadsByParent[parentId] = threads
+        }
+    }
+
+    private func decodeChannel(from payload: [String: Any]) -> Channel? {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: payload, options: [])
+            return try JSONDecoder().decode(Channel.self, from: data)
+        } catch {
+            print("Error decoding channel: \(error)")
+            return nil
+        }
+    }
+
+    private func sortThreads(_ threads: [Channel]) -> [Channel] {
+        threads.sorted { lhs, rhs in
+            snowflakeValue(lhs.lastMessageId ?? lhs.id) > snowflakeValue(rhs.lastMessageId ?? rhs.id)
+        }
+    }
+
+    private func snowflakeValue(_ id: String?) -> UInt64 {
+        guard let id = id, let value = UInt64(id) else { return 0 }
+        return value
+    }
+
+    func handleChatMessage(json: [String: Any], eventType: String) {
+        guard let payload = json["d"] as? [String: Any],
+              let channelId = payload["channel_id"] as? String,
+              channelId == currentchannel else { return }
+
+        if eventType == "MESSAGE_UPDATE" {
+            handleMessageUpdate(payload: payload)
+            return
+        }
+
+        do {
+            let data = try JSONSerialization.data(withJSONObject: payload, options: [])
+            let decoder = JSONDecoder()
+            let message = try decoder.decode(Message.self, from: data)
+            DispatchQueue.main.async {
+                if self.currentchannel == message.channelId {
+                    self.data.append(message)
+                }
+            }
+        } catch {
+            print("Error decoding JSON:", error)
         }
     }
     

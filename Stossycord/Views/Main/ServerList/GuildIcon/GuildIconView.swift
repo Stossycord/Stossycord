@@ -13,18 +13,16 @@ struct ServerIconView: View {
     var body: some View {
         Group {
             if let iconURL = iconURL, let url = URL(string: iconURL) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable()
-                             .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        placeholderIcon(letter: "!")
-                    case .empty:
-                        ProgressView()
-                    @unknown default:
-                        placeholderIcon(letter: "?")
-                    }
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    placeholderIcon(letter: "")
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        )
                 }
             } else {
                 placeholderIcon(letter: "")

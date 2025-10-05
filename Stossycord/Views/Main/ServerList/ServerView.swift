@@ -11,9 +11,23 @@ import Foundation
 struct ServerView: View {
     @State private var searchTerm = ""
     @StateObject var webSocketService: WebSocketService
+    @AppStorage("useDiscordFolders") private var useDiscordFolders: Bool = false
+    @State private var expandedFolders: Set<String> = []
     
     var body: some View {
-        PlatformSpecificView {
+        #if os(macOS)
+        VStack {
+            content()
+        }
+        #else
+        NavigationStack {
+            content()
+        }
+        #endif
+    }
+    
+    @ViewBuilder
+    private func content() -> some View {
             VStack(spacing: 0) {
                 // Search bar
                 searchField
@@ -28,7 +42,6 @@ struct ServerView: View {
             #if !os(macOS)
             .toolbar(.visible, for: .tabBar)
             #endif
-        }
     }
     
     // MARK: - Components
@@ -39,30 +52,54 @@ struct ServerView: View {
                 .foregroundColor(.secondary)
             
             TextField("Search servers", text: $searchTerm)
-                .font(.body)
+                .textFieldStyle(PlainTextFieldStyle())
             
             if !searchTerm.isEmpty {
                 Button(action: { searchTerm = "" }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
+                .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(10)
-        .background(Color(.systemBackground).opacity(0.8))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(10)
-        .padding(.horizontal)
+        .padding(.horizontal, 16)
         .padding(.top, 8)
     }
     
     private var serverList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(filteredGuilds, id: \.id) { guild in
-                    NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
-                        ServerRow(guild: guild)
+                if useDiscordFolders {
+                    ForEach(Array(organizedContent.enumerated()), id: \.element.id) { index, item in
+                        switch item.type {
+                        case .folder(let folder):
+                            FolderView(folder: folder, guilds: item.guilds, isExpanded: expandedFolders.contains(item.id)) {
+                                if expandedFolders.contains(item.id) {
+                                    expandedFolders.remove(item.id)
+                                } else {
+                                    expandedFolders.insert(item.id)
+                                }
+                            }
+                        case .guild:
+                            if let guild = item.guilds.first {
+                                NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
+                                    ServerRow(guild: guild)
+                                }
+                                .buttonStyle(ServerRowButtonStyle())
+                            }
+                        }
                     }
-                    .buttonStyle(ServerRowButtonStyle())
+                } else {
+                    ForEach(filteredGuilds, id: \.id) { guild in
+                        NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
+                            ServerRow(guild: guild)
+                        }
+                        .buttonStyle(ServerRowButtonStyle())
+                    }
                 }
                 
                 if filteredGuilds.isEmpty {
@@ -104,6 +141,39 @@ struct ServerView: View {
             searchTerm.isEmpty || guild.name.localizedCaseInsensitiveContains(searchTerm)
         }
     }
+    
+    private var organizedContent: [ContentItem] {
+        guard let guildFolders = webSocketService.userSettings?.guildFolders else {
+            return filteredGuilds.map { ContentItem(id: $0.id, type: .guild, guilds: [$0]) }
+        }
+        
+        var items: [ContentItem] = []
+        var processedGuildIds: Set<String> = []
+        
+        for folder in guildFolders {
+            let folderGuilds = folder.guildIds.compactMap { guildId in
+                filteredGuilds.first { $0.id == guildId }
+            }
+            
+            if !folderGuilds.isEmpty {
+                if folder.id == nil && folderGuilds.count == 1 {
+                    items.append(ContentItem(id: folderGuilds[0].id, type: .guild, guilds: folderGuilds))
+                } else if folder.id != nil {
+                    let folderId = String(folder.id ?? 0)
+                    items.append(ContentItem(id: folderId, type: .folder(folder), guilds: folderGuilds))
+                }
+                
+                folderGuilds.forEach { processedGuildIds.insert($0.id) }
+            }
+        }
+        
+        let unorganizedGuilds = filteredGuilds.filter { !processedGuildIds.contains($0.id) }
+        unorganizedGuilds.forEach { guild in
+            items.append(ContentItem(id: guild.id, type: .guild, guilds: [guild]))
+        }
+        
+        return items
+    }
 }
 
 // MARK: - Supporting Views
@@ -135,23 +205,4 @@ struct ServerRow: View {
     }
 }
 
-/// Platform-specific container view
-struct PlatformSpecificView<Content: View>: View {
-    let content: () -> Content
-    
-    init(@ViewBuilder content: @escaping () -> Content) {
-        self.content = content
-    }
-    
-    var body: some View {
-        #if os(macOS)
-        VStack {
-            content()
-        }
-        #else
-        NavigationStack {
-            content()
-        }
-        #endif
-    }
-}
+

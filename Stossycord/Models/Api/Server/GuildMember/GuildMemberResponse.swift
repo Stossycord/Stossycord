@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct GuildMember: Codable {
+struct GuildMember: Codable, Equatable {
     let user: User
     let roles: [String]
     let joinedAt: String
