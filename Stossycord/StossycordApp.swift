@@ -11,6 +11,8 @@ import KeychainSwift
 @main
 struct StossycordApp: App {
     @StateObject var webSocketService = WebSocketService.shared
+    @StateObject var settingsManager = SettingsManager(webSocketService: WebSocketService.shared)
+    @StateObject var presenceManager = PresenceManager(webSocketService: WebSocketService.shared)
     let keychain = KeychainSwift()
     @State var isPresented: Bool = false
     @State var isfirst: Bool = false
@@ -19,6 +21,10 @@ struct StossycordApp: App {
     var body: some Scene {
         WindowGroup {
             NavView(webSocketService: webSocketService)
+                .environmentObject(presenceManager)
+                .onAppear {
+                    presenceManager.start()
+                }
                 .onChange(of: scenePhase) { newPhase in
                     switch newPhase {
                     case .active:

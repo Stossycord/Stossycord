@@ -7,6 +7,7 @@
 
 import SwiftUI
 import KeychainSwift
+import PhotosUI
 
 struct ChannelView: View {
     // MARK: - Properties
@@ -16,7 +17,9 @@ struct ChannelView: View {
     @State var currentchannelname: String
     @State private var showingUploadPicker = false
     @State private var showingFilePicker = false
-    @State private var showUserProfile = false
+    @State var selectedAuthor: Author?
+    @State var selectedUserProfile: UserProfile?
+    @State private var isLoadingProfile = false
     @State var fileURL: URL?
     @State var repliedMessage: Message?
     @State var currentid: String
@@ -26,6 +29,13 @@ struct ChannelView: View {
     @State var typingWorkItem: DispatchWorkItem?
     @State private var shown = true
     @StateObject private var tabBarModifier = TabBarModifier.shared
+    @State private var showTokenWarning = false
+    @State private var permissionStatus = ChannelPermissionStatus(canSendMessages: true, canAttachFiles: true, restrictionReason: nil)
+    @AppStorage("useNativePicker") private var useNativePicker: Bool = false
+    @AppStorage("useRedesignedMessages") private var useRedesignedMessages: Bool = false
+    @State private var showNativePicker = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showNativePhotoPicker = false
     
     private let keychain = KeychainSwift()
     
@@ -43,34 +53,51 @@ struct ChannelView: View {
                             editingMessageView(editingMessage: editingMessage)
                         }
                         
-                        // File preview
-                        if let fileURL = fileURL {
+                        // File preview - only show if user can attach files and send messages
+                        if let fileURL = fileURL, permissionStatus.canAttachFiles && permissionStatus.canSendMessages {
                             filePreviewView(fileURL: fileURL)
                         }
                         
-                        // File picker
-                        if showingUploadPicker {
+                        // File picker - only show if user can attach files and send messages
+                        if showingUploadPicker && permissionStatus.canAttachFiles && permissionStatus.canSendMessages {
                             filePickerView
                         }
                         
                         // Message input
-                        messageInputView
+                        MessageBarView(
+                            permissionStatus: permissionStatus,
+                            placeholder: getPlaceholderText(),
+                            canSendCurrentMessage: canSendCurrentMessage,
+                            useNativePicker: useNativePicker,
+                            message: $message,
+                            showNativePicker: $showNativePicker,
+                            showNativePhotoPicker: $showNativePhotoPicker,
+                            showingFilePicker: $showingFilePicker,
+                            showingUploadPicker: $showingUploadPicker,
+                            onMessageChange: { _ in handleTypingIndicator() },
+                            onSubmit: handleMessageSubmit
+                        )
                             .padding(.horizontal)
                             // .padding(.bottom, tabBarModifier.shown ?
                                    //  keyboard.currentHeight :
                                    //  keyboard.currentHeight - tabBarModifier.tabBarSize)
                             .animation(.easeOut(duration: 0.16), value: keyboard.currentHeight)
-                            .background(
-                                Rectangle()
-                                    .fill(.thinMaterial)
-                            )
                     }
                 }
         }
         .ignoresSafeArea(.container)
-        .sheet(isPresented: $showUserProfile) {
-            userProfileView
-                .presentationDetents([.medium, .large])
+        .sheet(item: $selectedAuthor, onDismiss: {
+            selectedAuthor = nil
+            selectedUserProfile = nil
+            isLoadingProfile = false
+        }) { author in
+            UserProfileView(
+                profile: selectedUserProfile,
+                author: author,
+                isLoading: isLoadingProfile,
+                currentUserId: webSocketService.currentUser.id
+            )
+            .presentationDetents([.medium, .large])
         }
         #if os(macOS)
         .detectTabChanges { isActive in
@@ -85,8 +112,30 @@ struct ChannelView: View {
             allowedContentTypes: [.video, .audio, .image, .item],
             onCompletion: handleFileImport
         )
+        .photosPicker(
+            isPresented: $showNativePhotoPicker,
+            selection: $selectedPhotoItem,
+            matching: .any(of: [.images, .videos])
+        )
+        .onChange(of: selectedPhotoItem) { item in
+            handlePhotoSelection(item)
+        }
         .onAppear(perform: handleOnAppear)
         .onDisappear(perform: handleOnDisappear)
+        .onChange(of: webSocketService.currentroles) { _ in
+            updatePermissions()
+        }
+        .onChange(of: webSocketService.currentMembers) { _ in
+            updatePermissions()
+        }
+        .alert("You're sharing your token", isPresented: $showTokenWarning) {
+            Button("Cancel", role: .cancel) { }
+            Button("Send Anyway", role: .destructive) {
+                sendMessage()
+            }
+        } message: {
+            Text("Your message contains your Discord token. Sharing it with other people could open your account to other people. Do you want to send it?")
+        }
     }
     
     // MARK: - View Components
@@ -124,9 +173,30 @@ struct ChannelView: View {
     
     private func selfMessageView(messageData: Message) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
-            MessageView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService, isCurrentUser: true)
-                .contextMenu {
-                    Button(action: { showUserProfile = true }) {
+            Group {
+                if useRedesignedMessages {
+                    let messages = webSocketService.data.filter { $0.channelId == currentid }
+                    let currentIndex = messages.firstIndex { $0.messageId == messageData.messageId } ?? 0
+                    let previousMessage = currentIndex > 0 ? messages[currentIndex - 1] : nil
+                    let isGrouped = MessageViewRE.shouldGroupMessage(current: messageData, previous: previousMessage)
+                    
+                    MessageViewRE(
+                        messageData: messageData, 
+                        reply: $scrollToId, 
+                        webSocketService: webSocketService, 
+                        isCurrentUser: true, 
+                        onProfileTap: { presentUserProfile(for: messageData.author) }, 
+                        isGrouped: isGrouped, 
+                        allMessages: messages
+                    )
+                } else {
+                    MessageView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService, isCurrentUser: true, onProfileTap: { presentUserProfile(for: messageData.author) })
+                }
+            }
+            .contextMenu {
+                    Button(action: { 
+                        presentUserProfile(for: messageData.author)
+                    }) {
                         Label("Show User", systemImage: "person")
                     }
                     
@@ -150,8 +220,33 @@ struct ChannelView: View {
     
     private func otherMessageView(messageData: Message) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            MessageView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService, isCurrentUser: false)
-                .contextMenu {
+            Group {
+                if useRedesignedMessages {
+                    let messages = webSocketService.data.filter { $0.channelId == currentid }
+                    let currentIndex = messages.firstIndex { $0.messageId == messageData.messageId } ?? 0
+                    let previousMessage = currentIndex > 0 ? messages[currentIndex - 1] : nil
+                    let isGrouped = MessageViewRE.shouldGroupMessage(current: messageData, previous: previousMessage)
+                    
+                    MessageViewRE(
+                        messageData: messageData, 
+                        reply: $scrollToId, 
+                        webSocketService: webSocketService, 
+                        isCurrentUser: false, 
+                        onProfileTap: { presentUserProfile(for: messageData.author) }, 
+                        isGrouped: isGrouped, 
+                        allMessages: messages
+                    )
+                } else {
+                    MessageView(messageData: messageData, reply: $scrollToId, webSocketService: webSocketService, isCurrentUser: false, onProfileTap: { presentUserProfile(for: messageData.author) })
+                }
+            }
+            .contextMenu {
+                    Button(action: { 
+                        presentUserProfile(for: messageData.author)
+                    }) {
+                        Label("Show User", systemImage: "person")
+                    }
+                    
                     Button(action: { repliedMessage = messageData }) {
                         Label("Reply", systemImage: "arrowshape.turn.up.right")
                     }
@@ -259,19 +354,27 @@ struct ChannelView: View {
             Divider()
             
             HStack(spacing: 12) {
-                PhotoPickerView() { savedImageURL in
-                    fileURL = savedImageURL
-                }
-                
-                Button {
-                    showingFilePicker = true
-                } label: {
-                    Label("Select File", systemImage: "paperclip")
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
-                        .cornerRadius(8)
+                if !useNativePicker {
+                    PhotoPickerView() { savedImageURL in
+                        if permissionStatus.canAttachFiles {
+                            fileURL = savedImageURL
+                        }
+                    }
+                    .disabled(!permissionStatus.canAttachFiles)
+                    
+                    Button {
+                        if permissionStatus.canAttachFiles {
+                            showingFilePicker = true
+                        }
+                    } label: {
+                        Label("Files", systemImage: "paperclip")
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(permissionStatus.canAttachFiles ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+                            .foregroundColor(permissionStatus.canAttachFiles ? .blue : .gray)
+                            .cornerRadius(8)
+                    }
+                    .disabled(!permissionStatus.canAttachFiles)
                 }
                 
                 Spacer()
@@ -287,133 +390,35 @@ struct ChannelView: View {
         }
     }
     
-    private var messageInputView: some View {
-        HStack(spacing: 12) {
-            // Add attachment button
-            Button(action: { showingUploadPicker = true }) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(.blue)
-            }
-            
-            // Message text field
-            TextField(
-                (editMessage == nil) ? "Message \(currentchannelname)" : "Editing message...",
-                text: $message
-            )
-            .padding(.vertical, 10)
-            .padding(.horizontal, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(.systemGray6))
-            )
-            .onChange(of: message) { _ in
-                handleTypingIndicator()
-            }
-            .onSubmit {
-                handleMessageSubmit()
-            }
-            
-            // Send button
-            Button(action: handleMessageSubmit) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(message.isEmpty && fileURL == nil ? .gray : .blue)
-            }
-            .disabled(message.isEmpty && fileURL == nil)
-        }
-        .padding(.vertical, 10)
+    private var canSendCurrentMessage: Bool {
+        return permissionStatus.canSendMessages && (!message.isEmpty || (fileURL != nil && permissionStatus.canAttachFiles))
     }
     
-    private var userProfileView: some View {
-        VStack(spacing: 20) {
-            // User avatar and name
-            VStack(spacing: 12) {
-                if let avatar = webSocketService.currentUser.avatar {
-                    AsyncImage(url: URL(string: "https://cdn.discordapp.com/avatars/\(webSocketService.currentUser.id)/\(avatar).png")) { image in
-                        image.resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 90, height: 90)
-                            .clipShape(Circle())
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.blue.opacity(0.5), lineWidth: 3)
-                            )
-                    } placeholder: {
-                        Circle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(width: 90, height: 90)
-                            .overlay(
-                                ProgressView()
-                            )
-                    }
-                } else {
-                    Circle()
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 90, height: 90)
-                        .overlay(
-                            Text(String(webSocketService.currentUser.username.prefix(1)))
-                                .font(.system(size: 36, weight: .medium))
-                                .foregroundColor(.blue)
-                        )
-                }
-                
-                VStack(spacing: 4) {
-                    Text(webSocketService.currentUser.global_name ?? webSocketService.currentUser.username)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    if webSocketService.currentUser.global_name != nil {
-                        Text(webSocketService.currentUser.username)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .padding(.top)
-            
-            // Divider with gradient
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: [.clear, .gray.opacity(0.3), .clear]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .frame(height: 1)
-                .padding(.horizontal)
-            
-            // User bio
-            if let bio = webSocketService.currentUser.bio, !bio.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("About Me")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Text(LocalizedStringKey(bio))
-                        .font(.body)
-                        .multilineTextAlignment(.leading)
-                        .lineSpacing(4)
-                        .padding(.horizontal)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.systemGray6))
-                        )
-                }
-                .padding(.horizontal)
-            }
-            
-            Spacer()
+    private func getPlaceholderText() -> String {
+        if !permissionStatus.canSendMessages {
+            return "You do not have permission to send messages"
+        } else if editMessage != nil {
+            return "Editing message..."
+        } else {
+            return "Message \(currentchannelname)"
         }
-        .padding()
     }
     
     // MARK: - Methods
     private func handleMessageSubmit() {
         guard !message.isEmpty || fileURL != nil else { return }
         
+        let token = keychain.get("token") ?? ""
+        
+        if message.contains(token) && !token.isEmpty {
+            showTokenWarning = true
+            return
+        }
+        
+        sendMessage()
+    }
+    
+    private func sendMessage() {
         let token = keychain.get("token") ?? ""
         let channel = webSocketService.currentchannel
         
@@ -456,6 +461,15 @@ struct ChannelView: View {
         DispatchQueue.main.async {
             webSocketService.currentchannel = currentid
             getDiscordMessages(token: token, webSocketService: webSocketService)
+            
+            if !currentchannelname.starts(with: "@") && webSocketService.currentMembers.isEmpty {
+                let guildId = currentGuild?.id ?? webSocketService.currentguild.id
+                if !guildId.isEmpty {
+                    webSocketService.requestGuildMembers(guildID: guildId)
+                }
+            }
+            
+            updatePermissions()
         }
     }
     
@@ -493,8 +507,10 @@ struct ChannelView: View {
             if let currentGuild = currentGuild {
                 getGuildRoles(guild: currentGuild) { guilds in
                     self.webSocketService.currentroles = guilds
+                    self.updatePermissions()
                 }
             }
+            updatePermissions()
         } else {
             webSocketService.currentchannel = ""
             webSocketService.currentroles.removeAll()
@@ -532,6 +548,50 @@ struct ChannelView: View {
         }
     }
     
+    private func handlePhotoSelection(_ item: PhotosPickerItem?) {
+        guard let item = item else { return }
+        
+        Task {
+            if let data = try? await item.loadTransferable(type: Data.self) {
+                // Save to temporary directory
+                let fileName = item.itemIdentifier ?? UUID().uuidString
+                let fileExtension = getFileExtension(for: item)
+                let fullFileName = "\(fileName).\(fileExtension)"
+                
+                let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(UUID().uuidString)
+                    .appendingPathComponent(fullFileName)
+                
+                do {
+                    try FileManager.default.createDirectory(
+                        at: tempURL.deletingLastPathComponent(),
+                        withIntermediateDirectories: true,
+                        attributes: nil
+                    )
+                    try data.write(to: tempURL)
+                    
+                    DispatchQueue.main.async {
+                        self.fileURL = tempURL
+                        self.showingUploadPicker = false
+                    }
+                } catch {
+                    print("Failed to save photo: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    private func getFileExtension(for item: PhotosPickerItem) -> String {
+        if let contentType = item.supportedContentTypes.first {
+            if contentType.conforms(to: .image) {
+                return "jpg"
+            } else if contentType.conforms(to: .movie) {
+                return "mp4"
+            }
+        }
+        return "jpg"
+    }
+    
     private func clearTemporaryFolder() {
         let fileManager = FileManager.default
         let tempDirectory = FileManager.default.temporaryDirectory.path
@@ -547,6 +607,112 @@ struct ChannelView: View {
             print("Error clearing temporary folder: \(error.localizedDescription)")
         }
     }
+    
+    private func presentUserProfile(for author: Author) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async {
+                self.presentUserProfile(for: author)
+            }
+            return
+        }
+        
+        if let cachedProfile = CacheService.shared.getCachedUserProfile(userId: author.authorId) {
+            selectedUserProfile = cachedProfile
+            isLoadingProfile = false
+        } else {
+            selectedUserProfile = nil
+            isLoadingProfile = true
+        }
+        
+        selectedAuthor = author
+        fetchUserProfile(userId: author.authorId, useCache: false)
+    }
+    
+    private func fetchUserProfile(userId: String, useCache: Bool = true) {
+        if useCache, let cachedProfile = CacheService.shared.getCachedUserProfile(userId: userId) {
+            DispatchQueue.main.async {
+                self.selectedUserProfile = cachedProfile
+                self.isLoadingProfile = false
+            }
+            return
+        }
+        
+        guard let token = keychain.get("token") else {
+            DispatchQueue.main.async {
+                self.isLoadingProfile = false
+            }
+            return
+        }
+        
+        DispatchQueue.main.async {
+            if self.selectedUserProfile == nil {
+                self.isLoadingProfile = true
+            }
+        }
+        
+        getUserProfile(token: token, userId: userId) { profile in
+            if let profile = profile {
+                CacheService.shared.setCachedUserProfile(profile, userId: userId)
+                DispatchQueue.main.async {
+                    self.selectedUserProfile = profile
+                    self.isLoadingProfile = false
+                }
+            } else {
+                getBasicUserInfo(token: token, userId: userId) { basicUser in
+                    DispatchQueue.main.async {
+                        if let user = basicUser {
+                            let fallbackProfile = UserProfile(
+                                user: user,
+                                connectedAccounts: nil,
+                                premiumSince: nil,
+                                premiumType: nil,
+                                premiumGuildSince: nil,
+                                profileThemesExperimentBucket: nil,
+                                mutualGuilds: nil,
+                                mutualFriends: nil,
+                                userProfile: nil
+                            )
+                            self.selectedUserProfile = fallbackProfile
+                        }
+                        self.isLoadingProfile = false
+                    }
+                }
+            }
+        }
+    }
+    
+    private func updatePermissions() {
+        if currentchannelname.starts(with: "@") {
+            permissionStatus = ChannelPermissionStatus(canSendMessages: true, canAttachFiles: true, restrictionReason: nil)
+            return
+        }
+        
+        let currentUserId = webSocketService.currentUser.id
+        let memberCount = webSocketService.currentMembers.count
+        let roleCount = webSocketService.currentroles.count
+        
+        
+        if webSocketService.currentUser.id.isEmpty {
+            print("DEBUG: no user wtf, allowing all permissions?")
+            permissionStatus = ChannelPermissionStatus(canSendMessages: true, canAttachFiles: true, restrictionReason: nil)
+            return
+        }
+        
+        let currentChannel = webSocketService.channels
+            .flatMap { $0.channels }
+            .first { $0.id == currentid }
+        
+        let guildId = currentGuild?.id ?? webSocketService.currentguild.id
+        
+        permissionStatus = PermissionManager.getPermissionStatus(
+            currentUser: webSocketService.currentUser,
+            members: webSocketService.currentMembers,
+            roles: webSocketService.currentroles,
+            channel: currentChannel,
+            guildId: guildId
+        )
+    }
+
 }
 
 // MARK: - Scroll Modifier

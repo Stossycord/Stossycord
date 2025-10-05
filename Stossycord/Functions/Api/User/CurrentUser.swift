@@ -41,7 +41,7 @@ func CurrentUser(token: String, completion: @escaping (User?) -> Void) {
             do {
                 do {
                     let discordUser = try JSONDecoder().decode(User.self, from: data)
-                    print(discordUser)
+                    //print(discordUser)
                     print(String(data: data, encoding: .utf8) ?? "")
                     completion(discordUser)
                 } catch {

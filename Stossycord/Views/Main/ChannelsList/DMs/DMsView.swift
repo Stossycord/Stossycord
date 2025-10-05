@@ -15,22 +15,33 @@ struct DMsView: View {
     @State private var searchTerm = ""
     
     var body: some View {
-        PlatformSpecificView {
-            VStack(spacing: 0) {
-                // Search bar
-                searchField
-                
-                // DMs list
-                conversationsList
-                    .onAppear {
-                        loadDirectMessages()
-                    }
-            }
-            .navigationTitle("Messages")
-            #if !os(macOS)
-            .toolbar(.visible, for: .tabBar)
-            #endif
+        #if os(macOS)
+        VStack {
+            content()
         }
+        #else
+        NavigationStack {
+            content()
+        }
+        #endif
+    }
+    
+    @ViewBuilder
+    private func content() -> some View {
+        VStack(spacing: 0) {
+            // Search bar
+            searchField
+            
+            // DMs list
+            conversationsList
+                .onAppear {
+                    loadDirectMessages()
+                }
+        }
+        .navigationTitle("Messages")
+        #if !os(macOS)
+        .toolbar(.visible, for: .tabBar)
+        #endif
     }
     
     // MARK: - Components

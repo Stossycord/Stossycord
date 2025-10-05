@@ -8,6 +8,7 @@
 import SwiftUI
 import KeychainSwift
 import LocalAuthentication
+import MusicKit
 #if os(macOS)
 import AppKit
 #else
@@ -20,7 +21,19 @@ struct SettingsView: View {
     @State var showAlert: Bool = false
     @State var showPopover = false
     @State var guildID = ""
-
+    @EnvironmentObject private var presenceManager: PresenceManager
+    @AppStorage("disableAnimatedAvatars") private var disableAnimatedAvatars: Bool = false
+    @AppStorage("disableProfilePictureTap") private var disableProfilePictureTap: Bool = false
+    @AppStorage("disableProfilePicturesCache") private var disableProfilePicturesCache: Bool = false
+    @AppStorage("disableProfileCache") private var disableProfileCache: Bool = false
+    @AppStorage("hideRestrictedChannels") private var hideRestrictedChannels: Bool = false
+    @AppStorage("useNativePicker") private var useNativePicker: Bool = false
+    @AppStorage("useRedesignedMessages") private var useRedesignedMessages: Bool = false
+    @AppStorage("useDiscordFolders") private var useDiscordFolders: Bool = false
+    @AppStorage(DesignSettingsKeys.messageBubbleStyle) private var messageStyleRawValue: String = MessageBubbleStyle.imessage.rawValue
+    @AppStorage(DesignSettingsKeys.showSelfAvatar) private var showSelfAvatar: Bool = true
+    @AppStorage(DesignSettingsKeys.customMessageBubbleJSON) private var customBubbleJSON: String = ""
+    @AppStorage("allowDestructiveActions") private var allowDestructiveActions: Bool = false
     
     var body: some View {
         VStack {
@@ -29,9 +42,163 @@ struct SettingsView: View {
                 .padding()
             
             List {
-                Section("Token") {
-                
+                Section("Appearance") {
+                    Toggle("Disable animated avatars", isOn: $disableAnimatedAvatars)
+                        .help("When enabled, animated profile pictures will be requested as PNG and shown as a static first frame.")
+                    Toggle("Disable profile picture tap", isOn: $disableProfilePictureTap)
+                        .help("When enabled, tapping profile pictures won't open user profiles.")
+                }
+
+                Section("Design") {
+                    Picker("Message style", selection: $messageStyleRawValue) {
+                        ForEach(MessageBubbleStyle.allCases) { style in
+                            Text(style.displayName).tag(style.rawValue)
+                        }
+                    }
+                    #if os(iOS)
+                    .pickerStyle(.segmented)
+                    #endif
+
+                    Toggle("Show my profile picture", isOn: $showSelfAvatar)
+                        .help("When disabled, your messages align closer to the edge without your avatar.")
                     
+                    let selectedStyle = MessageBubbleStyle(rawValue: messageStyleRawValue) ?? .default
+                    if selectedStyle == .custom {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Custom bubble JSON")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                            TextEditor(text: $customBubbleJSON)
+                                .font(.system(.body, design: .monospaced))
+                                .frame(minHeight: 160)
+                                .padding(8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.secondary.opacity(0.2))
+                                )
+                    #if os(iOS)
+                                .textInputAutocapitalization(.never)
+                                .disableAutocorrection(true)
+                    #endif
+                            if !MessageBubbleVisualConfiguration.isCustomJSONValid(customBubbleJSON) {
+                                Text("Invalid JSON detected – falling back to defaults.")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                            HStack(spacing: 12) {
+                                Button("Load sample") {
+                                    customBubbleJSON = MessageBubbleVisualConfiguration.sampleJSON
+                                }
+                                Button("Clear") {
+                                    customBubbleJSON = ""
+                                }
+                                .foregroundColor(.secondary)
+                            }
+                            .font(.caption)
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+                
+                Section("Cache") {
+                    Toggle("Disable profile pictures cache", isOn: $disableProfilePicturesCache)
+                        .help("When enabled, profile pictures won't be cached and will be downloaded every time.")
+                    Toggle("Disable profile cache", isOn: $disableProfileCache)
+                        .help("When enabled, user profiles and bios won't be cached and will be fetched every time.")
+                    
+                    HStack {
+                        Button("Clear cache") {
+                            CacheService.shared.clearAllCaches()
+                        }
+                        .foregroundColor(.red)
+                        
+                        Spacer()
+                        
+                        Text(CacheService.shared.getCacheSizeString())
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                }
+                
+                Section("Beta") {
+                    Toggle("Hide channels you can't see", isOn: $hideRestrictedChannels)
+                        .help("When enabled, channels without VIEW_CHANNEL permission will be hidden from the channel list.")
+                    Toggle("Use native picker", isOn: $useNativePicker)
+                        .help("When enabled, uses the native iOS picker for selecting photos and files instead of the custom interface.")
+                    Toggle("Use redesigned messages", isOn: $useRedesignedMessages)
+                        .help("When enabled, messages from the same author within 30 minutes are grouped together and images without text don't show message bubbles.")
+                    Toggle("Use Discord server folders", isOn: $useDiscordFolders)
+                        .help("When enabled, servers are organized using your Discord folder structure.")
+                }
+
+                Section("Presence") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Apple Music access")
+                            Spacer()
+                            Text(authorizationStatusText(presenceManager.authorizationStatus))
+                                .foregroundColor(authorizationStatusColor(presenceManager.authorizationStatus))
+                                .font(.subheadline)
+                        }
+
+                        if presenceManager.authorizationStatus != .authorized {
+                            Button {
+                                presenceManager.requestAuthorization()
+                            } label: {
+                                if presenceManager.isRequestingAuthorization {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                } else {
+                                    Text("Request Apple Music access")
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(presenceManager.isRequestingAuthorization)
+                        } else {
+                            Text("Apple Music access is enabled.")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+
+                        if presenceManager.authorizationStatus == .authorized {
+                            Toggle("Share Apple Music status", isOn: $presenceManager.musicPresenceEnabled)
+                        } else {
+                            Text(authorizationHelpText(for: presenceManager.authorizationStatus))
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+
+                        if !presenceManager.musicPresenceEnabled {
+                            Divider()
+
+                            Text("Custom presence")
+                                .font(.headline)
+
+                            TextField("Activity name", text: $presenceManager.customPresenceName)
+                            TextField("Details", text: $presenceManager.customPresenceDetails)
+                            TextField("State", text: $presenceManager.customPresenceState)
+
+                            Text("Leave the activity name empty to clear your custom presence.")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+
+                            if !presenceManager.customPresenceName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                                !presenceManager.customPresenceDetails.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                                !presenceManager.customPresenceState.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                Button(role: .destructive) {
+                                    presenceManager.customPresenceName = ""
+                                    presenceManager.customPresenceDetails = ""
+                                    presenceManager.customPresenceState = ""
+                                } label: {
+                                    Text("Clear custom presence")
+                                }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                Section("Token") {
                     
                     HStack {
                         Text("Token: ")
@@ -84,6 +251,107 @@ struct SettingsView: View {
                         }
                     }
                 }
+
+                Section("Warning zone") {
+                    Toggle("Allow destructive actions", isOn: Binding(
+                        get: { allowDestructiveActions },
+                        set: { newValue in
+                            if newValue {
+                                showPopover = true
+                            } else {
+                                allowDestructiveActions = false
+                            }
+                        }
+                    ))
+                    .help("When enabled, allows actions like mass leaving servers.")
+                    .foregroundColor(allowDestructiveActions ? .red : .primary)
+                    .sheet(isPresented: $showPopover) {
+                        VStack(spacing: 20) {
+                            VStack(alignment: .leading, spacing: 24) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 64))
+                                    .foregroundColor(.yellow)
+                                    .padding(.top, 16)
+                                    .padding(.bottom, 16)
+
+                                Text("Are you sure?")
+                                    .font(.system(size: 38, weight: .bold))
+
+                                Text("This will enable options like mass leaving servers or other features that do not exist on official Discord distributions. Discord could suspend your account for using these features. Proceed with caution.")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                                    .frame(maxWidth: 600, alignment: .leading)
+                            }
+                            .padding(.horizontal, 34)
+
+                            Spacer()
+
+                            VStack(spacing: 12) {
+                                if #available(iOS 26.0, *) {
+                                    Button(action: {
+                                        allowDestructiveActions = true
+                                        showPopover = false
+                                    }) {
+                                        Text("Enable")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 40)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(.red)
+                                    .glassEffect(.regular)
+                                    
+                                    Button(action: {
+                                        allowDestructiveActions = false
+                                        showPopover = false
+                                    }) {
+                                        Text("Nevermind")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 40)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .glassEffect(.regular)
+                                } else {
+                                    Button(action: {
+                                        allowDestructiveActions = true
+                                        showPopover = false
+                                    }) {
+                                        Text("Enable")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 56)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(.red)
+                                    
+                                    Button(action: {
+                                        allowDestructiveActions = false
+                                        showPopover = false
+                                    }) {
+                                        Text("Nevermind")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 56)
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 20)
+                        }
+                        .padding(.top, 20)
+                        .background(Color(UIColor.systemBackground))
+                        /*.presentationDetents {
+                            if #available(iOS 16.0, *) {
+                                [.fraction(0.5), .large]
+                            } else {
+                                []
+                            }
+                        } */
+                        #if !os(iOS)
+                        .frame(maxHeight: .infinity)
+                        #endif
+                    }
+                }
+
                 /*
                 if let token = keychain.get("token") {
                     Section("Servers") {
@@ -119,6 +387,12 @@ struct SettingsView: View {
                     title: Text("Token Reset"),
                     message: Text("Your token has been reset. Please Quit and Relaunch the App."))
             }
+            .onAppear {
+                presenceManager.refreshAuthorizationStatus()
+            }
+        }
+        .onAppear {
+            ensureValidMessageStyle()
         }
     }
     
@@ -176,6 +450,62 @@ struct SettingsView: View {
     }
 }
 
+private extension SettingsView {
+    func ensureValidMessageStyle() {
+        if MessageBubbleStyle(rawValue: messageStyleRawValue) == nil {
+            messageStyleRawValue = MessageBubbleStyle.default.rawValue
+        }
+    }
+}
+
+private extension SettingsView {
+    func authorizationStatusText(_ status: MusicAuthorization.Status) -> String {
+        switch status {
+        case .authorized:
+            return "Authorized"
+        case .denied:
+            return "Denied"
+        case .restricted:
+            return "Restricted"
+        case .notDetermined:
+            return "Not requested"
+        @unknown default:
+            return "Unknown"
+        }
+    }
+
+    func authorizationStatusColor(_ status: MusicAuthorization.Status) -> Color {
+        switch status {
+        case .authorized:
+            return .green
+        case .denied:
+            return .red
+        case .restricted:
+            return .orange
+        case .notDetermined:
+            return .secondary
+        @unknown default:
+            return .secondary
+        }
+    }
+
+    func authorizationHelpText(for status: MusicAuthorization.Status) -> String {
+        switch status {
+        case .authorized:
+            return "Apple Music access is enabled."
+        case .notDetermined:
+            return "Request access to share what you're listening to from Apple Music."
+        case .denied:
+            return "Access has been denied. You can re-enable Apple Music permissions from System Settings."
+        case .restricted:
+            return "Apple Music access is restricted on this device."
+        @unknown default:
+            return "Apple Music access is currently unavailable."
+        }
+    }
+}
+
 #Preview {
     SettingsView()
+        .environmentObject(PresenceManager(webSocketService: WebSocketService.shared))
 }
