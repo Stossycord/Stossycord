@@ -8,12 +8,16 @@
 import SwiftUI
 import Foundation
 import MarkdownUI
+#if os(iOS)
+import Giffy
+#endif
 
 struct MessageView: View {
     let messageData: Message
     @Binding var reply: String?
     @StateObject var webSocketService: WebSocketService
     let isCurrentUser: Bool
+    let onProfileTap: (() -> Void)?
     
     @State private var roleColor: Color = .primary
     
@@ -22,7 +26,7 @@ struct MessageView: View {
             if isCurrentUser { Spacer(minLength: 60) }
             
             if !isCurrentUser {
-                AvatarView(author: messageData.author)
+                AvatarView(author: messageData.author, onProfileTap: onProfileTap)
             }
             
             VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 6) {
@@ -42,10 +46,20 @@ struct MessageView: View {
                     isCurrentUser: isCurrentUser
                 )
                 
-                MessageContentView(
-                    messageData: messageData,
-                    isCurrentUser: isCurrentUser
-                )
+                if !messageData.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    MessageContentView(
+                        messageData: messageData,
+                        isCurrentUser: isCurrentUser
+                    )
+                }
+
+                if let embeds = messageData.embeds, !embeds.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(embeds, id: \.self) { embed in
+                            EmbedCardView(embed: embed, isCurrentUser: isCurrentUser)
+                        }
+                    }
+                }
                 
                 if let attachments = messageData.attachments, !attachments.isEmpty {
                     HStack {
@@ -53,11 +67,20 @@ struct MessageView: View {
                     }
                     .padding()
                 }
+
+                if let poll = messageData.poll {
+                    PollMessageView(
+                        message: messageData,
+                        webSocketService: webSocketService,
+                        poll: poll,
+                        isCurrentUser: isCurrentUser
+                    )
+                }
             }
             .frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
             
             if isCurrentUser {
-                AvatarView(author: messageData.author)
+                AvatarView(author: messageData.author, onProfileTap: onProfileTap)
             }
             
             if !isCurrentUser { Spacer(minLength: 60) }
@@ -94,26 +117,91 @@ struct MessageView: View {
 
 struct AvatarView: View {
     let author: Author
+    let onProfileTap: (() -> Void)?
+    @AppStorage("disableAnimatedAvatars") private var disableAnimatedAvatars: Bool = false
+    @AppStorage("disableProfilePictureTap") private var disableProfilePictureTap: Bool = false
     
     var body: some View {
-        AsyncImage(url: avatarURL) { image in
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } placeholder: {
+        if let url = avatarURL {
+            let shouldAnimate = author.animated && !disableAnimatedAvatars
+            if shouldAnimate {
+                #if os(iOS)
+                AsyncGiffy(url: url) { phase in
+                    switch phase {
+                    case .loading:
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(ProgressView().scaleEffect(0.6))
+                            .frame(width: 36, height: 36)
+                            .clipShape(Circle())
+                    case .error:
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 36, height: 36)
+                            .clipShape(Circle())
+                    case .success(let giffy):
+                        giffy
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 36, height: 36)
+                            .clipped()
+                            .clipShape(Circle())
+                    }
+                }
+                .onTapGesture {
+                    if !disableProfilePictureTap {
+                        onProfileTap?()
+                    }
+                }
+                #else
+                AnimatedWebImage(url: url)
+                    .frame(width: 36, height: 36)
+                    .clipShape(Circle())
+                    .onTapGesture {
+                        if !disableProfilePictureTap {
+                            onProfileTap?()
+                        }
+                    }
+                #endif
+            } else {
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.6)
+                        )
+                }
+                .frame(width: 36, height: 36)
+                .clipShape(Circle())
+                .onTapGesture {
+                    if !disableProfilePictureTap {
+                        onProfileTap?()
+                    }
+                }
+            }
+        } else {
             Circle()
                 .fill(Color.gray.opacity(0.3))
-                .overlay(
-                    ProgressView()
-                        .scaleEffect(0.6)
-                )
+                .frame(width: 36, height: 36)
+                .onTapGesture {
+                    if !disableProfilePictureTap {
+                        onProfileTap?()
+                    }
+                }
         }
-        .frame(width: 36, height: 36)
-        .clipShape(Circle())
     }
     
     private var avatarURL: URL? {
         if let avatar = author.avatarHash {
+            // If animations are disabled, request PNG — Discord returns the first frame for animated avatars when requested as PNG
+            let shouldAnimate = author.animated && !disableAnimatedAvatars
+            if shouldAnimate {
+                return URL(string: "https://cdn.discordapp.com/avatars/\(author.authorId)/\(avatar).gif?size=1024&animated=true")
+            }
             return URL(string: "https://cdn.discordapp.com/avatars/\(author.authorId)/\(avatar).png")
         } else {
             return URL(string: "https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a6cc3c481a15a141738_icon_clyde_white_RGB.png")
