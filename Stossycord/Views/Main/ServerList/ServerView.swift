@@ -18,6 +18,7 @@ struct ServerView: View {
     @State private var searchTerm = ""
     @StateObject var webSocketService: WebSocketService
     @AppStorage("useDiscordFolders") private var useDiscordFolders: Bool = false
+    @AppStorage("allowDestructiveActions") private var allowDestructiveActions: Bool = false
     @State private var expandedFolders: Set<String> = []
     @State private var selectionMode = false
     @State private var selectedGuildIds: Set<String> = []
@@ -189,15 +190,17 @@ struct ServerView: View {
     
     @ToolbarContentBuilder
     private var selectionToolbar: some ToolbarContent {
-        #if os(macOS)
-        ToolbarItemGroup(placement: .automatic) {
-            toolbarControls
+        if allowDestructiveActions {
+            #if os(macOS)
+            ToolbarItemGroup(placement: .automatic) {
+                toolbarControls
+            }
+            #else
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                toolbarControls
+            }
+            #endif
         }
-        #else
-        ToolbarItemGroup(placement: .navigationBarTrailing) {
-            toolbarControls
-        }
-        #endif
     }
     
     @ViewBuilder
