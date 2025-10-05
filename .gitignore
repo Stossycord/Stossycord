@@ -1,55 +1,37 @@
 # macOS
 .DS_Store
 
-# Xcode
-# Ignore user-specific workspace/project data which often contains developer/team info
 **/xcuserdata/
 *.xcuserdatad/
 *.xcuserstate
 *.xcscmblueprint
 *.xccheckout
 
-# Xcode build / derived data
 build/
 DerivedData/
 *.moved-aside
 
-# Xcode project user-specific files
 *.pbxuser
 *~.pbxuser
 *.mode1v3
 *.mode2v3
 
-# Workspace user data
 project.xcworkspace/xcuserdata/
 *.xcworkspace/xcuserdata/
 
-# Swift Package Manager
 .build/
 .swiftpm/
 Package.resolved
 
-# CocoaPods
 Pods/
 
-# Carthage
 Carthage/Build/
 
-# Certificates and provisioning
 *.cer
 *.p12
 *.mobileprovision
 
-# Archives
 *.xcarchive
 
-# Misc
 *.swp
 *~
-
-# NOTE: You cannot git-ignore an individual setting line inside a tracked file
-# (for example DEVELOPMENT_TEAM inside project.pbxproj). To avoid committing
-# a development team value in the tracked project file consider one of:
-#  - Move team-specific settings into a local xcconfig that is ignored
-#  - Remove the DEVELOPMENT_TEAM from the project and let it be set per-user
-#  - Use a pre-commit hook or a custom merge/clean filter to scrub the field
