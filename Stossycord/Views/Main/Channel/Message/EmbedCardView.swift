@@ -9,7 +9,6 @@ struct EmbedCardView: View {
     let isCurrentUser: Bool
 
     private var accentColor: Color {
-        print(embed)
         if let color = embed.color, let resolved = Color(hex: color) {
             return resolved
         }
