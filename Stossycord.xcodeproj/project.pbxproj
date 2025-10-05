@@ -295,7 +295,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Stossycord/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Stossyfork;
+				INFOPLIST_KEY_CFBundleDisplayName = Stossycord;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
@@ -339,7 +339,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Stossycord/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Stossyfork;
+				INFOPLIST_KEY_CFBundleDisplayName = Stossycord;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
@@ -358,7 +358,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13;
 				MARKETING_VERSION = 0.6;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.alexbadi.stossyfork;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossycord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
