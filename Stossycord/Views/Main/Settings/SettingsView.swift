@@ -30,9 +30,10 @@ struct SettingsView: View {
     @AppStorage("useNativePicker") private var useNativePicker: Bool = false
     @AppStorage("useRedesignedMessages") private var useRedesignedMessages: Bool = false
     @AppStorage("useDiscordFolders") private var useDiscordFolders: Bool = false
-    @AppStorage(DesignSettingsKeys.messageBubbleStyle) private var messageStyleRawValue: String = MessageBubbleStyle.default.rawValue
+    @AppStorage(DesignSettingsKeys.messageBubbleStyle) private var messageStyleRawValue: String = MessageBubbleStyle.imessage.rawValue
     @AppStorage(DesignSettingsKeys.showSelfAvatar) private var showSelfAvatar: Bool = true
     @AppStorage(DesignSettingsKeys.customMessageBubbleJSON) private var customBubbleJSON: String = ""
+    @AppStorage("allowDestructiveActions") private var allowDestructiveActions: Bool = false
     
     var body: some View {
         VStack {
@@ -41,60 +42,6 @@ struct SettingsView: View {
                 .padding()
             
             List {
-                Section("Token") {
-                    
-                    HStack {
-                        Text("Token: ")
-                        ZStack {
-                            if isspoiler {
-                                Spacer()
-                                Image(systemName: "lock.rectangle")
-                                    .onTapGesture {
-                                        if isspoiler {
-                                            authenticate()
-                                        } else {
-                                            isspoiler = true
-                                        }
-                                    }
-                                Spacer()
-                            } else {
-                                Text(keychain.get("token") ?? "")
-                                    .contextMenu {
-                                        Button {
-                                            #if os(macOS)
-                                            if let token = keychain.get("token") {
-                                                let pasteboard = NSPasteboard.general
-                                                pasteboard.clearContents() // Clear the pasteboard before writing
-                                                pasteboard.setString(token, forType: .string)
-                                            } else {
-                                                print("No token found in the keychain.")
-                                            }
-                                            #else
-                                            UIPasteboard.general.string = keychain.get("token") ?? ""
-                                            #endif
-                                        } label: {
-                                            Text("Copy")
-                                        }
-                                    }
-                                    .onTapGesture {
-                                        isspoiler = true
-                                        // token = ""
-                                    }
-                            }
-                        }
-                    }
-                    
-                    
-                    ZStack {
-                        Button {
-                            keychain.delete("token")
-                            showAlert = true
-                        } label: {
-                            Text("Log Out")
-                        }
-                    }
-                }
-                
                 Section("Appearance") {
                     Toggle("Disable animated avatars", isOn: $disableAnimatedAvatars)
                         .help("When enabled, animated profile pictures will be requested as PNG and shown as a static first frame.")
@@ -108,9 +55,9 @@ struct SettingsView: View {
                             Text(style.displayName).tag(style.rawValue)
                         }
                     }
-#if os(iOS)
+                    #if os(iOS)
                     .pickerStyle(.segmented)
-#endif
+                    #endif
 
                     Toggle("Show my profile picture", isOn: $showSelfAvatar)
                         .help("When disabled, your messages align closer to the edge without your avatar.")
@@ -129,10 +76,10 @@ struct SettingsView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color.secondary.opacity(0.2))
                                 )
-#if os(iOS)
+                    #if os(iOS)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
-#endif
+                    #endif
                             if !MessageBubbleVisualConfiguration.isCustomJSONValid(customBubbleJSON) {
                                 Text("Invalid JSON detected – falling back to defaults.")
                                     .font(.caption)
@@ -251,10 +198,158 @@ struct SettingsView: View {
                     .padding(.vertical, 4)
                 }
 
-                Section("User info") {
-                    Text("Locale: \(WebSocketService.shared.userSettings?.locale ?? "N/A")")
-                    Text("Discord Theme: \(WebSocketService.shared.userSettings?.theme ?? "N/A")")
-                    Text("Developer Mode: \(WebSocketService.shared.userSettings?.developerMode == true ? "Enabled" : "Disabled")")
+                Section("Token") {
+                    
+                    HStack {
+                        Text("Token: ")
+                        ZStack {
+                            if isspoiler {
+                                Spacer()
+                                Image(systemName: "lock.rectangle")
+                                    .onTapGesture {
+                                        if isspoiler {
+                                            authenticate()
+                                        } else {
+                                            isspoiler = true
+                                        }
+                                    }
+                                Spacer()
+                            } else {
+                                Text(keychain.get("token") ?? "")
+                                    .contextMenu {
+                                        Button {
+                                            #if os(macOS)
+                                            if let token = keychain.get("token") {
+                                                let pasteboard = NSPasteboard.general
+                                                pasteboard.clearContents() // Clear the pasteboard before writing
+                                                pasteboard.setString(token, forType: .string)
+                                            } else {
+                                                print("No token found in the keychain.")
+                                            }
+                                            #else
+                                            UIPasteboard.general.string = keychain.get("token") ?? ""
+                                            #endif
+                                        } label: {
+                                            Text("Copy")
+                                        }
+                                    }
+                                    .onTapGesture {
+                                        isspoiler = true
+                                        // token = ""
+                                    }
+                            }
+                        }
+                    }
+                    
+                    
+                    ZStack {
+                        Button {
+                            keychain.delete("token")
+                            showAlert = true
+                        } label: {
+                            Text("Log Out")
+                        }
+                    }
+                }
+
+                Section("Warning zone") {
+                    Toggle("Allow destructive actions", isOn: Binding(
+                        get: { allowDestructiveActions },
+                        set: { newValue in
+                            if newValue {
+                                showPopover = true
+                            } else {
+                                allowDestructiveActions = false
+                            }
+                        }
+                    ))
+                    .help("When enabled, allows actions like mass leaving servers.")
+                    .foregroundColor(allowDestructiveActions ? .red : .primary)
+                    .sheet(isPresented: $showPopover) {
+                        VStack(spacing: 20) {
+                            VStack(alignment: .leading, spacing: 24) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 64))
+                                    .foregroundColor(.yellow)
+                                    .padding(.top, 16)
+                                    .padding(.bottom, 16)
+
+                                Text("Are you sure?")
+                                    .font(.system(size: 38, weight: .bold))
+
+                                Text("This will enable options like mass leaving servers or other features that do not exist on official Discord distributions. Discord could suspend your account for using these features. Proceed with caution.")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                                    .frame(maxWidth: 600, alignment: .leading)
+                            }
+                            .padding(.horizontal, 34)
+
+                            Spacer()
+
+                            VStack(spacing: 12) {
+                                if #available(iOS 26.0, *) {
+                                    Button(action: {
+                                        allowDestructiveActions = true
+                                        showPopover = false
+                                    }) {
+                                        Text("Enable")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 40)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(.red)
+                                    .glassEffect(.regular)
+                                    
+                                    Button(action: {
+                                        allowDestructiveActions = false
+                                        showPopover = false
+                                    }) {
+                                        Text("Nevermind")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 40)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .glassEffect(.regular)
+                                } else {
+                                    Button(action: {
+                                        allowDestructiveActions = true
+                                        showPopover = false
+                                    }) {
+                                        Text("Enable")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 56)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(.red)
+                                    
+                                    Button(action: {
+                                        allowDestructiveActions = false
+                                        showPopover = false
+                                    }) {
+                                        Text("Nevermind")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 56)
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 20)
+                        }
+                        .padding(.top, 20)
+                        .background(Color(UIColor.systemBackground))
+                        /*.presentationDetents {
+                            if #available(iOS 16.0, *) {
+                                [.fraction(0.5), .large]
+                            } else {
+                                []
+                            }
+                        } */
+                        #if !os(iOS)
+                        .frame(maxHeight: .infinity)
+                        #endif
+                    }
                 }
 
                 /*

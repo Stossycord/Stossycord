@@ -12,7 +12,7 @@ enum MessageBubbleStyle: String, CaseIterable, Identifiable {
         case .default:
             return "Default"
         case .imessage:
-            return "iMessage"
+            return "iMessage-like"
         case .custom:
             return "Custom (JSON)"
         }
