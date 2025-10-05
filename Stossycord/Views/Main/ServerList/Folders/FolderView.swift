@@ -16,7 +16,11 @@ struct FolderView: View {
     let guilds: [Guild]
     let isExpanded: Bool
     let onToggle: () -> Void
-    @StateObject private var webSocketService = WebSocketService.shared
+    @ObservedObject var webSocketService: WebSocketService
+    let selectionMode: Bool
+    let selectedGuildIds: Set<String>
+    let onGuildSelected: (Guild) -> Void
+    let isLeavingGuilds: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -47,10 +51,24 @@ struct FolderView: View {
             if isExpanded {
                 VStack(spacing: 6) {
                     ForEach(guilds, id: \.id) { guild in
-                        NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
-                            ServerRow(guild: guild)
+                        if selectionMode {
+                            Button {
+                                onGuildSelected(guild)
+                            } label: {
+                                ServerRow(
+                                    guild: guild,
+                                    selectionMode: true,
+                                    isSelected: selectedGuildIds.contains(guild.id)
+                                )
+                            }
+                            .disabled(isLeavingGuilds)
+                            .buttonStyle(ServerRowButtonStyle())
+                        } else {
+                            NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
+                                ServerRow(guild: guild)
+                            }
+                            .buttonStyle(ServerRowButtonStyle())
                         }
-                        .buttonStyle(ServerRowButtonStyle())
                     }
                 }
                 .padding(.leading, 20)

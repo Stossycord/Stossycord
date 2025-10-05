@@ -16,38 +16,15 @@ struct ChannelsListView: View {
     @AppStorage("hideRestrictedChannels") private var hideRestrictedChannels: Bool = false
 
     var body: some View {
-        NavigationView {
-            List {
-                if webSocketService.channels.isEmpty {
-                    Text("No channels available.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(webSocketService.channels, id: \.id) { category in
-                        let visibleChannels = visibleChannels(in: category)
-                        if visibleChannels.isEmpty {
-                            EmptyView()
-                        } else {
-                            Section {
-                                ForEach(visibleChannels, id: \.id) { channel in
-                                    channelRow(channel: channel, category: categoryContext(from: category), isThread: false)
-
-                                    if channel.isTextLike {
-                                        let threads = visibleThreads(for: channel, in: categoryContext(from: category))
-                                        ForEach(threads, id: \.id) { thread in
-                                            channelRow(channel: thread, category: categoryContext(from: category), isThread: true)
-                                        }
-                                    }
-                                }
-                            } header: {
-                                sectionHeader(for: category)
-                            }
-                        }
-                    }
-                }
-            }
-            .listStyle(.insetGrouped)
-        }
-        .onAppear {
+        channelsList
+            .navigationTitle(guild.name)
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+        #endif
+        #if os(macOS)
+            .navigationSubtitle("Channels")
+        #endif
+            .onAppear {
             if webSocketService.currentguild.id != guild.id {
                 webSocketService.currentguild = guild
                 webSocketService.channels.removeAll()
@@ -65,6 +42,43 @@ struct ChannelsListView: View {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private var channelsList: some View {
+        List {
+            if webSocketService.channels.isEmpty {
+                Text("No channels available.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(webSocketService.channels, id: \.id) { category in
+                    categorySection(for: category)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+    }
+
+    @ViewBuilder
+    private func categorySection(for category: Category) -> some View {
+        let context = categoryContext(from: category)
+        let channels = visibleChannels(in: category)
+
+        if !channels.isEmpty {
+            Section {
+                ForEach(channels, id: \.id) { channel in
+                    channelRow(channel: channel, category: context, isThread: false)
+
+                    let threads = visibleThreads(for: channel, in: context)
+                    if !threads.isEmpty {
+                        ForEach(threads, id: \.id) { thread in
+                            channelRow(channel: thread, category: context, isThread: true)
+                        }
+                    }
+                }
+            } header: {
+                sectionHeader(for: category)
             }
         }
     }
@@ -217,23 +231,7 @@ struct ChannelsListView: View {
     }
 
     func channels(token: String) {
-        let group = DispatchGroup()
-        var fetchedChannels: [Channel] = []
-        var fetchedThreads: [Channel] = []
-
-        group.enter()
-        getDiscordChannels(serverId: guild.id, token: token) { channels in
-            fetchedChannels = channels
-            group.leave()
-        }
-
-        group.enter()
-        getGuildActiveThreads(guildId: guild.id, token: token) { threads in
-            fetchedThreads = threads
-            group.leave()
-        }
-
-        group.notify(queue: .main) {
+        getDiscordChannels(serverId: guild.id, token: token) { fetchedChannels in
             let channelSort: (Channel, Channel) -> Bool = { lhs, rhs in
                 let lhsIsVoiceLike = lhs.isVoiceLike
                 let rhsIsVoiceLike = rhs.isVoiceLike
@@ -328,14 +326,9 @@ struct ChannelsListView: View {
             )
             finalCategories.insert(rootCategory, at: 0)
 
-            let threadsWithParents = fetchedThreads.filter { $0.parentId != nil }
-            let groupedThreads = Dictionary(grouping: threadsWithParents, by: { $0.parentId! })
-                .mapValues { threads in
-                    threads.sorted { snowflake($0.lastMessageId ?? $0.id) > snowflake($1.lastMessageId ?? $1.id) }
-                }
-
+            // Do not attempt to fetch guild-wide threads (bot-only). Keep threadsByParent empty.
             webSocketService.channels = finalCategories
-            webSocketService.threadsByParent = groupedThreads
+            webSocketService.threadsByParent = [:]
         }
     }
 
@@ -343,4 +336,5 @@ struct ChannelsListView: View {
         guard let id = id, let value = UInt64(id) else { return 0 }
         return value
     }
+
 }

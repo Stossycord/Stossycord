@@ -675,8 +675,18 @@ class WebSocketService: ObservableObject {
                     return nil
                 }
             }
-            
-            self.currentMembers = parsedMembers
+
+            var updatedMembers = self.currentMembers
+
+            for member in parsedMembers {
+                if let index = updatedMembers.firstIndex(where: { $0.user.id == member.user.id }) {
+                    updatedMembers[index] = member
+                } else {
+                    updatedMembers.append(member)
+                }
+            }
+
+            self.currentMembers = updatedMembers
         }
     }
     
