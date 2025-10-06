@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Build Stossyfork
+    name: Build Stossycord
     runs-on: macos-26
 
     env:
@@ -46,6 +46,10 @@ jobs:
             -derivedDataPath "$DERIVED_DATA_PATH"
 
       - name: Build (iOS Simulator)
+        env:
+          SWIFT_SUPPRESS_WARNINGS: "YES"
+          GCC_WARN_INHIBIT_ALL_WARNINGS: "YES"
+          OTHER_SWIFT_FLAGS: "-suppress-warnings"
         run: |
           xcodebuild \
             -project Stossycord.xcodeproj \
