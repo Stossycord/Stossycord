@@ -10,24 +10,30 @@ Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift a
 
 
 ## Features
-- Sending Messages
-- Recieving Messages
-- Replying to Messages
-- Uploading Images, Videos and other files
-- Recieving Images, Videos, Music and other files
-- Sending and Recieving DMs
+- Sending messages
+- Receiving messages (text)
+- Replying to messages
+- Uploading attachments (images, video, files)
+- Receiving attachments (images, video, audio, files)
+- Direct Messages (send & receive)
+- Discord Settings (currently used for folders)
+- User Profiles
+- Basic channel list and navigation
+- Basic account/session management (login/logout)
 
 
-## Not Supported Features (Coming Soon)
+## Unsupported / Coming Soon
 - Voice Chat
 - Roles
-- Adding Friends
+- Adding Friends and Friend requests
 - Joining Servers
-- User Profiles
-- Discord Settings
-- Reactions
+- Reactions (view/add/remove)
 - Showing Typing Indicators
 - Notifications
+- Custom emojis
+- Animated banners
+- View other users' presence
+
 
 # Discord
 You can find the discord server [Here](https://discord.gg/sNzwHGDVEJ)
