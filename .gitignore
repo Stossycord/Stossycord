@@ -21,6 +21,7 @@ project.xcworkspace/xcuserdata/
 
 .build/
 .swiftpm/
+.logs/
 Package.resolved
 
 Pods/
