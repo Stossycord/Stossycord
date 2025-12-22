@@ -230,7 +230,7 @@ struct InteractiveDiscordWebView: UIViewRepresentable {
             webView.evaluateJavaScript(js) { [weak self] result, error in
                 if let token = result as? String, !token.isEmpty {
                     let strippedToken = token.replacingOccurrences(of: "\"", with: "")
-                    DispatchQueue.main.async {
+                    Task { @MainActor in 
                         self?.viewModel?.token = strippedToken
                         self?.viewModel?.showCaptcha = false
                         self?.viewModel?.show2FA = false
@@ -280,7 +280,7 @@ struct HiddenDiscordWebView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         if viewModel.shouldSubmitLogin {
             context.coordinator.submitLogin()
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 viewModel.shouldSubmitLogin = false
             }
         }
@@ -385,7 +385,7 @@ struct HiddenDiscordWebView: UIViewRepresentable {
                     print("JavaScript result: \(result)")
                 }
                 
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     if let result = result as? String, result == "submitted" {
                         // Start monitoring for challenges (2FA/captcha)
                         self?.startChallengeMonitoring()
@@ -544,7 +544,7 @@ struct HiddenDiscordWebView: UIViewRepresentable {
                 
                 print("Challenge check result: \(type)")
                 
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     switch type {
                     case "token":
                         if let token = dict["value"] as? String {
@@ -689,12 +689,12 @@ extension HiddenDiscordWebView.Coordinator {
             
             
             if let croppedImage = image.cropped(to: paddedRect) {
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self?.viewModel?.qrCodeImage = croppedImage
                     self?.qrCodeRetryCount = 0
                 }
             } else {
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self?.viewModel?.qrCodeImage = image
                     self?.qrCodeRetryCount = 0
                 }

@@ -406,7 +406,7 @@ struct SettingsView: View {
             let reason = "This is very Sensitive Data. Please Authenticate"
 
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authenticationError in
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     if success {
                         self.isspoiler = false
                     } else {
@@ -438,7 +438,7 @@ struct SettingsView: View {
         let reason = "Please enter your passcode to authenticate"
 
         context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, error in
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 if success {
                     self.isspoiler = false
                 } else {

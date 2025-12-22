@@ -41,16 +41,16 @@ func updatePollVotes(token: String, channelId: String, messageId: String, answer
 
     URLSession.shared.dataTask(with: request) { _, response, error in
         if let error = error {
-            DispatchQueue.main.async { completion(.failure(error)) }
+            Task { @MainActor in  completion(.failure(error)) }
             return
         }
 
         if let httpResponse = response as? HTTPURLResponse, !(200..<300).contains(httpResponse.statusCode) {
             let error = NSError(domain: "PollVote", code: httpResponse.statusCode, userInfo: nil)
-            DispatchQueue.main.async { completion(.failure(error)) }
+            Task { @MainActor in  completion(.failure(error)) }
             return
         }
 
-        DispatchQueue.main.async { completion(.success(())) }
+        Task { @MainActor in  completion(.success(())) }
     }.resume()
 }

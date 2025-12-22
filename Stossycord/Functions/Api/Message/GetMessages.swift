@@ -62,7 +62,7 @@ func getDiscordMessages(token: String, webSocketService: WebSocketService) {
                         
                         
                         if !webSocketService.data.contains(where: { $0.messageId == currentmessage.messageId }) {
-                            DispatchQueue.main.async {
+                            Task { @MainActor in 
                                 
                                 webSocketService.data.append(currentmessage)
                                 

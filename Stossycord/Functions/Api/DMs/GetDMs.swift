@@ -50,7 +50,7 @@ func getDiscordDMs(token: String, completion: @escaping ([DMs]) -> Void) {
                 channels = try JSONDecoder().decode([DMs].self, from: data)
 
                 channels.sort { $0.position > $1.position }
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     completion(channels)
                 }
             } catch {

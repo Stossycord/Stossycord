@@ -10,6 +10,7 @@ import AVFoundation
 import KeychainSwift
 import Network
 
+
 class WebSocketService: ObservableObject {
     @Published var currentUser: User
     @Published var isConnected: Bool = false
@@ -133,7 +134,7 @@ class WebSocketService: ObservableObject {
             
             // Fetch user and guilds on background thread
             CurrentUser(token: token) { user in
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     if let user {
                         self.currentUser = user
                     } else {
@@ -143,7 +144,7 @@ class WebSocketService: ObservableObject {
             }
             
             getDiscordGuilds(token: token) { result in
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self.Guilds = result
                 }
             }
@@ -153,7 +154,7 @@ class WebSocketService: ObservableObject {
             if self.shouldResume, let resumeUrl = self.resumeGatewayUrl {
                 gatewayUrl = resumeUrl
             } else {
-                gatewayUrl = "wss://gateway.discord.gg/?encoding=json&v=9"
+                gatewayUrl = "wss://gateway.discord.gg/?encoding=json&v=10"
             }
 
             guard let url = URL(string: gatewayUrl) else {
@@ -197,7 +198,7 @@ class WebSocketService: ObservableObject {
         
         self.cleanupConnection()
         
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             self.isConnected = false
         }
     }
@@ -269,7 +270,7 @@ class WebSocketService: ObservableObject {
                         self.isHeartbeatActive = false
                     }
                     
-                    DispatchQueue.main.async {
+                    Task { @MainActor in 
                         self.isConnected = false
                         self.isConnecting = false
                     }
@@ -475,7 +476,7 @@ class WebSocketService: ObservableObject {
                     self.isConnecting = false
                     self.shouldResume = false // Reset resume flag after successful connect
                 }
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self.isConnected = true
                 }
                 // Start keep-alive mechanism
@@ -488,7 +489,7 @@ class WebSocketService: ObservableObject {
                     self.isConnecting = false
                     self.shouldResume = false // Reset resume flag after successful resume
                 }
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self.isConnected = true
                 }
                 // Start keep-alive mechanism
@@ -548,19 +549,19 @@ class WebSocketService: ObservableObject {
             if let userSettingsData = data["user_settings"] as? [String: Any] {
                 let settingsData = try JSONSerialization.data(withJSONObject: userSettingsData)
                 let settings = try JSONDecoder().decode(UserSettings.self, from: settingsData)
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self.userSettings = settings
                 }
             } else {
                 print("no user_settings found!")
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self.userSettings = UserSettings()
                 }
             }
             
         } catch {
             print("error parsing ready event, usersettings: \(error)")
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 self.userSettings = UserSettings()
             }
         }
@@ -587,13 +588,13 @@ class WebSocketService: ObservableObject {
             if let settingsData = json?["d"] as? [String: Any] {
                 let data = try JSONSerialization.data(withJSONObject: settingsData)
                 let decodedSettings = try JSONDecoder().decode(UserSettings.self, from: data)
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self.userSettings = decodedSettings
                 }
             }
         } catch {
             print("error parsing user settings update: \(error)")
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 if self.userSettings == nil {
                     self.userSettings = UserSettings()
                 }
@@ -664,17 +665,18 @@ class WebSocketService: ObservableObject {
             return
         }
         
-        DispatchQueue.main.async {
-            let parsedMembers = members.compactMap { memberData -> GuildMember? in
-                do {
-                    let jsonData = try JSONSerialization.data(withJSONObject: memberData, options: [])
-                    let decoder = JSONDecoder()
-                    return try decoder.decode(GuildMember.self, from: jsonData)
-                } catch {
-                    print("Failed to decode member: \(error)")
-                    return nil
-                }
+        let parsedMembers = members.compactMap { memberData -> GuildMember? in
+            do {
+                let jsonData = try JSONSerialization.data(withJSONObject: memberData, options: [])
+                let decoder = JSONDecoder()
+                return try decoder.decode(GuildMember.self, from: jsonData)
+            } catch {
+                print("Failed to decode member: \(error)")
+                return nil
             }
+        }
+        
+        Task { @MainActor in 
 
             var updatedMembers = self.currentMembers
 
@@ -699,7 +701,7 @@ class WebSocketService: ObservableObject {
         
         print("Deleting message: \(messageID)")
         
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             self.data.removeAll { $0.messageId == messageID }
         }
     }
@@ -854,7 +856,7 @@ class WebSocketService: ObservableObject {
         let decodedAttachments = attachmentsPayload.flatMap { decodeAttachments(from: $0) }
         let decodedPoll = pollPayload.flatMap { decodePoll(from: $0) }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             guard let index = self.data.firstIndex(where: { $0.messageId == messageId }) else { return }
             if let content = content {
                 self.data[index].content = content
@@ -905,7 +907,7 @@ class WebSocketService: ObservableObject {
     }
 
     func updatePoll(messageId: String, mutate: @escaping (inout Poll) -> Void) {
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             guard let index = self.data.firstIndex(where: { $0.messageId == messageId }) else { return }
             guard var poll = self.data[index].poll else { return }
             mutate(&poll)
@@ -982,7 +984,7 @@ class WebSocketService: ObservableObject {
               let parentId = payload["parent_id"] as? String,
               let channel = decodeChannel(from: payload) else { return }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             var threads = self.threadsByParent[parentId] ?? []
             if let index = threads.firstIndex(where: { $0.id == channel.id }) {
                 threads[index] = channel
@@ -998,7 +1000,7 @@ class WebSocketService: ObservableObject {
               let parentId = payload["parent_id"] as? String,
               let channel = decodeChannel(from: payload) else { return }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             var threads = self.threadsByParent[parentId] ?? []
             if let index = threads.firstIndex(where: { $0.id == channel.id }) {
                 threads[index] = channel
@@ -1014,7 +1016,7 @@ class WebSocketService: ObservableObject {
               let parentId = payload["parent_id"] as? String,
               let threadId = payload["id"] as? String else { return }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             guard var threads = self.threadsByParent[parentId] else { return }
             threads.removeAll { $0.id == threadId }
             self.threadsByParent[parentId] = threads
@@ -1056,7 +1058,7 @@ class WebSocketService: ObservableObject {
             let data = try JSONSerialization.data(withJSONObject: payload, options: [])
             let decoder = JSONDecoder()
             let message = try decoder.decode(Message.self, from: data)
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 if self.currentchannel == message.channelId {
                     self.data.append(message)
                 }

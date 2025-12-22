@@ -458,7 +458,7 @@ struct ChannelView: View {
         guard let token = keychain.get("token") else { return }
         TabBarModifier.shared.hideTabBar()
         
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             webSocketService.currentchannel = currentid
             getDiscordMessages(token: token, webSocketService: webSocketService)
             
@@ -570,7 +570,7 @@ struct ChannelView: View {
                     )
                     try data.write(to: tempURL)
                     
-                    DispatchQueue.main.async {
+                    Task { @MainActor in 
                         self.fileURL = tempURL
                         self.showingUploadPicker = false
                     }
@@ -610,7 +610,7 @@ struct ChannelView: View {
     
     private func presentUserProfile(for author: Author) {
         if !Thread.isMainThread {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 self.presentUserProfile(for: author)
             }
             return
@@ -630,7 +630,7 @@ struct ChannelView: View {
     
     private func fetchUserProfile(userId: String, useCache: Bool = true) {
         if useCache, let cachedProfile = CacheService.shared.getCachedUserProfile(userId: userId) {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 self.selectedUserProfile = cachedProfile
                 self.isLoadingProfile = false
             }
@@ -638,13 +638,13 @@ struct ChannelView: View {
         }
         
         guard let token = keychain.get("token") else {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 self.isLoadingProfile = false
             }
             return
         }
         
-        DispatchQueue.main.async {
+        Task { @MainActor in 
             if self.selectedUserProfile == nil {
                 self.isLoadingProfile = true
             }
@@ -653,13 +653,13 @@ struct ChannelView: View {
         getUserProfile(token: token, userId: userId) { profile in
             if let profile = profile {
                 CacheService.shared.setCachedUserProfile(profile, userId: userId)
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     self.selectedUserProfile = profile
                     self.isLoadingProfile = false
                 }
             } else {
                 getBasicUserInfo(token: token, userId: userId) { basicUser in
-                    DispatchQueue.main.async {
+                    Task { @MainActor in 
                         if let user = basicUser {
                             let fallbackProfile = UserProfile(
                                 user: user,
@@ -753,7 +753,7 @@ struct WindowTabObserver: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear {
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     currentWindow = NSApplication.shared.keyWindow
                 }
                 setupNotifications()

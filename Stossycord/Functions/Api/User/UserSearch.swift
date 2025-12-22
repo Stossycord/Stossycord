@@ -23,26 +23,26 @@ func UserSearch(token: String,
             return
         }
         if let error = error {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 completion(.failure(error))
             }
             return
         }
         guard let httpResponse = response as? HTTPURLResponse else {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 completion(.failure(SearchServiceError.invalidResponse))
             }
             return
         }
         guard (200...299).contains(httpResponse.statusCode) else {
             let message = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 completion(.failure(SearchServiceError.http(status: httpResponse.statusCode, message: message)))
             }
             return
         }
         guard let data = data else {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 completion(.failure(SearchServiceError.emptyPayload))
             }
             return
@@ -52,11 +52,11 @@ func UserSearch(token: String,
             decoder.dateDecodingStrategy = .iso8601
             let payload = try decoder.decode(UnifiedSearchResponse.self, from: data)
             let unified = UnifiedSearchResults(tabs: payload.tabs)
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 completion(.success(unified))
             }
         } catch {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 completion(.failure(error))
             }
         }

@@ -45,7 +45,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         isLoading = true
         
         URLSession.shared.dataTask(with: url) { data, response, error in
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 isLoading = false
                 
                 if let data = data, let downloadedImage = UIImage(data: data) {
@@ -101,7 +101,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         isLoading = true
         
         URLSession.shared.dataTask(with: url) { data, response, error in
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 isLoading = false
                 
                 if let data = data, let downloadedImage = NSImage(data: data) {

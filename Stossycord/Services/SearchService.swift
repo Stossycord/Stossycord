@@ -32,7 +32,7 @@ final class SearchService {
             completion(result)
         }
         guard let task = taskReference else {
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 completion(.failure(SearchServiceError.invalidRequest))
             }
             return
@@ -47,7 +47,7 @@ final class SearchService {
     }
     
     private func remove(task: URLSessionDataTask) {
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             self?.tasks.removeAll { $0 === task }
         }
     }

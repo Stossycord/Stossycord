@@ -45,7 +45,7 @@ func getDiscordChannels(serverId: String, token: String, completion: @escaping (
                     
                     do {
                         let channels = try JSONDecoder().decode([Channel].self, from: data)
-                        DispatchQueue.main.async {
+                        Task { @MainActor in 
                             completion(channels)
                         }
                     } catch {

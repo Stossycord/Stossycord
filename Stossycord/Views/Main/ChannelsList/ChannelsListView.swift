@@ -36,7 +36,7 @@ struct ChannelsListView: View {
 
                     Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
                         getGuildRoles(guild: guild) { roles in
-                            DispatchQueue.main.async {
+                            Task { @MainActor in 
                                 webSocketService.currentroles = roles
                             }
                         }

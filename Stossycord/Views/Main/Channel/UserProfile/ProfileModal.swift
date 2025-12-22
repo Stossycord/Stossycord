@@ -121,14 +121,14 @@ struct ProfileModal: View {
         }
         
         getUserProfile(token: token, userId: userId) { fetchedProfile in
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 isLoading = false
                 if let fetchedProfile = fetchedProfile {
                     profile = fetchedProfile
                     CacheService.shared.setCachedUserProfile(fetchedProfile, userId: userId)
                 } else {
                     getBasicUserInfo(token: token, userId: userId) { basicUser in
-                        DispatchQueue.main.async {
+                        Task { @MainActor in 
                             if let user = basicUser {
                                 let fallbackProfile = UserProfile(
                                     user: user,

@@ -289,7 +289,7 @@ struct ServerView: View {
         alert.addButton(withTitle: leaveConfirmationButtonTitle)
         alert.addButton(withTitle: "Cancel")
         alert.beginSheetModal(for: window) { response in
-            DispatchQueue.main.async {
+            Task { @MainActor in 
                 showLeaveConfirmation = false
                 if response == .alertFirstButtonReturn {
                     leaveSelectedGuilds()
@@ -375,7 +375,7 @@ struct ServerView: View {
         
         func attemptLeave(guildId: String, attempt: Int, completion: @escaping (Result<Void, Error>) -> Void) {
             leaveDiscordGuild(token: token, guildId: guildId) { result in
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     switch result {
                     case .success:
                         removeGuildFromState(id: guildId)

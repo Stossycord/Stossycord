@@ -46,7 +46,7 @@ func getGuildRoles(guild: Guild, completion: @escaping ([AdvancedGuild.Role]) ->
                 
                 let sorted = guilds.sorted { $0.position > $1.position }
                 
-                DispatchQueue.main.async {
+                Task { @MainActor in 
                     completion(sorted)
                 }
             } catch {
