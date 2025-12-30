@@ -23,14 +23,11 @@ class PermissionManager {
         guildId: String,
         categoryOverwrites: [PermissionOverwrite]? = nil
     ) -> UInt64 {
-        // If no members loaded, create a temporary member with @everyone role
-        var currentMember: GuildMember
-        if let foundMember = members.first(where: { $0.user.id == currentUser.id }) {
-            currentMember = foundMember
-        } else {
-            currentMember = GuildMember(
+
+        let member: GuildMember = members.first { $0.user.id == currentUser.id } ??
+            GuildMember(
                 user: currentUser,
-                roles: [guildId], // @everyone role has same ID as guild ID
+                roles: [guildId],
                 joinedAt: "",
                 deaf: false,
                 mute: false,
@@ -39,53 +36,76 @@ class PermissionManager {
                 pending: false,
                 communicationDisabledUntil: nil
             )
+
+        var permissions: UInt64 = 0
+
+        if let everyoneRole = roles.first(where: { $0.id == guildId }),
+           let perms = UInt64(everyoneRole.permissions) {
+            permissions = perms
         }
-        
-        var basePermissions: UInt64 = 0
-        
-        let userRoles = roles.filter { currentMember.roles.contains($0.id) }
-        
-        for role in userRoles {
-            if let permissionInt = UInt64(role.permissions) {
-                basePermissions |= permissionInt
+
+        for role in roles where member.roles.contains(role.id) && role.id != guildId {
+            if let perms = UInt64(role.permissions) {
+                permissions |= perms
             }
         }
-        
-        if userRoles.isEmpty, let everyoneRole = roles.first(where: { $0.id == guildId }) {
-            if let permissionInt = UInt64(everyoneRole.permissions) {
-                basePermissions |= permissionInt
-            }
-        }
-        
-        if hasPermission(basePermissions, DiscordPermissions.ADMINISTRATOR) {
+
+        if hasPermission(permissions, DiscordPermissions.ADMINISTRATOR) {
             return UInt64.max
         }
-        
-        var finalPermissions = basePermissions
+
+        func applyOverwrites(_ overwrites: [PermissionOverwrite]) {
+
+            if let overwrite = overwrites.first(where: { $0.id == guildId }) {
+                if let deny = UInt64(overwrite.deny) {
+                    permissions &= ~deny
+                }
+                if let allow = UInt64(overwrite.allow) {
+                    permissions |= allow
+                }
+            }
+
+            let roleOverwrites = overwrites.filter {
+                $0.type == 0 && member.roles.contains($0.id) && $0.id != guildId
+            }
+
+            for overwrite in roleOverwrites {
+                if let deny = UInt64(overwrite.deny) {
+                    permissions &= ~deny
+                }
+            }
+
+            for overwrite in roleOverwrites {
+                if let allow = UInt64(overwrite.allow) {
+                    permissions |= allow
+                }
+            }
+
+            if let overwrite = overwrites.first(where: {
+                $0.type == 1 && $0.id == member.user.id
+            }) {
+                if let deny = UInt64(overwrite.deny) {
+                    permissions &= ~deny
+                }
+                if let allow = UInt64(overwrite.allow) {
+                    permissions |= allow
+                }
+            }
+        }
 
         if let categoryOverwrites {
-            applyPermissionOverwrites(
-                categoryOverwrites,
-                guildId: guildId,
-                currentMember: currentMember,
-                finalPermissions: &finalPermissions
-            )
+            applyOverwrites(categoryOverwrites)
         }
 
-        guard let channel = channel else {
-            return finalPermissions
+        if let channelOverwrites = channel?.permissionOverwrites {
+            applyOverwrites(channelOverwrites)
         }
 
-        if let overwrites = channel.permissionOverwrites {
-            applyPermissionOverwrites(
-                overwrites,
-                guildId: guildId,
-                currentMember: currentMember,
-                finalPermissions: &finalPermissions
-            )
+        if !hasPermission(permissions, DiscordPermissions.VIEW_CHANNEL) {
+            return 0
         }
 
-        return finalPermissions
+        return permissions
     }
     
     static func canSendMessages(
