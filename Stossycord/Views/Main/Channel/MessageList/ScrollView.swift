@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
 
 
@@ -136,3 +137,123 @@ struct UIKitScrollView<Content: View>: UIViewRepresentable {
         }
     }
 }
+#elseif canImport(AppKit)
+import SwiftUI
+import AppKit
+
+struct UIKitScrollView<Content: View>: NSViewRepresentable {
+    enum AnchorPosition {
+        case top
+        case bottom
+    }
+    
+    let anchorTo: AnchorPosition
+    let content: ((@escaping (String) -> Void) -> Content)
+    
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.drawsBackground = false
+        
+        let hostingView = context.coordinator.hostingView
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // In AppKit, we set the documentView
+        scrollView.documentView = hostingView
+        
+        // Constraint to ensure the content matches the width of the scroll view
+        if let clipView = scrollView.contentView as? NSClipView {
+            NSLayoutConstraint.activate([
+                hostingView.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+                hostingView.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+                hostingView.topAnchor.constraint(equalTo: clipView.topAnchor)
+            ])
+        }
+        
+        context.coordinator.setupObservation(for: scrollView)
+        
+        return scrollView
+    }
+    
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        let scrollTo = context.coordinator.makeScrollTo(scrollView: scrollView)
+        context.coordinator.hostingView.rootView = content(scrollTo)
+        
+        context.coordinator.hostingView.needsLayout = true
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(content: content, anchorTo: anchorTo)
+    }
+    
+    class Coordinator: NSObject {
+        var hostingView: NSHostingView<Content>
+        var anchorTo: AnchorPosition
+        var hasAnchored = false
+        private var observation: NSKeyValueObservation?
+        
+        init(content: @escaping (@escaping (String) -> Void) -> Content, anchorTo: AnchorPosition) {
+            self.anchorTo = anchorTo
+            self.hostingView = NSHostingView(rootView: content({ _ in }))
+        }
+        
+        func setupObservation(for scrollView: NSScrollView) {
+            observation = scrollView.documentView?.observe(\.frame, options: [.new]) { [weak self] _, _ in
+                guard let self = self, !self.hasAnchored else { return }
+                self.applyAnchor(scrollView: scrollView)
+            }
+        }
+        
+        private func applyAnchor(scrollView: NSScrollView) {
+            DispatchQueue.main.async {
+                guard let documentView = scrollView.documentView else { return }
+                
+                let contentHeight = documentView.frame.height
+                if contentHeight > 0 {
+                    switch self.anchorTo {
+                    case .top:
+                        scrollView.contentView.scroll(to: NSPoint(x: 0, y: documentView.isFlipped ? 0 : contentHeight))
+                    case .bottom:
+                        let bottomPoint = NSPoint(x: 0, y: documentView.isFlipped ? contentHeight : 0)
+                        scrollView.contentView.scroll(to: bottomPoint)
+                    }
+                    self.hasAnchored = true
+                }
+            }
+        }
+        
+        func makeScrollTo(scrollView: NSScrollView) -> (String) -> Void {
+            return { [weak self, weak scrollView] id in
+                guard let self = self, let scrollView = scrollView, let documentView = scrollView.documentView else { return }
+                
+                DispatchQueue.main.async {
+                    if let target = self.findView(id: id, in: documentView) {
+                        let targetRect = target.convert(target.bounds, to: documentView)
+                        
+                        target.scrollToVisible(target.bounds)
+                    }
+                }
+            }
+        }
+        
+        private func findView(id: String, in view: NSView) -> NSView? {
+            if view.identifier?.rawValue == id { return view }
+            
+            
+            if view.accessibilityIdentifier() == id { return view }
+            
+            // Mirror check for SwiftUI internal IDs if accessibilityIdentifier isn't used
+            if let idValue = Mirror(reflecting: view).descendant("id") as? String,
+               idValue == id {
+                return view
+            }
+            
+            for subview in view.subviews {
+                if let found = findView(id: id, in: subview) { return found }
+            }
+            return nil
+        }
+    }
+}
+#endif

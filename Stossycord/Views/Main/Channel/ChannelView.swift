@@ -9,6 +9,24 @@ import SwiftUI
 import KeychainSwift
 import PhotosUI
 
+#if canImport(AppKit)
+struct ScrollMarker: NSViewRepresentable {
+    let id: String
+    
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        view.identifier = NSUserInterfaceItemIdentifier(id)
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {
+        // Update identifier if it changes
+        if nsView.identifier?.rawValue != id {
+            nsView.identifier = NSUserInterfaceItemIdentifier(id)
+        }
+    }
+}
+#else
 struct ScrollMarker: UIViewRepresentable {
     let id: String
     func makeUIView(context: Context) -> UIView {
@@ -18,6 +36,7 @@ struct ScrollMarker: UIViewRepresentable {
     }
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
+#endif
 
 struct ChannelView: View {
     // MARK: - Properties
