@@ -40,7 +40,7 @@ jobs:
             -o $PWD/output/Stossycord.ipa || true
 
       - name: Upload IPA as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: unsigned-ipa
           path: output/Stossycord.ipa
