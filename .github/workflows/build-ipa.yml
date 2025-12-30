@@ -23,30 +23,29 @@ jobs:
         run: |
           xcodebuild -resolvePackageDependencies -project Stossycord.xcodeproj -scheme Stossycord
           
-          xcodebuild \
+          xcodebuild archive \
             -project Stossycord.xcodeproj \
             -scheme Stossycord \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -derivedDataPath DerivedData \
+            -archivePath build/Stossycord.xcarchive \
             COMPILER_INDEX_STORE_ENABLE=NO \
             SWIFT_USE_EXPLICIT_MODULE_BUILD=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            clean build
             
-            
+      - name: Create Payload directory
+        run: mkdir -p Payload
+              
       - name: Create unsigned .ipa
         run: |
-          mkdir -p output
-          xcrun -sdk iphoneos PackageApplication \
-            -v build/Release-iphoneos/Stossycord.app \
-            -o $PWD/output/Stossycord.ipa || true
+          cp -R build/Stossycord.xcarchive/Products/Applications/Stossycord.app Payload/Stossycord.app
+          zip -r ./Stossycord.ipa Payload
 
       - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-ipa
-          path: output/Stossycord.ipa
+          path: Stossycord.ipa
 
