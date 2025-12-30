@@ -140,7 +140,7 @@ struct LoginView: View {
                         .frame(width: 900)
                         .border(Color.red, width: 2)
                         .scaleEffect(0.2)
-                       //  .offset(x: 10000 ,y: 10000)
+                        .offset(x: 10000 ,y: 10000)
                 }
                 .padding(.horizontal)
             }
@@ -549,6 +549,8 @@ struct HiddenDiscordWebView: UIViewRepresentable {
                     case "token":
                         if let token = dict["value"] as? String {
                             let strippedToken = token.replacingOccurrences(of: "\"", with: "")
+                            print(dict)
+                            KeychainSwift().set(strippedToken, forKey: "token")
                             self.viewModel?.token = strippedToken
                             self.viewModel?.isLoading = false
                             self.challengeCheckTimer?.invalidate()

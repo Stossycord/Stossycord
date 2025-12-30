@@ -33,7 +33,9 @@ struct StossycordApp: App {
                         } else {
                             webSocketService.connect()
                             if !webSocketService.currentchannel.isEmpty {
-                                getDiscordMessages(token: webSocketService.token, webSocketService: webSocketService)
+                                getDiscordMessages(token: webSocketService.token, webSocketService: webSocketService) {
+                                    
+                                }
                             }
                             print("App opened")
                         }

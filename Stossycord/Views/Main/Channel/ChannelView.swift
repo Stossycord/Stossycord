@@ -9,6 +9,16 @@ import SwiftUI
 import KeychainSwift
 import PhotosUI
 
+struct ScrollMarker: UIViewRepresentable {
+    let id: String
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.accessibilityIdentifier = id
+        return view
+    }
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+
 struct ChannelView: View {
     // MARK: - Properties
     @StateObject var webSocketService: WebSocketService
@@ -36,6 +46,7 @@ struct ChannelView: View {
     @State private var showNativePicker = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showNativePhotoPicker = false
+    @State private var finished = false
     
     private let keychain = KeychainSwift()
     
@@ -140,36 +151,51 @@ struct ChannelView: View {
     
     // MARK: - View Components
     private var messagesScrollView: some View {
-        ScrollViewReader { scrollViewProxy in
-            ScrollView {
-                LazyVStack(spacing: 2) {
-                    ForEach(webSocketService.data.filter { $0.channelId == currentid }, id: \.messageId) { messageData in
-                        if webSocketService.currentUser.id == messageData.author.authorId {
-                            selfMessageView(messageData: messageData)
-                                .id(messageData.messageId)
-                                .transition(.opacity)
-                        } else {
-                            otherMessageView(messageData: messageData)
-                                .id(messageData.messageId)
-                                .transition(.opacity)
-                        }
-                    }
-                    .padding(.horizontal)
+        UIKitScrollView(anchorTo: .bottom) { scrollProxy in
+            
+            LazyVStack {
+                ForEach(webSocketService.data.filter { $0.channelId == currentid }, id: \.messageId) { messageData in
+                    messageRow(for: messageData)
+                        .id(messageData.messageId)
+                        .background(ScrollMarker(id: messageData.messageId))
                 }
-                .padding(.top)
+                .padding(.horizontal)
             }
+            .padding(.top)
             .onChange(of: scrollToId) { newValue in
                 if let scrollToId,
                    let targetMessage = webSocketService.data.first(where: { $0.messageId == scrollToId }) {
-                    withAnimation {
-                        scrollViewProxy.scrollTo(targetMessage.messageId, anchor: .center)
-                        self.scrollToId = nil
+                    print("cool")
+                    scrollProxy(targetMessage.messageId)
+                    self.scrollToId = nil
+                }
+            }
+            .onChange(of: webSocketService.data) { newval in
+                if let scrollToId = newval.last {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        scrollProxy(scrollToId.messageId)
                     }
                 }
             }
-            .scrollAnchorBottom(websocket: webSocketService, scrollproxy: scrollViewProxy)
+            .onChange(of: finished) { newValue in
+                if newValue, let id = webSocketService.data.last {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        scrollProxy(id.messageId)
+                    }
+                }
+            }
         }
     }
+    
+    @ViewBuilder
+    private func messageRow(for messageData: Message) -> some View {
+        if webSocketService.currentUser.id == messageData.author.authorId {
+            selfMessageView(messageData: messageData)
+        } else {
+            otherMessageView(messageData: messageData)
+        }
+    }
+
     
     private func selfMessageView(messageData: Message) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -460,7 +486,9 @@ struct ChannelView: View {
         
         Task { @MainActor in 
             webSocketService.currentchannel = currentid
-            getDiscordMessages(token: token, webSocketService: webSocketService)
+            getDiscordMessages(token: token, webSocketService: webSocketService) {
+                finished = true
+            }
             
             if !currentchannelname.starts(with: "@") && webSocketService.currentMembers.isEmpty {
                 let guildId = currentGuild?.id ?? webSocketService.currentguild.id
@@ -500,9 +528,12 @@ struct ChannelView: View {
     
     private func handleTabChange(isActive: Bool) {
         if isActive {
+            finished = false
             guard let token = keychain.get("token") else { return }
             webSocketService.currentchannel = currentid
-            getDiscordMessages(token: token, webSocketService: webSocketService)
+            getDiscordMessages(token: token, webSocketService: webSocketService) { 
+                finished = true
+            }
             
             if let currentGuild = currentGuild {
                 getGuildRoles(guild: currentGuild) { guilds in

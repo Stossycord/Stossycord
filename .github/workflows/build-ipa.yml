@@ -1,0 +1,47 @@
+name: Build iOS Unsigned IPA
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v3
+        with:
+          xcode-version: latest-stable
+
+      - name: Build unsigned .app
+        run: |
+          xcodebuild \
+            -project Stossycord.xcodeproj \
+            -scheme Stossycord \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            clean build \
+            BUILD_DIR=build
+
+      - name: Create unsigned .ipa
+        run: |
+          mkdir -p output
+          xcrun -sdk iphoneos PackageApplication \
+            -v build/Release-iphoneos/Stossycord.app \
+            -o $PWD/output/Stossycord.ipa || true
+
+      - name: Upload IPA as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: unsigned-ipa
+          path: output/Stossycord.ipa
+

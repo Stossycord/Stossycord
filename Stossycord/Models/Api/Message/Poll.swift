@@ -1,6 +1,6 @@
 import Foundation
 
-struct Poll: Codable, Hashable {
+struct Poll: Codable, Hashable, Equatable {
     let question: PollQuestion?
     let answers: [PollAnswer]?
     let allowMultiselect: Bool?
@@ -20,11 +20,11 @@ struct Poll: Codable, Hashable {
     }
 }
 
-struct PollQuestion: Codable, Hashable {
+struct PollQuestion: Codable, Hashable, Equatable {
     let text: String?
 }
 
-struct PollAnswer: Codable, Hashable {
+struct PollAnswer: Codable, Hashable, Equatable {
     let answerId: Int
     let pollMedia: PollMedia?
 
@@ -34,7 +34,7 @@ struct PollAnswer: Codable, Hashable {
     }
 }
 
-struct PollMedia: Codable, Hashable {
+struct PollMedia: Codable, Hashable, Equatable {
     let text: String?
     let emoji: PollEmoji?
 
@@ -44,7 +44,7 @@ struct PollMedia: Codable, Hashable {
     }
 }
 
-struct PollEmoji: Codable, Hashable {
+struct PollEmoji: Codable, Hashable, Equatable {
     let id: String?
     let name: String?
     let animated: Bool?
@@ -56,7 +56,7 @@ struct PollEmoji: Codable, Hashable {
     }
 }
 
-struct PollResults: Codable, Hashable {
+struct PollResults: Codable, Hashable, Equatable {
     let isFinalized: Bool?
     var totalVotes: Int?
     var answerCounts: [PollAnswerCount]?
@@ -68,7 +68,7 @@ struct PollResults: Codable, Hashable {
     }
 }
 
-struct PollAnswerCount: Codable, Hashable {
+struct PollAnswerCount: Codable, Hashable, Equatable {
     let answerId: Int
     var count: Int?
     var meVoted: Bool?

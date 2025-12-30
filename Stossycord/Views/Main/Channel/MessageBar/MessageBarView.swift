@@ -47,7 +47,7 @@ struct MessageBarView: View {
                 }
             }
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 21)
         .padding(.horizontal, 16)
         .background(barBackground)
     }

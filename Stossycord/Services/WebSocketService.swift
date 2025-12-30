@@ -29,7 +29,13 @@ class WebSocketService: ObservableObject {
     private var webSocketTask: URLSessionWebSocketTask?
     private var urlSession: URLSession!
     let keychain = KeychainSwift()
-    @Published var token: String
+    var token: String {
+        get {
+            keychain.get("token") ?? ""
+        } set {
+            
+        }
+    }
     var deviceInfo: DeviceInfo = CurrentDeviceInfo.shared.deviceInfo
     
     // Custom threads
@@ -65,7 +71,6 @@ class WebSocketService: ObservableObject {
     static var shared = WebSocketService()
 
     private init() {
-        token = keychain.get("token") ?? ""
         currentUser = User(id: "", username: "", discriminator: "", avatar: "")
         
         let config = URLSessionConfiguration.default

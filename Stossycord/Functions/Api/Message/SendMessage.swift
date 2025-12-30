@@ -73,13 +73,14 @@ func SendMessage(content: String, fileUrl: URL?, token: String, channel: String,
     request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
     request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
     request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
-    
     // JSON Body (for non-file message)
+    let nonce = generateDiscordNonce()
     if fileUrl == nil {
-        var bodyObject: [String: Any] = ["content": content]
+        var bodyObject: [String: Any] = ["mobile_network_type":"unknown", "content": content, "nonce": nonce, "tts": true]
         if let messageReference = messageReference {
             bodyObject["message_reference"] = messageReference
         }
+        bodyObject["flags"] = 0
         request.httpBody = try? JSONSerialization.data(withJSONObject: bodyObject)
     } else {
         request.httpBody = data
@@ -94,4 +95,11 @@ func SendMessage(content: String, fileUrl: URL?, token: String, channel: String,
         }
     }
     task.resume()
+}
+
+func generateDiscordNonce() -> String {
+    let timestamp = UInt64(Date().timeIntervalSince1970 * 1000)
+    let randomBits = UInt64.random(in: 0..<(1 << 22))
+    let nonce = (timestamp << 22) | randomBits
+    return String(nonce)
 }

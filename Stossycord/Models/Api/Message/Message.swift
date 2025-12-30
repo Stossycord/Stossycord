@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Message: Codable {
+struct Message: Codable, Equatable{
     let channelId: String
     var content: String
     let messageId: String
@@ -39,7 +39,7 @@ struct Message: Codable {
     }
 }
 
-struct Attachment: Codable {
+struct Attachment: Codable, Equatable {
     let url: String
     let id: String
     
@@ -49,7 +49,7 @@ struct Attachment: Codable {
     }
 }
 
-struct MessageReference: Codable {
+struct MessageReference: Codable, Equatable {
     let messageId: String?
     
     enum CodingKeys: String, CodingKey {

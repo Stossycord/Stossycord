@@ -8,7 +8,7 @@
 import Foundation
 
 
-func getDiscordMessages(token: String, webSocketService: WebSocketService) {
+func getDiscordMessages(token: String, webSocketService: WebSocketService, success: @escaping () -> Void) {
     var messageLimit: Int? = nil
     if #available(iOS 17, *)  {
         messageLimit = 100
@@ -48,12 +48,16 @@ func getDiscordMessages(token: String, webSocketService: WebSocketService) {
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data else {
             print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
+            success()
             return
         }
         
         do {
             if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
-                var uniqueMessages = Set<String>()
+                if json.isEmpty {
+                    success()
+                }
+                
                 for message in json {
                     do {
                         let jsonData = try JSONSerialization.data(withJSONObject: message, options: [])
@@ -67,18 +71,21 @@ func getDiscordMessages(token: String, webSocketService: WebSocketService) {
                                 webSocketService.data.append(currentmessage)
                                 
                                 webSocketService.data.sort(by: { $0.messageId < $1.messageId })
+                                
+                                if !webSocketService.data.isEmpty {
+                                    success()
+                                }
                             }
                         }
-                        
                     } catch {
                         print("Error decoding JSON:", error)
-                        return
                     }
                 }
             }
         } catch {
             print("Error parsing JSON: \(error)")
         }
+        
     }
     
     task.resume()

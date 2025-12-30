@@ -9,8 +9,6 @@ import Foundation
 
 func editMessage(message: Message) {
     
-    let webSocketService = WebSocketService.shared
-    
     let url = URL(string: "https://discord.com/api/v10/channels/\(message.channelId)/messages/\(message.messageId)")!
     
     
@@ -58,12 +56,12 @@ func editMessage(message: Message) {
         
         do {
             if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
-                var uniqueMessages = Set<String>()
+                var _ = Set<String>()
                 for message in json {
                     do {
                         let jsonData = try JSONSerialization.data(withJSONObject: message, options: [])
                         let decoder = JSONDecoder()
-                        let currentmessage = try decoder.decode(Message.self, from: jsonData)
+                        let _ = try decoder.decode(Message.self, from: jsonData)
                         
                         
                         
