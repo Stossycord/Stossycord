@@ -46,6 +46,6 @@ jobs:
       - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: unsigned-ipa
+          name: Stossycord.ipa
           path: Stossycord.ipa
 
