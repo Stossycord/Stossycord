@@ -7,8 +7,8 @@ class SettingsManager: ObservableObject {
     @Published var userSettings: UserSettings?
     private var cancellables = Set<AnyCancellable>()
     
-    init(webSocketService: WebSocketService) {
-        webSocketService.$userSettings
+    init() {
+        CurrentUserService.shared.$userSettings
             .receive(on: DispatchQueue.main)
             .sink { [weak self] settings in
                 self?.userSettings = settings

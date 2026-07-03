@@ -13,16 +13,21 @@ import Giffy
 
 struct MessageViewRE: View {
     let messageData: Message
+    let currentChannel: String
     @Binding var reply: String?
     @StateObject var webSocketService: WebSocketService
+    @EnvironmentObject var userSession: CurrentUserService
+    @Environment(\.api) var discordAPI
     let isCurrentUser: Bool
     let onProfileTap: (() -> Void)?
+    var onChannelMentionTapped: ((String) -> Void)? = nil
     let isGrouped: Bool
     let allMessages: [Message]
     
     @State private var roleColor: Color = .primary
     @AppStorage(DesignSettingsKeys.messageBubbleStyle) private var messageStyleRawValue: String = MessageBubbleStyle.default.rawValue
     @AppStorage(DesignSettingsKeys.showSelfAvatar) private var showSelfAvatar: Bool = true
+    @AppStorage(DesignSettingsKeys.hideProfilePictures) private var hideProfilePictures: Bool = false
     @AppStorage(DesignSettingsKeys.customMessageBubbleJSON) private var customBubbleJSON: String = ""
     @State private var showTimestampOverlay: Bool = false
     @State private var timestampHideTask: DispatchWorkItem?
@@ -89,7 +94,7 @@ struct MessageViewRE: View {
     private var verticalPadding: CGFloat {
         return isGrouped ? bubbleConfiguration.groupedVerticalPadding : bubbleConfiguration.ungroupedVerticalPadding
     }
-
+    
     private var contentStackSpacing: CGFloat { 6 }
     
     var body: some View {
@@ -120,7 +125,8 @@ struct MessageViewRE: View {
                             style: messageStyle,
                             configuration: bubbleConfiguration,
                             editedTimestamp: messageData.editedtimestamp,
-                            maxWidth: maxBubbleWidth
+                            maxWidth: maxBubbleWidth,
+                            onChannelMentionTapped: onChannelMentionTapped
                         )
                     }
                     
@@ -149,8 +155,17 @@ struct MessageViewRE: View {
                             isCurrentUser: isCurrentUser
                         )
                     }
+                    
+                    if let reactions = messageData.reactions, !reactions.isEmpty {
+                        HStack(spacing: 6) {
+                            ForEach(reactions, id: \.self) { reaction in
+                                reactionButton(reaction)
+                            }
+                        }
+                        .frame(alignment: isCurrentUser ? .trailing : .leading)
+                    }
                 }
-
+                
                 contentColumn
                     .frame(maxWidth: maxBubbleWidth, alignment: frameAlignment)
                     .frame(maxWidth: .infinity, alignment: frameAlignment)
@@ -223,22 +238,31 @@ struct MessageViewRE: View {
     
     @ViewBuilder
     private func avatarColumn(forCurrentUser: Bool) -> some View {
-        switch messageStyle {
-        case .default:
-            if shouldShowAvatar(forCurrentUser: forCurrentUser) {
-                AvatarView(author: messageData.author, onProfileTap: onProfileTap)
-            }
-        default:
-            if shouldReserveAvatarSpace(forCurrentUser: forCurrentUser) {
-                AvatarView(author: messageData.author, onProfileTap: onProfileTap)
-                    .frame(width: 36, height: 36)
-                    .opacity(shouldShowAvatar(forCurrentUser: forCurrentUser) ? 1 : 0)
-                    .allowsHitTesting(shouldShowAvatar(forCurrentUser: forCurrentUser))
+        if hideProfilePictures {
+            EmptyView()
+        } else {
+            switch messageStyle {
+            case .default:
+                if shouldShowAvatar(forCurrentUser: forCurrentUser) {
+                    AvatarView(author: messageData.author, onProfileTap: onProfileTap)
+                } else {
+                    Spacer()
+                        .frame(width: 36, height: 36)
+                }
+            default:
+                if shouldReserveAvatarSpace(forCurrentUser: forCurrentUser) {
+                    AvatarView(author: messageData.author, onProfileTap: onProfileTap)
+                        .frame(width: 36, height: 36)
+                        .opacity(shouldShowAvatar(forCurrentUser: forCurrentUser) ? 1 : 0)
+                        .allowsHitTesting(shouldShowAvatar(forCurrentUser: forCurrentUser))
+                }
             }
         }
     }
     
     private func shouldShowAvatar(forCurrentUser: Bool) -> Bool {
+        guard !hideProfilePictures else { return false }
+        
         switch messageStyle {
         case .default, .custom:
             if forCurrentUser {
@@ -254,6 +278,8 @@ struct MessageViewRE: View {
     }
     
     private func shouldReserveAvatarSpace(forCurrentUser: Bool) -> Bool {
+        guard !hideProfilePictures else { return false }
+        
         switch messageStyle {
         case .default, .custom:
             return shouldShowAvatar(forCurrentUser: forCurrentUser)
@@ -292,11 +318,46 @@ struct MessageViewRE: View {
     private func attachmentsView(attachments: [Attachment]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(attachments, id: \.id) { attachment in
-                MediaView(url: attachment.url, isCurrentUser: isCurrentUser)
-                    .cornerRadius(8)
-                    .frame(maxHeight: 300)
+                GeometryReader { geo in
+                    let displaySize = attachmentDisplaySize(for: attachment, availableWidth: geo.size.width)
+                    
+                    MediaView(attachment: attachment, isCurrentUser: isCurrentUser, maxDimension: max(displaySize.width, displaySize.height))
+                        .cornerRadius(8)
+                        .frame(width: displaySize.width, height: displaySize.height)
+                        .frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
+                }
+                .frame(height: {
+                    attachmentDisplaySize(
+                        for: attachment,
+                        availableWidth: maxBubbleWidth ?? UIScreen.main.bounds.width * 0.75
+                    ).height
+                }())
+                .cornerRadius(8)
             }
         }
+    }
+    
+    private func attachmentDisplaySize(for attachment: Attachment, availableWidth: CGFloat) -> CGSize {
+        let maxHeight: CGFloat = 360
+        let maxWidth = max(1, min(availableWidth, UIScreen.main.bounds.width * 0.9))
+        
+        guard let width = attachment.width,
+              let height = attachment.height,
+              width > 0,
+              height > 0 else {
+            return CGSize(width: min(maxWidth, 300), height: 200)
+        }
+        
+        let aspectRatio = CGFloat(width) / CGFloat(height)
+        var displayWidth = min(maxWidth, maxHeight * aspectRatio)
+        var displayHeight = displayWidth / aspectRatio
+        
+        if displayHeight > maxHeight {
+            displayHeight = maxHeight
+            displayWidth = displayHeight * aspectRatio
+        }
+        
+        return CGSize(width: max(1, displayWidth), height: max(1, displayHeight))
     }
     
     private var widthReader: some View {
@@ -307,22 +368,76 @@ struct MessageViewRE: View {
     }
     
     private func loadRoleColor() {
-        guard let member = webSocketService.currentMembers.first(where: { $0.user.id == messageData.author.authorId }) else {
-            return
-        }
+        guard let guildId = messageData.guildId else { return }
         
-        let roles = member.roles
+        let members = userSession.guildManager.members[guildId] ?? []
+        let roles = userSession.guildManager.roles[array: guildId]
+        let authorId = messageData.author.authorId
         
-        if let role = roles.compactMap({ roleId in
-            webSocketService.currentroles.first { $0.id == roleId && $0.color != 0 }
-        }).first {
-            roleColor = Color(hex: role.color) ?? .primary
+        Task.detached(priority: .utility) {
+            guard let member = members.first(where: { $0.user?.id == authorId || $0.userId == authorId }) else { return }
+            
+            let matchedRoles = roles.filter { member.roles.contains($0.id) }
+            let roleColor = matchedRoles.first(where: { $0.color != 0 })
+                .flatMap { Color(hex: $0.color) } ?? Color.primary
+            
+            await MainActor.run { self.roleColor = roleColor }
         }
     }
-
+    
     private func ensureValidMessageStyle() {
         if MessageBubbleStyle(rawValue: messageStyleRawValue) == nil {
             messageStyleRawValue = MessageBubbleStyle.default.rawValue
+        }
+    }
+    
+    @ViewBuilder
+    private func reactionButton(_ reaction: Reaction) -> some View {
+        Button {
+            toggleReaction(reaction)
+        } label: {
+            HStack(spacing: 5) {
+                if reaction.emoji.id != nil {
+                    EmojiImageView(emoji: reaction.emoji, onProfileTap: nil)
+                        .allowsHitTesting(false)
+                } else if let emojiName = reaction.emoji.name {
+                    Text(emojiName)
+                }
+                
+                Text("\(reaction.count)")
+                    .font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(reaction.me == true ? Color.blue : Color.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(
+                Capsule()
+                    .fill(reaction.me == true ? Color.blue.opacity(0.16) : Color(.secondarySystemBackground))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(reaction.me == true ? Color.blue.opacity(0.45) : Color(.separator).opacity(0.45), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(reaction.me == true ? "Remove reaction" : "Add reaction")
+    }
+    
+    private func toggleReaction(_ reaction: Reaction) {
+        Task {
+            do {
+                if reaction.me == true {
+                    try await discordAPI.makeRequest(
+                        .deleteOwnReaction(channelId: messageData.channelId, messageId: messageData.messageId, emoji: reaction.emoji)
+                    )
+                } else {
+                    try await discordAPI.makeRequest(
+                        .addReaction(channelId: messageData.channelId, messageId: messageData.messageId, emoji: reaction.emoji)
+                    )
+                }
+            } catch {
+                print("Reaction update failed: \(error)")
+            }
         }
     }
 }
@@ -337,92 +452,7 @@ private struct AvailableWidthPreferenceKey: PreferenceKey {
     }
 }
 
-struct MessageContentViewRE: View {
-    let messageData: Message
-    let isCurrentUser: Bool
-    let style: MessageBubbleStyle
-    let configuration: MessageBubbleVisualConfiguration
-    let editedTimestamp: String?
-    let maxWidth: CGFloat?
 
-    private var isEdited: Bool { editedTimestamp != nil }
-    private var currentSide: MessageBubbleVisualConfiguration.Side {
-        isCurrentUser ? configuration.currentUser : configuration.otherUser
-    }
-    private var textAlignment: TextAlignment { isCurrentUser ? .trailing : .leading }
-    private var lineSpacing: CGFloat { 2 }
-
-    private var messageAttributedString: AttributedString {
-        (try? AttributedString(markdown: messageData.content, options: MessageContentViewRE.markdownOptions))
-            ?? AttributedString(messageData.content)
-    }
-
-    private static let markdownOptions = AttributedString.MarkdownParsingOptions(allowsExtendedAttributes: true, interpretedSyntax: .full)
-    
-    var body: some View {
-        bubbleContainer {
-            VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 2) {
-                messageContent
-                    .foregroundColor(currentSide.text)
-                    .lineSpacing(lineSpacing)
-                
-                if style != .default && isEdited {
-                    Text("(edited)")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
-                }
-            }
-        }
-    .frame(maxWidth: maxWidth, alignment: isCurrentUser ? .trailing : .leading)
-    .fixedSize(horizontal: false, vertical: true)
-    }
-    
-    @ViewBuilder
-    private var messageContent: some View {
-        Text(messageAttributedString)
-            .multilineTextAlignment(textAlignment)
-    }
-    
-    @ViewBuilder
-    private func bubbleContainer<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        let side = currentSide
-        let padded = content()
-            .padding(configuration.padding.edgeInsets)
-        #if os(iOS)
-        if #available(iOS 19, *), configuration.glassEffect {
-            padded
-                .glassEffect(
-                    .regular.tint(side.background.opacity(0.6)),
-                    in: .rect(cornerRadius: configuration.cornerRadius)
-                )
-                .overlay(strokeOverlay(for: side))
-        } else {
-            padded
-                .background(
-                    RoundedRectangle(cornerRadius: configuration.cornerRadius)
-                        .fill(side.background)
-                )
-                .overlay(strokeOverlay(for: side))
-        }
-        #else
-        padded
-            .background(
-                RoundedRectangle(cornerRadius: configuration.cornerRadius)
-                    .fill(side.background)
-            )
-            .overlay(strokeOverlay(for: side))
-        #endif
-    }
-    
-    @ViewBuilder
-    private func strokeOverlay(for side: MessageBubbleVisualConfiguration.Side) -> some View {
-        if configuration.strokeWidth > 0 {
-            RoundedRectangle(cornerRadius: configuration.cornerRadius)
-                .stroke(side.stroke ?? Color.clear, lineWidth: configuration.strokeWidth)
-        }
-    }
-}
 
 extension MessageViewRE {
     static func shouldGroupMessage(current: Message, previous: Message?) -> Bool {
@@ -436,7 +466,7 @@ extension MessageViewRE {
         let previousTimestamp = MessageViewRE.extractTimestamp(from: previous.messageId)
         
         let timeDifference = abs(currentTimestamp - previousTimestamp)
-        let thirtyMinutesInSeconds: TimeInterval = 30 * 60
+        let thirtyMinutesInSeconds: TimeInterval = 5 * 60
         
         return timeDifference <= thirtyMinutesInSeconds
     }

@@ -22,5 +22,7 @@ enum MessageBubbleStyle: String, CaseIterable, Identifiable {
 enum DesignSettingsKeys {
     static let messageBubbleStyle = "messageBubbleStyle"
     static let showSelfAvatar = "showSelfAvatar"
+    static let hideProfilePictures = "hideProfilePictures"
     static let customMessageBubbleJSON = "customMessageBubbleJSON"
+    static let allowFakeNitroEmojis = "allowFakeNitroEmojis"
 }

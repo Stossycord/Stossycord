@@ -14,19 +14,33 @@ import Giffy
 
 struct MessageView: View {
     let messageData: Message
+    let currentChannel: String
     @Binding var reply: String?
     @StateObject var webSocketService: WebSocketService
+    @EnvironmentObject var userSession: CurrentUserService
     let isCurrentUser: Bool
     let onProfileTap: (() -> Void)?
+    
+    @AppStorage(DesignSettingsKeys.messageBubbleStyle) private var messageStyleRawValue: String = MessageBubbleStyle.imessage.rawValue
+    
+    var messageStyle: MessageBubbleStyle {
+        .init(rawValue: messageStyleRawValue) ?? .imessage
+    }
     
     @State private var roleColor: Color = .primary
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
+            let isMessage = isMessageAbove()
             if isCurrentUser { Spacer(minLength: 60) }
             
             if !isCurrentUser {
-                AvatarView(author: messageData.author, onProfileTap: onProfileTap)
+                if isMessage {
+                    Spacer()
+                        .frame(width: 36, height: 36)
+                } else {
+                    AvatarView(author: messageData.author, onProfileTap: onProfileTap)
+                }
             }
             
             VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 6) {
@@ -39,12 +53,14 @@ struct MessageView: View {
                     )
                 }
                 
-                AuthorHeaderView(
-                    author: messageData.author,
-                    editedTimestamp: messageData.editedtimestamp,
-                    roleColor: roleColor,
-                    isCurrentUser: isCurrentUser
-                )
+                if !isMessageAbove() {
+                    AuthorHeaderView(
+                        author: messageData.author,
+                        editedTimestamp: messageData.editedtimestamp,
+                        roleColor: roleColor,
+                        isCurrentUser: isCurrentUser
+                    )
+                }
                 
                 if !messageData.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     MessageContentView(
@@ -52,7 +68,7 @@ struct MessageView: View {
                         isCurrentUser: isCurrentUser
                     )
                 }
-
+                
                 if let embeds = messageData.embeds, !embeds.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         ForEach(embeds, id: \.self) { embed in
@@ -67,7 +83,7 @@ struct MessageView: View {
                     }
                     .padding()
                 }
-
+                
                 if let poll = messageData.poll {
                     PollMessageView(
                         message: messageData,
@@ -80,7 +96,12 @@ struct MessageView: View {
             .frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
             
             if isCurrentUser {
-                AvatarView(author: messageData.author, onProfileTap: onProfileTap)
+                if isMessage {
+                    Spacer()
+                        .frame(width: 36, height: 36)
+                } else {
+                    AvatarView(author: messageData.author, onProfileTap: onProfileTap)
+                }
             }
             
             if !isCurrentUser { Spacer(minLength: 60) }
@@ -93,25 +114,82 @@ struct MessageView: View {
     private func attachmentsView(attachments: [Attachment]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(attachments, id: \.id) { attachment in
-                MediaView(url: attachment.url, isCurrentUser: isCurrentUser)
-                    .cornerRadius(8)
-                    .frame(maxHeight: 300)
+                GeometryReader { geo in
+                    let displaySize = attachmentDisplaySize(for: attachment, availableWidth: geo.size.width)
+                    
+                    MediaView(attachment: attachment, isCurrentUser: isCurrentUser, maxDimension: max(displaySize.width, displaySize.height))
+                        .cornerRadius(8)
+                        .frame(width: displaySize.width, height: displaySize.height)
+                        .frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
+                }
+                .frame(height: {
+                    attachmentDisplaySize(
+                        for: attachment,
+                        availableWidth: UIScreen.main.bounds.width * 0.75
+                    ).height
+                }())
+                .cornerRadius(8)
             }
         }
     }
     
+    private func attachmentDisplaySize(for attachment: Attachment, availableWidth: CGFloat) -> CGSize {
+        let maxHeight: CGFloat = 360
+        let maxWidth = max(1, min(availableWidth, UIScreen.main.bounds.width * 0.9))
+        
+        guard let width = attachment.width,
+              let height = attachment.height,
+              width > 0,
+              height > 0 else {
+            return CGSize(width: min(maxWidth, 300), height: 200)
+        }
+        
+        let aspectRatio = CGFloat(width) / CGFloat(height)
+        var displayWidth = min(maxWidth, maxHeight * aspectRatio)
+        var displayHeight = displayWidth / aspectRatio
+        
+        if displayHeight > maxHeight {
+            displayHeight = maxHeight
+            displayWidth = displayHeight * aspectRatio
+        }
+        
+        return CGSize(width: max(1, displayWidth), height: max(1, displayHeight))
+    }
+    
+    private func isMessageAbove() -> Bool {
+        if let messages = userSession.data[messageData.channelId],
+           let messageIndex = messages.firstIndex(where: { $0.messageId == messageData.messageId }),
+           let message = messages[safe: (messageIndex - 1)], message.author.id == messageData.author.id {
+            if abs(snowflakeToDate(messageData.messageId) .timeIntervalSince(snowflakeToDate(message.messageId))) <= 30 * 60 {
+                return messageData.messageReference?.messageId == nil && messageData.attachments?.isEmpty ?? true && messageData.embeds?.isEmpty ?? true && messageData.poll == nil
+            }
+        }
+        
+        return false
+    }
+    
     private func loadRoleColor() {
-        guard let member = webSocketService.currentMembers.first(where: { $0.user.id == messageData.author.authorId }) else {
-            return
-        }
+        guard let guildId = messageData.guildId else { return }
         
-        let roles = member.roles
+        let members = userSession.guildManager.members[guildId] ?? []
+        let roles = userSession.guildManager.roles[array: guildId]
+        let authorId = messageData.author.authorId
         
-        if let role = roles.compactMap({ roleId in
-            webSocketService.currentroles.first { $0.id == roleId && $0.color != 0 }
-        }).first {
-            roleColor = Color(hex: role.color) ?? .primary
+        Task.detached(priority: .utility) {
+            guard let member = members.first(where: { $0.user?.id == authorId || $0.userId == authorId }) else { return }
+            
+            let matchedRoles = roles.filter { member.roles.contains($0.id) }
+            let roleColor = matchedRoles.first(where: { $0.color != 0 })
+                .flatMap { Color(hex: $0.color) } ?? Color.primary
+            
+            await MainActor.run { self.roleColor = roleColor }
         }
+    }
+    
+    func snowflakeToDate(_ snowflake: String) -> Date {
+        let discordEpoch: UInt64 = 1420070400000 // Jan 1, 2015 in ms
+        let timestamp = (UInt64(snowflake) ?? 0 >> 22) + discordEpoch
+        return Date(timeIntervalSince1970: TimeInterval(timestamp) / 1000)
     }
 }
 
@@ -120,12 +198,15 @@ struct AvatarView: View {
     let onProfileTap: (() -> Void)?
     @AppStorage("disableAnimatedAvatars") private var disableAnimatedAvatars: Bool = false
     @AppStorage("disableProfilePictureTap") private var disableProfilePictureTap: Bool = false
+    @AppStorage(DesignSettingsKeys.hideProfilePictures) private var hideProfilePictures: Bool = false
     
     var body: some View {
-        if let url = avatarURL {
+        if hideProfilePictures {
+            EmptyView()
+        } else if let url = avatarURL {
             let shouldAnimate = author.animated && !disableAnimatedAvatars
             if shouldAnimate {
-                #if os(iOS)
+#if os(iOS)
                 AsyncGiffy(url: url) { phase in
                     switch phase {
                     case .loading:
@@ -152,7 +233,7 @@ struct AvatarView: View {
                         onProfileTap?()
                     }
                 }
-                #else
+#else
                 AnimatedWebImage(url: url)
                     .frame(width: 36, height: 36)
                     .clipShape(Circle())
@@ -161,7 +242,7 @@ struct AvatarView: View {
                             onProfileTap?()
                         }
                     }
-                #endif
+#endif
             } else {
                 CachedAsyncImage(url: url) { image in
                     image
@@ -209,152 +290,6 @@ struct AvatarView: View {
     }
 }
 
-struct AuthorHeaderView: View {
-    let author: Author
-    let editedTimestamp: String?
-    let roleColor: Color
-    let isCurrentUser: Bool
-    
-    var body: some View {
-        HStack(spacing: 6) {
-            if !isCurrentUser {
-                Text(author.currentname)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(roleColor)
-                
-                if editedTimestamp != nil {
-                    Text("(edited)")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                }
-            } else {
-                if editedTimestamp != nil {
-                    Text("(edited)")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                }
-                
-                Text(author.currentname)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(roleColor)
-            }
-        }
-    }
-}
-
-struct ReplyIndicatorView: View {
-    let messageId: String
-    @StateObject var webSocketService: WebSocketService
-    let isCurrentUser: Bool
-    @Binding var reply: String?
-    
-    var body: some View {
-        HStack(spacing: 6) {
-            if !isCurrentUser {
-                replyIcon
-                replyContent
-            } else {
-                replyContent
-                replyIcon
-            }
-        }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.secondary.opacity(0.15))
-        )
-        .onTapGesture { reply = messageId }
-    }
-    
-    private var replyIcon: some View {
-        Image(systemName: isCurrentUser ? "arrowshape.turn.up.left" : "arrowshape.turn.up.right")
-            .font(.system(size: 10))
-            .foregroundColor(.secondary)
-    }
-    
-    @ViewBuilder
-    private var replyContent: some View {
-        if let referencedMessage = webSocketService.data.first(where: { $0.messageId == messageId }) {
-            if !isCurrentUser {
-                Text(referencedMessage.author.currentname)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
-                
-                Text(referencedMessage.content)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            } else {
-                Text(referencedMessage.content)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                
-                Text(referencedMessage.author.currentname)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
-        } else {
-            Text("Referenced message unavailable")
-                .font(.system(size: 11))
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
-struct MessageContentView: View {
-    let messageData: Message
-    let isCurrentUser: Bool
-    
-    var body: some View {
-        VStack(alignment: isCurrentUser ? .trailing : .leading) {
-            if #available(iOS 19, *) {
-                Group {
-                    if isCurrentUser {
-                        Text(messageData.content)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(.white)
-                    } else {
-                        Markdown(messageData.content)
-                            .markdownTheme(.basic)
-                            .multilineTextAlignment(.leading)
-                            .foregroundColor(.white)
-                    }
-                }
-                .padding(12)
-                .glassEffect(.regular.tint(isCurrentUser ? .blue.opacity(0.6) : .init(uiColor: .darkGray).opacity(0.6)), in: .rect(cornerRadius: 16))
-            } else {
-                Group {
-                    if isCurrentUser {
-                        Text(messageData.content)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(.white)
-                    } else {
-                        Markdown(messageData.content)
-                            .markdownTheme(.basic)
-                            .multilineTextAlignment(.leading)
-                            .foregroundColor(.white)
-                    }
-                }
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(isCurrentUser ? Color.blue : Color(.systemGray6))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(
-                            isCurrentUser ? Color.blue.opacity(0.3) : Color.secondary.opacity(0.2),
-                            lineWidth: 1
-                        )
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Extensions
 extension Color {
     init?(hex: Int) {
         let red = Double((hex >> 16) & 0xFF) / 255.0

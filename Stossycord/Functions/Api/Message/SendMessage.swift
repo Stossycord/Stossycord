@@ -6,100 +6,139 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
 
-func SendMessage(content: String, fileUrl: URL?, token: String, channel: String, messageReference: [String: String]?) {
-    let url = URL(string: "https://discord.com/api/v10/channels/\(channel)/messages")!
-    var request = URLRequest(url: url)
-    var data = Data()
-    request.httpMethod = "POST"
+class SendMessage: DiscordRequest<Message>, APIRequest {
+    typealias Response = Message
     
-    if content.isEmpty && fileUrl == nil {
-        return
+    var endpoint: String = ""
+    var method: String = "POST"
+     
+    var args: (channel: String, content: String, fileURL: URL?, messageReference: [String: String]?)
+    
+    init(channel: String, content: String, fileURL: URL? = nil, messageReference: [String: String]? = nil) {
+        args = (channel, content, fileURL, messageReference)
     }
     
-    request.addValue(token, forHTTPHeaderField: "Authorization")
-    
-    let boundary = "Boundary-\(UUID().uuidString)"
-    
-    if let fileUrl = fileUrl {
-        request.addValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    func handleArgs(_ args: [Any?]) throws -> URLRequest? {
         
-        // Append content
-        data.append("--\(boundary)\r\n".data(using: .utf8)!)
-        data.append("Content-Disposition: form-data; name=\"content\"\r\n\r\n".data(using: .utf8)!)
-        data.append("\(content)\r\n".data(using: .utf8)!)
+        let channel = self.args.channel
+        let content = self.args.content
         
-        // Append file
-        data.append("--\(boundary)\r\n".data(using: .utf8)!)
-        data.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileUrl.lastPathComponent)\"\r\n".data(using: .utf8)!)
+        let fileURL = self.args.fileURL
         
-        // Add Content-Type for the file (change accordingly)
-        let mimeType = "application/octet-stream" // Default MIME type
-        data.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
         
-        do {
+ 
+        var request = makeUrlRequest(url: makeAPIUrl("channels/\(channel)/messages"), json: fileURL == nil)
+        
+        let messageReference = self.args.messageReference
+        
+        if content.isEmpty && fileURL == nil {
+            throw NSError(domain: "Invalid arguments", code: 0, userInfo: nil)
+        }
+        
+        let boundary = "Boundary-\(UUID().uuidString)"
+        
+        var data = Data()
+        
+        let nonce = generateDiscordNonce()
+        if fileURL == nil {
+            var bodyObject: [String: Any] = ["mobile_network_type":"unknown", "content": content, "nonce": nonce, "tts": false]
+            if let messageReference = messageReference {
+                bodyObject["message_reference"] = messageReference
+                
+            }
+            bodyObject["flags"] = 0
+            
+            request.httpBody = try? JSONSerialization.data(withJSONObject: bodyObject)
+        } else {
+            guard let fileUrl = fileURL else { return request }
+            let filename = fileUrl.lastPathComponent
+            var payloadObject: [String: Any] = [
+                "mobile_network_type": "unknown",
+                "content": content,
+                "nonce": nonce,
+                "tts": false,
+                "flags": 0,
+                "attachments": [
+                    [
+                        "id": "0",
+                        "filename": filename
+                    ]
+                ]
+            ]
+            
+            if let messageReference = messageReference {
+                payloadObject["message_reference"] = messageReference
+            }
+            
+            let payloadData = try JSONSerialization.data(withJSONObject: payloadObject)
+            guard let payloadJson = String(data: payloadData, encoding: .utf8) else {
+                throw NSError(domain: "Invalid arguments", code: 0, userInfo: nil)
+            }
+            
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            
+            data.appendMultipartField(name: "payload_json", value: payloadJson, boundary: boundary)
+            
             let fileData = try Data(contentsOf: fileUrl)
-            data.append(fileData)
-        } catch {
-            print("Failed to read file data")
-            return
+            data.appendFileField(
+                name: "files[0]",
+                filename: filename,
+                mimeType: Self.mimeType(for: fileUrl),
+                fileData: fileData,
+                boundary: boundary
+            )
+            
+            data.append("--\(boundary)--\r\n".data(using: .utf8)!)
+            request.httpBody = data
         }
         
-        // Close the boundary
-        data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        return request
     }
     
-    if fileUrl == nil {
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    }
-    
-    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
-    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
-    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
-    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
-    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
-    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-    let Country: String = CurrentDeviceInfo.shared.Country
-    
-    let currentTimeZone = CurrentDeviceInfo.shared.currentTimeZone
-    
-    let timeZoneIdentifier = currentTimeZone.identifier
-    
-    let deviceInfo = CurrentDeviceInfo.shared.deviceInfo
-    
-    request.addValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
-    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
-    request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
-    // JSON Body (for non-file message)
-    let nonce = generateDiscordNonce()
-    if fileUrl == nil {
-        var bodyObject: [String: Any] = ["mobile_network_type":"unknown", "content": content, "nonce": nonce, "tts": true]
-        if let messageReference = messageReference {
-            bodyObject["message_reference"] = messageReference
+    private static func mimeType(for fileURL: URL) -> String {
+        if let resourceValues = try? fileURL.resourceValues(forKeys: [.contentTypeKey]),
+           let contentType = resourceValues.contentType,
+           let mimeType = contentType.preferredMIMEType {
+            return mimeType
         }
-        bodyObject["flags"] = 0
-        request.httpBody = try? JSONSerialization.data(withJSONObject: bodyObject)
-    } else {
-        request.httpBody = data
-    }
-
-    // Create the task
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let error = error {
-            print("Error: \(error)")
-        } else if let data = data {
-            print("Response: \(String(data: data, encoding: .utf8) ?? "")")
+        
+        if let contentType = UTType(filenameExtension: fileURL.pathExtension),
+           let mimeType = contentType.preferredMIMEType {
+            return mimeType
         }
+        
+        return "application/octet-stream"
     }
-    task.resume()
 }
 
+private extension Data {
+    mutating func appendMultipartField(name: String, value: String, boundary: String) {
+        append("--\(boundary)\r\n".data(using: .utf8)!)
+        append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+        append("\(value)\r\n".data(using: .utf8)!)
+    }
+    
+    mutating func appendFileField(name: String, filename: String, mimeType: String, fileData: Data, boundary: String) {
+        append("--\(boundary)\r\n".data(using: .utf8)!)
+        append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        append(fileData)
+        append("\r\n".data(using: .utf8)!)
+    }
+}
+
+extension DiscordRequest {
+    static func sendMessage(channel: String, content: String, fileURL: URL? = nil, messageReference: [String: String]? = nil) -> SendMessage { .init(channel: channel, content: content, fileURL: fileURL, messageReference: messageReference) }
+}
+
+
 func generateDiscordNonce() -> String {
-    let timestamp = UInt64(Date().timeIntervalSince1970 * 1000)
-    let randomBits = UInt64.random(in: 0..<(1 << 22))
+    let discordEpoch: Int64 = 1420070400000
+    let unixMs = Int64(Date().timeIntervalSince1970 * 1000)
+    let timestamp = unixMs - discordEpoch
+    let randomBits = Int64.random(in: 0..<(1 << 22))
     let nonce = (timestamp << 22) | randomBits
     return String(nonce)
 }

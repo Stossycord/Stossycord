@@ -13,6 +13,7 @@ struct UserSettings: Codable {
     let inlineAttachmentMedia: Bool?
     let inlineEmbedMedia: Bool?
     let gifAutoPlay: Bool?
+    let favoriteGIFs: [FavoriteGIF]?
     let renderEmbeds: Bool?
     let renderReactions: Bool?
     let animateEmoji: Bool?
@@ -49,6 +50,7 @@ struct UserSettings: Codable {
         inlineAttachmentMedia = try container.decodeIntAsBool(forKey: .inlineAttachmentMedia)
         inlineEmbedMedia = try container.decodeIntAsBool(forKey: .inlineEmbedMedia)
         gifAutoPlay = try container.decodeIntAsBool(forKey: .gifAutoPlay)
+        favoriteGIFs = try? container.decodeIfPresent([FavoriteGIF].self, forKey: .favoriteGIFs)
         renderEmbeds = try container.decodeIntAsBool(forKey: .renderEmbeds)
         renderReactions = try container.decodeIntAsBool(forKey: .renderReactions)
         animateEmoji = try container.decodeIntAsBool(forKey: .animateEmoji)
@@ -82,6 +84,7 @@ struct UserSettings: Codable {
         case inlineAttachmentMedia = "inline_attachment_media"
         case inlineEmbedMedia = "inline_embed_media"
         case gifAutoPlay = "gif_auto_play"
+        case favoriteGIFs = "favorite_gifs"
         case renderEmbeds = "render_embeds"
         case renderReactions = "render_reactions"
         case animateEmoji = "animate_emoji"
@@ -102,7 +105,7 @@ struct UserSettings: Codable {
         case nativePhoneIntegrationEnabled = "native_phone_integration_enabled"
     }
     
-    init(locale: String? = nil, theme: String? = nil, developerMode: Bool? = nil, afkTimeout: Int? = nil, status: String? = nil, customStatus: CustomStatus? = nil, allowAccessibilityDetection: Bool? = nil, detectPlatformAccounts: Bool? = nil, defaultGuildsRestricted: Bool? = nil, inlineAttachmentMedia: Bool? = nil, inlineEmbedMedia: Bool? = nil, gifAutoPlay: Bool? = nil, renderEmbeds: Bool? = nil, renderReactions: Bool? = nil, animateEmoji: Bool? = nil, enableTtsCommand: Bool? = nil, messageDisplayCompact: Bool? = nil, convertEmoticons: Bool? = nil, showCurrentGame: Bool? = nil, guildFolders: [GuildFolder]? = nil, explicitContentFilter: Int? = nil, disableGamesTab: Bool? = nil, animateStickers: Bool? = nil, viewNsfwGuilds: Bool? = nil, viewNsfwCommands: Bool? = nil, streamNotificationsEnabled: Bool? = nil, contactSyncEnabled: Bool? = nil, timezoneOffset: Int? = nil, passwordless: Bool? = nil, nativePhoneIntegrationEnabled: Bool? = nil) {
+    init(locale: String? = nil, theme: String? = nil, developerMode: Bool? = nil, afkTimeout: Int? = nil, status: String? = nil, customStatus: CustomStatus? = nil, allowAccessibilityDetection: Bool? = nil, detectPlatformAccounts: Bool? = nil, defaultGuildsRestricted: Bool? = nil, inlineAttachmentMedia: Bool? = nil, inlineEmbedMedia: Bool? = nil, gifAutoPlay: Bool? = nil, favoriteGIFs: [FavoriteGIF]? = nil, renderEmbeds: Bool? = nil, renderReactions: Bool? = nil, animateEmoji: Bool? = nil, enableTtsCommand: Bool? = nil, messageDisplayCompact: Bool? = nil, convertEmoticons: Bool? = nil, showCurrentGame: Bool? = nil, guildFolders: [GuildFolder]? = nil, explicitContentFilter: Int? = nil, disableGamesTab: Bool? = nil, animateStickers: Bool? = nil, viewNsfwGuilds: Bool? = nil, viewNsfwCommands: Bool? = nil, streamNotificationsEnabled: Bool? = nil, contactSyncEnabled: Bool? = nil, timezoneOffset: Int? = nil, passwordless: Bool? = nil, nativePhoneIntegrationEnabled: Bool? = nil) {
         self.locale = locale
         self.theme = theme
         self.developerMode = developerMode
@@ -115,6 +118,7 @@ struct UserSettings: Codable {
         self.inlineAttachmentMedia = inlineAttachmentMedia
         self.inlineEmbedMedia = inlineEmbedMedia
         self.gifAutoPlay = gifAutoPlay
+        self.favoriteGIFs = favoriteGIFs
         self.renderEmbeds = renderEmbeds
         self.renderReactions = renderReactions
         self.animateEmoji = animateEmoji
@@ -217,7 +221,7 @@ struct UserSettings: Codable {
 
 // Helper extension for decoding Discord's integer-boolean format
 extension KeyedDecodingContainer {
-    func decodeIntAsBool(forKey key: Key) -> Bool? {
+    func decodeIntAsBool(forKey key: Key) throws -> Bool? {
         if let intValue = try? decode(Int.self, forKey: key) {
             return intValue != 0
         } else if let boolValue = try? decode(Bool.self, forKey: key) {

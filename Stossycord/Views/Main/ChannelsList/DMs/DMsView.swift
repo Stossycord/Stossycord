@@ -7,23 +7,24 @@
 
 import SwiftUI
 import Foundation
-import KeychainSwift
 
 struct DMsView: View {
-    let keychain = KeychainSwift()
+    @EnvironmentObject var user: CurrentUserService
     @StateObject var webSocketService: WebSocketService
     @State private var searchTerm = ""
+    @State private var navigationRequest: ChatNavigationRequest?
+    @State private var handledNavigationRequestIds: Set<UUID> = []
     
     var body: some View {
-        #if os(macOS)
+#if os(macOS)
         VStack {
             content()
         }
-        #else
+#else
         NavigationStack {
             content()
         }
-        #endif
+#endif
     }
     
     @ViewBuilder
@@ -34,17 +35,17 @@ struct DMsView: View {
             
             // DMs list
             conversationsList
-                .onAppear {
-                    loadDirectMessages()
-                }
         }
         .navigationTitle("Messages")
-        #if !os(macOS)
-        .toolbar(.visible, for: .tabBar)
-        #endif
+        .tabBarHidden(false)
+        .background(dmNavigationLink)
+        .onAppear {
+            handleChatNavigationRequest(user.pendingChatNavigationRequest)
+        }
+        .onChange(of: user.pendingChatNavigationRequest) { request in
+            handleChatNavigationRequest(request)
+        }
     }
-    
-    // MARK: - Components
     
     private var searchField: some View {
         HStack {
@@ -74,9 +75,15 @@ struct DMsView: View {
                 ForEach(filteredDMs, id: \.id) { channel in
                     NavigationLink(destination: destinationForChannel(channel)) {
                         if channel.type == 1 {
-                            DirectMessageRow(channel: channel)
+                            DirectMessageRow(
+                                channel: channel,
+                                mentionCount: user.unreadMentionCount(channelId: channel.id)
+                            )
                         } else if channel.type == 3 {
-                            GroupChatRow(channel: channel)
+                            GroupChatRow(
+                                channel: channel,
+                                mentionCount: user.unreadMentionCount(channelId: channel.id)
+                            )
                         }
                     }
                     .buttonStyle(ConversationRowButtonStyle())
@@ -90,7 +97,7 @@ struct DMsView: View {
             .padding(.top, 12)
             .padding(.bottom, 20)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicatorsHidden()
     }
     
     private var emptyStateView: some View {
@@ -114,10 +121,8 @@ struct DMsView: View {
         .padding(.vertical, 50)
     }
     
-    // MARK: - Logic
-    
     private var filteredDMs: [DMs] {
-        webSocketService.dms.filter { channel in
+        user.dms.filter { channel in
             guard searchTerm.isEmpty else {
                 if channel.type == 1, let recipient = channel.recipients?.first {
                     let name = recipient.global_name ?? recipient.username
@@ -132,26 +137,56 @@ struct DMsView: View {
         }
     }
     
-    private func loadDirectMessages() {
-        guard let token = keychain.get("token") else { return }
-        getDiscordDMs(token: token) { items in
-            webSocketService.dms = items
-        }
-    }
-    
     @ViewBuilder
     private func destinationForChannel(_ channel: DMs) -> some View {
         let channelName = getChannelName(for: channel)
-        #if os(macOS)
+#if os(macOS)
         ChannelView(webSocketService: webSocketService, currentchannelname: channelName, currentid: channel.id)
-        #else
+#else
         if UIDevice.current.userInterfaceIdiom == .pad {
             ChannelView(webSocketService: webSocketService, currentchannelname: channelName, currentid: channel.id)
         } else {
             ChannelView(webSocketService: webSocketService, currentchannelname: channelName, currentid: channel.id)
-                .toolbar(.hidden, for: .tabBar)
+                .tabBarHidden(true)
+                .ignoresSafeArea(.container, edges: .bottom)
         }
-        #endif
+#endif
+    }
+    
+    @ViewBuilder
+    private var dmNavigationLink: some View {
+        NavigationLink(
+            destination: dmNavigationDestination,
+            isActive: Binding(
+                get: { navigationRequest != nil },
+                set: { if !$0 { navigationRequest = nil } }
+            )
+        ) {
+            EmptyView()
+        }
+        .hidden()
+    }
+    
+    @ViewBuilder
+    private var dmNavigationDestination: some View {
+        if let request = navigationRequest,
+           let channel = user.dmChannel(withId: request.mention.channelId) {
+            destinationForChannel(channel)
+        } else {
+            EmptyView()
+        }
+    }
+    
+    private func handleChatNavigationRequest(_ request: ChatNavigationRequest?) {
+        guard let request,
+              !handledNavigationRequestIds.contains(request.id),
+              user.hasDMChannel(withId: request.mention.channelId) else { return }
+        
+        handledNavigationRequestIds.insert(request.id)
+        navigationRequest = request
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            user.consumeChatNavigationRequest(request)
+        }
     }
     
     private func getChannelName(for channel: DMs) -> String {
@@ -168,15 +203,15 @@ struct DMsView: View {
     }
 }
 
-// MARK: - Supporting Views
-
 struct DirectMessageRow: View {
     let channel: DMs
+    let mentionCount: Int
     
     var body: some View {
         HStack(spacing: 14) {
             // User avatar
             UserAvatarView(user: channel.recipients?.first)
+                .mentionBadge(count: mentionCount)
             
             // Username and status
             VStack(alignment: .leading, spacing: 2) {
@@ -211,10 +246,12 @@ struct DirectMessageRow: View {
 
 struct GroupChatRow: View {
     let channel: DMs
+    let mentionCount: Int
     
     var body: some View {
         HStack(spacing: 14) {
             GroupAvatarView(users: channel.recipients ?? [])
+                .mentionBadge(count: mentionCount)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(groupName)
@@ -252,6 +289,7 @@ struct GroupChatRow: View {
 
 struct UserAvatarView: View {
     let user: User?
+    @AppStorage(DesignSettingsKeys.hideProfilePictures) private var hideProfilePictures: Bool = false
     
     var body: some View {
         Group {
@@ -260,7 +298,7 @@ struct UserAvatarView: View {
                     switch phase {
                     case .success(let image):
                         image.resizable()
-                             .aspectRatio(contentMode: .fill)
+                            .aspectRatio(contentMode: .fill)
                     case .failure:
                         defaultAvatar
                     case .empty:
@@ -294,20 +332,25 @@ struct UserAvatarView: View {
 
 struct GroupAvatarView: View {
     let users: [User]
+    @AppStorage(DesignSettingsKeys.hideProfilePictures) private var hideProfilePictures: Bool = false
     
     var body: some View {
-        ZStack {
-            ForEach(0..<min(3, users.count), id: \.self) { index in
-                Circle()
-                    .fill(Color(.secondarySystemGroupedBackground))
-                    .frame(width: 30, height: 30)
-                    .overlay(
-                        UserInitialView(user: users[index])
-                    )
-                    .offset(getOffset(for: index, total: min(3, users.count)))
+        if hideProfilePictures {
+            EmptyView()
+        } else {
+            ZStack {
+                ForEach(0..<min(3, users.count), id: \.self) { index in
+                    Circle()
+                        .fill(Color(.secondarySystemGroupedBackground))
+                        .frame(width: 30, height: 30)
+                        .overlay(
+                            UserInitialView(user: users[index])
+                        )
+                        .offset(getOffset(for: index, total: min(3, users.count)))
+                }
             }
+            .frame(width: 44, height: 44)
         }
-        .frame(width: 44, height: 44)
     }
     
     private func getOffset(for index: Int, total: Int) -> CGSize {

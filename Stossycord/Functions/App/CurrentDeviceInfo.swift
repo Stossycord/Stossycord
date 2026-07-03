@@ -34,26 +34,7 @@ class CurrentDeviceInfo {
     let systemVersion = UIDevice.current.systemVersion
     #endif
     
-    public var deviceInfo: DeviceInfo {
-        let deviceInfo = DeviceInfo(
-            os: "Mac OS X",
-            browser: "Safari",
-            device: "",
-            systemLocale: "\(currentTimeZone)-\(Country))",
-            browserUserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X \(self.systemVersion)) AppleWebKit/\(getWebKitVersion()) (KHTML, like Gecko) Version/17.4 Safari/\(getWebKitVersion())",
-            browserVersion: "17.4",
-            osVersion: self.systemVersion,
-            referrer: "",
-            referringDomain: "",
-            referrerCurrent: "",
-            referringDomainCurrent: "",
-            releaseChannel: "stable",
-            clientBuildNumber: 318966,
-            clientEventSource: "nil",
-            designId: 0
-        )
-        return deviceInfo
-    }
+    public var deviceInfo: DeviceInfo = .init()
     
     
 }

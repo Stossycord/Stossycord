@@ -13,16 +13,23 @@ enum Tabs: Hashable {
 
 struct NavView: View {
     @StateObject var webSocketService: WebSocketService
+    @ObservedObject private var userSession = CurrentUserService.shared
     @State private var selectedTab: Tabs = .home
     
+    
     var body: some View {
-        #if os(macOS)
-        NavigationView {
-            legacyTabView()
+        Group {
+#if os(macOS)
+            NavigationView {
+                legacyTabView()
+            }
+#else
+            iosTabView()
+#endif
         }
-    #else
-        iosTabView()
-    #endif
+        .onChange(of: userSession.pendingChatNavigationRequest) { request in
+            handleChatNavigationRequest(request)
+        }
     }
 }
 
@@ -42,7 +49,7 @@ extension NavView {
     private func modernTabView() -> some View {
         let tabView = TabView(selection: $selectedTab) {
             Tab("Servers", systemImage: "house", value: Tabs.home) {
-                ServerView(webSocketService: webSocketService)
+                ServerViewStack() //ServerView(webSocketService: webSocketService)
             }
             
             Tab("DMs", systemImage: "envelope", value: Tabs.dm) {
@@ -59,7 +66,7 @@ extension NavView {
         }
         .onChange(of: selectedTab, perform: handleTabChange)
         
-        if #available(iOS 26.0, *) {
+        if #available(iOS 19.0, *) {
             tabView.tabBarMinimizeBehavior(.onScrollDown)
         } else {
             tabView
@@ -78,7 +85,7 @@ extension NavView {
     @ViewBuilder
     private func legacyTabView() -> some View {
         TabView(selection: $selectedTab) {
-            ServerView(webSocketService: webSocketService)
+            ServerViewStack() //ServerView(webSocketService: webSocketService)
                 .tabItem {
                     Label("Servers", systemImage: "house")
                 }
@@ -93,6 +100,16 @@ extension NavView {
                     Label("Settings", systemImage: "gear")
                 }
                 .tag(Tabs.settings)
+        }
+    }
+
+    private func handleChatNavigationRequest(_ request: ChatNavigationRequest?) {
+        guard let mention = request?.mention else { return }
+
+        if userSession.hasDMChannel(withId: mention.channelId) || mention.guildId == nil {
+            selectedTab = .dm
+        } else {
+            selectedTab = .home
         }
     }
 }

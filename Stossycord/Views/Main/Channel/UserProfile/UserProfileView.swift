@@ -5,6 +5,7 @@ struct UserProfileView: View {
     let author: Author
     let isLoading: Bool
     let currentUserId: String?
+    @AppStorage(DesignSettingsKeys.hideProfilePictures) private var hideProfilePictures: Bool = false
     
     var body: some View {
         ScrollView {
@@ -30,7 +31,7 @@ struct UserProfileView: View {
                     }
                     
                     HStack {
-                        if let avatar = author.avatarHash {
+                        if !hideProfilePictures, let avatar = author.avatarHash {
                             CachedAsyncImage(url: URL(string: profile?.avatarUrl ?? "https://cdn.discordapp.com/avatars/\(author.authorId)/\(avatar).png")) { image in
                                 image.resizable()
                                     .aspectRatio(contentMode: .fill)
@@ -46,7 +47,7 @@ struct UserProfileView: View {
                                     .frame(width: 80, height: 80)
                                     .overlay(ProgressView())
                             }
-                        } else {
+                        } else if !hideProfilePictures {
                             Circle()
                                 .fill(Color.gray.opacity(0.2))
                                 .frame(width: 80, height: 80)

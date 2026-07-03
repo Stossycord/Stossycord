@@ -1,13 +1,13 @@
 {
-  "originHash" : "d81b58bd7db3478b51975d80698d64de335bfa0f77ce8b87b6505cf1fd463165",
+  "originHash" : "579c15fb8522b165703e7554e4cfe2895f975937a0fa6dae20fa6e7d7cee8745",
   "pins" : [
     {
-      "identity" : "cocoaasyncsocket",
+      "identity" : "emojitext",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/robbiehanson/CocoaAsyncSocket",
+      "location" : "https://github.com/stossy11/EmojiText.git",
       "state" : {
-        "revision" : "dbdc00669c1ced63b27c3c5f052ee4d28f10150c",
-        "version" : "7.6.5"
+        "branch" : "main",
+        "revision" : "c826af55fadf128cf6d844ae51ca8e8624c9291d"
       }
     },
     {
@@ -38,6 +38,15 @@
       }
     },
     {
+      "identity" : "navigation-stack-backport",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/lm/navigation-stack-backport",
+      "state" : {
+        "revision" : "55acfe7693c233ddc7f62f887f0df6ebd779ef01",
+        "version" : "1.1.0"
+      }
+    },
+    {
       "identity" : "networkimage",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gonzalezreal/NetworkImage",
@@ -52,7 +61,7 @@
       "location" : "https://github.com/arkasas/OggDecoder.git",
       "state" : {
         "branch" : "main",
-        "revision" : "65e1465e593d2b0be6ac12256f2866a18d26e211"
+        "revision" : "e94c8ca23cf2a66feab53d795117ae513c273db8"
       }
     },
     {
@@ -60,8 +69,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-cmark",
       "state" : {
-        "revision" : "3ccff77b2dc5b96b77db3da0d68d28068593fa53",
-        "version" : "0.5.0"
+        "revision" : "5d9bdaa4228b381639fff09403e39a04926e2dbe",
+        "version" : "0.7.1"
+      }
+    },
+    {
+      "identity" : "swift-markdown",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-markdown",
+      "state" : {
+        "revision" : "7d9a5ce307528578dfa777d505496bd5f544ad94",
+        "version" : "0.7.3"
       }
     },
     {
@@ -71,6 +89,15 @@
       "state" : {
         "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
         "version" : "2.4.1"
+      }
+    },
+    {
+      "identity" : "swiftui-introspect",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/siteline/swiftui-introspect",
+      "state" : {
+        "revision" : "26986a57e31c813f98262ddb62d4b07d40008535",
+        "version" : "26.0.1"
       }
     }
   ],

@@ -73,7 +73,7 @@ struct MessageBubbleVisualConfiguration: Equatable {
     )
     
     private static let defaultOtherSide = Side(
-        background: Color(red: 0.93, green: 0.94, blue: 0.96),
+        background: Color(.systemGray6),
         text: .primary,
         stroke: Color.secondary.opacity(0.2)
     )

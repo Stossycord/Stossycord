@@ -86,7 +86,7 @@ private func makeUnifiedSearchRequest(token: String,
     let deviceInfo = CurrentDeviceInfo.shared.deviceInfo
     let timeZone = CurrentDeviceInfo.shared.currentTimeZone
     let locale = CurrentDeviceInfo.shared.Country
-    request.addValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
+    request.addValue(deviceInfo.browser_user_agent, forHTTPHeaderField: "User-Agent")
     request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
     request.addValue("\(timeZone.identifier)-\(locale)", forHTTPHeaderField: "X-Discord-Locale")
     request.addValue(timeZone.identifier, forHTTPHeaderField: "X-Discord-Timezone")

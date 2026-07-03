@@ -13,11 +13,64 @@ import AppKit
 #if os(iOS)
 import UIKit
 #endif
+import SwiftUIIntrospect
+
+var uiTabarController: UITabBarController?
+var tabBarFrame: CGRect?
+
+extension View {
+    func tabBarHidden(_ hidden: Bool) -> some View {
+        self.modifier(TabBarHiddenModifier(hidden: hidden))
+    }
+}
+
+private struct TabBarHiddenModifier: ViewModifier {
+    let hidden: Bool
+    
+    @State private var tabBarController: UITabBarController?
+    @State private var originalFrame: CGRect?
+    
+    func body(content: Content) -> some View {
+        content
+            .introspect(.tabView) { (controller: UITabBarController) in
+                if tabBarController == nil {
+                    tabBarController = controller
+                    originalFrame = controller.view.frame
+                }
+                applyHidden(hidden, to: controller)
+            }
+            .onChange(of: hidden) { newValue in
+                guard let controller = tabBarController else { return }
+                applyHidden(newValue, to: controller)
+            }
+            .onDisappear {
+                guard let controller = tabBarController,
+                      let frame = originalFrame else { return }
+                controller.tabBar.isHidden = false
+                controller.view.frame = frame
+            }
+    }
+
+    private func applyHidden(_ hidden: Bool, to controller: UITabBarController) {
+        guard let originalFrame else { return }
+        controller.tabBar.isHidden = hidden
+        controller.view.frame = hidden
+            ? CGRect(
+                x: originalFrame.origin.x,
+                y: originalFrame.origin.y,
+                width: originalFrame.width,
+                height: originalFrame.height + controller.tabBar.frame.height
+            ) : originalFrame
+    }
+}
 
 struct ServerView: View {
     @State private var searchTerm = ""
+    @Binding var guild: Guild?
+    @EnvironmentObject var user: CurrentUserService
+    @Environment(\.api) var discordAPI
     @StateObject var webSocketService: WebSocketService
-    @AppStorage("useDiscordFolders") private var useDiscordFolders: Bool = false
+    @AppStorage("useDiscordFolders") private var useDiscordFolders: Bool = true
     @AppStorage("allowDestructiveActions") private var allowDestructiveActions: Bool = false
     @State private var expandedFolders: Set<String> = []
     @State private var selectionMode = false
@@ -26,6 +79,7 @@ struct ServerView: View {
     @State private var isLeavingGuilds = false
     @State private var leaveErrorMessage: String?
     @State private var showLeaveErrorAlert = false
+    @State private var channelNavigationRequest: ChatNavigationRequest?
     
     var body: some View {
         container
@@ -72,8 +126,14 @@ struct ServerView: View {
             .onChange(of: useDiscordFolders) { _ in
                 pruneSelections()
             }
-            .onReceive(webSocketService.$Guilds) { _ in
+            .onReceive(user.$Guilds) { _ in
                 pruneSelections()
+            }
+            .onAppear {
+                handleChatNavigationRequest(user.pendingChatNavigationRequest)
+            }
+            .onChange(of: user.pendingChatNavigationRequest) { request in
+                handleChatNavigationRequest(request)
             }
     }
     
@@ -84,34 +144,80 @@ struct ServerView: View {
             content()
         }
         #else
-        NavigationStack {
-            content()
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            NavigationStack {
+                content()
+            }
+        } else {
+            VStack {
+                content()
+            }
         }
         #endif
     }
     
     @ViewBuilder
     private func content() -> some View {
-            VStack(spacing: 0) {
-                // Search bar
+        VStack(spacing: 0) {
+            // Search bar
+            if UIDevice.current.userInterfaceIdiom != .pad {
                 searchField
-                
-                // Server list
-                serverList
-                    .onAppear {
-                        webSocketService.currentguild = Guild(id: "", name: "", icon: "")
+                    .navigationTitle("Servers")
+            }
+            
+            // Server list
+            serverList
+        }
+        .toolbar {
+            
+            selectionToolbar
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if UIDevice.current.userInterfaceIdiom != .pad {
+                    NavigationLink(destination: MentionsView(webSocketService: .shared)) {
+                        Image(systemName: "at")
+                            .mentionBadge(count: user.unreadMentionCount)
                     }
+                }
             }
-            .navigationTitle("Servers")
-            .toolbar {
-                selectionToolbar
-            }
-            #if !os(macOS)
-            .toolbar(.visible, for: .tabBar)
-            #endif
+        }
+        .tabBarHidden(true)
+        .background(guildNavigationLink)
+  
     }
-    
-    // MARK: - Components
+
+    @ViewBuilder
+    private var guildNavigationLink: some View {
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            NavigationLink(
+                destination: guildNavigationDestination,
+                isActive: Binding(
+                    get: { channelNavigationRequest != nil },
+                    set: { if !$0 { channelNavigationRequest = nil } }
+                )
+            ) {
+                EmptyView()
+            }
+            .hidden()
+        }
+    }
+
+    @ViewBuilder
+    private var guildNavigationDestination: some View {
+        if let request = channelNavigationRequest,
+           let targetGuild = guild(for: request) {
+            ChannelsListView(
+                guild: targetGuild,
+                webSocketService: webSocketService,
+                initialNavigationRequest: request
+            )
+            .onAppear {
+                guild = targetGuild
+            }
+        } else {
+            EmptyView()
+        }
+    }
     
     private var searchField: some View {
         HStack {
@@ -137,8 +243,29 @@ struct ServerView: View {
         .padding(.top, 8)
     }
     
+    @State var showMentions: Bool = false
+    
     private var serverList: some View {
         ScrollView {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                
+                Button {
+                    showMentions = true
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "at")
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 14)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                    .mentionBadge(count: user.unreadMentionCount)
+                }
+                .buttonStyle(ServerRowButtonStyle())
+                .sheet(isPresented: $showMentions, content: { MentionsView(webSocketService: .shared) })
+
+            }
+            
             LazyVStack(spacing: 12) {
                 if useDiscordFolders {
                     ForEach(Array(organizedContent.enumerated()), id: \.element.id) { _, item in
@@ -171,7 +298,12 @@ struct ServerView: View {
                     }
                 } else {
                     ForEach(filteredGuilds, id: \.id) { guild in
-                        guildRow(for: guild)
+                        if UIDevice.current.userInterfaceIdiom == .pad {
+                            guildRow(for: guild)
+                                .frame(maxWidth: 60)
+                        } else {
+                            guildRow(for: guild)
+                        }
                     }
                 }
                 
@@ -185,22 +317,25 @@ struct ServerView: View {
             .animation(.easeInOut(duration: 0.15), value: selectionMode)
             .animation(.easeInOut(duration: 0.15), value: selectedGuildIds)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicatorsHidden()
+
     }
     
     @ToolbarContentBuilder
     private var selectionToolbar: some ToolbarContent {
-        if allowDestructiveActions {
-            #if os(macOS)
-            ToolbarItemGroup(placement: .automatic) {
+#if os(macOS)
+        ToolbarItemGroup(placement: .automatic) {
+            if allowDestructiveActions {
                 toolbarControls
             }
-            #else
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                toolbarControls
-            }
-            #endif
         }
+#else
+        ToolbarItemGroup(placement: .navigationBarTrailing) {
+            if UIDevice.current.userInterfaceIdiom != .pad && allowDestructiveActions {
+                toolbarControls
+            }
+        }
+#endif
     }
     
     @ViewBuilder
@@ -234,18 +369,65 @@ struct ServerView: View {
                 ServerRow(
                     guild: guild,
                     selectionMode: true,
-                    isSelected: selectedGuildIds.contains(guild.id)
+                    isSelected: selectedGuildIds.contains(guild.id),
+                    mentionCount: user.unreadMentionCount(guildId: guild.id)
                 )
             }
             .disabled(isLeavingGuilds)
             .buttonStyle(ServerRowButtonStyle())
         } else {
-            NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService)) {
-                ServerRow(guild: guild)
+            if UIDevice.current.userInterfaceIdiom != .pad {
+                NavigationLink(destination: ChannelsListView(guild: guild, webSocketService: webSocketService).onAppear() { self.guild = guild } ) {
+                    ServerRow(guild: guild, mentionCount: user.unreadMentionCount(guildId: guild.id))
+                }
+                .buttonStyle(ServerRowButtonStyle())
+            } else {
+                Button {
+                    self.guild = nil
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self.guild = guild
+                    }
+                } label: {
+                    ServerRow(guild: guild, mentionCount: user.unreadMentionCount(guildId: guild.id))
+                }
+                .buttonStyle(ServerRowButtonStyle())
             }
-            .buttonStyle(ServerRowButtonStyle())
         }
     }
+
+    private func handleChatNavigationRequest(_ request: ChatNavigationRequest?) {
+        guard let request,
+              !user.hasDMChannel(withId: request.mention.channelId),
+              let targetGuild = guild(for: request) else { return }
+
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            if guild?.id == targetGuild.id {
+                guild = targetGuild
+            } else {
+                guild = nil
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    guild = targetGuild
+                }
+            }
+        } else {
+            channelNavigationRequest = request
+        }
+    }
+
+    private func guild(for request: ChatNavigationRequest) -> Guild? {
+        if let guildId = request.mention.guildId {
+            return user.Guilds.first(where: { $0.id == guildId })
+        }
+
+        if let guildId = user.guildId(containing: request.mention.channelId) {
+            return user.Guilds.first(where: { $0.id == guildId })
+        }
+
+        return nil
+    }
+    
+    
     
     private func toggleSelectionMode() {
         withAnimation(.easeInOut(duration: 0.15)) {
@@ -352,7 +534,7 @@ struct ServerView: View {
         showLeaveConfirmation = false
         let guildIds = Array(selectedGuildIds)
         guard !guildIds.isEmpty else { return }
-        let token = webSocketService.token
+        let token = user.token
         guard !token.isEmpty else {
             leaveErrorMessage = "Missing authentication token."
             showLeaveErrorAlert = true
@@ -360,8 +542,8 @@ struct ServerView: View {
         }
         
         isLeavingGuilds = true
-        let guildLookup = Dictionary(uniqueKeysWithValues: webSocketService.Guilds.map { ($0.id, $0.name) })
-        var errors: [String] = []
+        
+        let errors: [String] = []
         
         func finalize() {
             isLeavingGuilds = false
@@ -373,20 +555,18 @@ struct ServerView: View {
             }
         }
         
-        func attemptLeave(guildId: String, attempt: Int, completion: @escaping (Result<Void, Error>) -> Void) {
-            leaveDiscordGuild(token: token, guildId: guildId) { result in
-                Task { @MainActor in 
-                    switch result {
-                    case .success:
-                        removeGuildFromState(id: guildId)
-                        completion(.success(()))
-                    case .failure(let error):
-                        if let delay = retryDelay(for: error), attempt < 3 {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                                attemptLeave(guildId: guildId, attempt: attempt + 1, completion: completion)
-                            }
-                        } else {
-                            completion(.failure(error))
+        func attemptLeave(guildId: String, attempt: Int) async {
+            
+            do {
+                let _ = try await discordAPI.makeRequest(.leaveGuild, args: [guildId])
+                
+                removeGuildFromState(id: guildId)
+                
+            } catch {
+                if let delay = retryDelay(for: error), attempt < 3 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                        Task {
+                            await attemptLeave(guildId: guildId, attempt: attempt + 1)
                         }
                     }
                 }
@@ -399,28 +579,9 @@ struct ServerView: View {
                 return
             }
             let guildId = guildIds[index]
-            attemptLeave(guildId: guildId, attempt: 1) { result in
-                let nextIndex = index + 1
-                switch result {
-                case .success:
-                    if nextIndex < guildIds.count {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                            processGuild(at: nextIndex)
-                        }
-                    } else {
-                        finalize()
-                    }
-                case .failure(let error):
-                    let name = guildLookup[guildId] ?? guildId
-                    errors.append("\(name): \(error.localizedDescription)")
-                    if nextIndex < guildIds.count {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                            processGuild(at: nextIndex)
-                        }
-                    } else {
-                        finalize()
-                    }
-                }
+            
+            Task {
+                await attemptLeave(guildId: guildId, attempt: 1)
             }
         }
 
@@ -457,19 +618,14 @@ struct ServerView: View {
     }
     
     private func removeGuildFromState(id: String) {
-        if let index = webSocketService.Guilds.firstIndex(where: { $0.id == id }) {
-            webSocketService.Guilds.remove(at: index)
+        if let index = user.Guilds.firstIndex(where: { $0.id == id }) {
+            user.Guilds.remove(at: index)
         }
         selectedGuildIds.remove(id)
-        if webSocketService.currentguild.id == id {
-            webSocketService.currentguild = Guild(id: "", name: "", icon: "")
-            webSocketService.channels = []
-            webSocketService.currentchannel = ""
-        }
     }
     
     private var selectedGuildsList: [Guild] {
-        webSocketService.Guilds.filter { selectedGuildIds.contains($0.id) }
+        user.Guilds.filter { selectedGuildIds.contains($0.id) }
     }
     
     private var selectedGuildCount: Int {
@@ -527,13 +683,13 @@ struct ServerView: View {
     // MARK: - Logic
     
     private var filteredGuilds: [Guild] {
-        webSocketService.Guilds.filter { guild in
+        user.Guilds.filter { guild in
             searchTerm.isEmpty || guild.name.localizedCaseInsensitiveContains(searchTerm)
         }
     }
     
     private var organizedContent: [ContentItem] {
-        guard let guildFolders = webSocketService.userSettings?.guildFolders else {
+        guard let guildFolders = user.userSettings?.guildFolders else {
             return filteredGuilds.map { ContentItem(id: $0.id, type: .guild, guilds: [$0]) }
         }
         
@@ -572,37 +728,44 @@ struct ServerRow: View {
     let guild: Guild
     var selectionMode: Bool = false
     var isSelected: Bool = false
+    var mentionCount: Int = 0
     
     var body: some View {
-        HStack(spacing: 14) {
-            if selectionMode {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20))
-                    .foregroundColor(isSelected ? .accentColor : .secondary)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            HStack(spacing: 14) {
+                ServerIconView(iconURL: guild.iconUrl)
+                    .mentionBadge(count: mentionCount)
             }
-            
-            // Server icon
-            ServerIconView(iconURL: guild.iconUrl)
-            
-            // Server name
-            Text(guild.name)
-                .font(.system(size: 16, weight: .medium))
-                .lineLimit(1)
-            
-            Spacer()
-            
-            if !selectionMode {
-                // Navigation indicator
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+        } else {
+            HStack(spacing: 14) {
+                if selectionMode {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 20))
+                        .foregroundColor(isSelected ? .accentColor : .secondary)
+                }
+                
+                // Server icon
+                ServerIconView(iconURL: guild.iconUrl)
+                    .mentionBadge(count: selectionMode ? 0 : mentionCount)
+                
+                // Server name
+                Text(guild.name)
+                    .font(.system(size: 16, weight: .medium))
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                if !selectionMode {
+                    // Navigation indicator
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 14)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
     }
 }
-
-

@@ -38,3 +38,13 @@ struct DMs: Codable {
         case recipients
     }
 }
+
+extension DMs {
+    var isDirectMessageChannel: Bool {
+        type == 1 || type == 3
+    }
+    
+    func updatingLastMessageId(_ messageId: String) -> DMs {
+        DMs(id: id, type: type, last_message_id: messageId, recipients: recipients)
+    }
+}

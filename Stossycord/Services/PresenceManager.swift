@@ -3,6 +3,15 @@ import Combine
 import MusicKit
 import MediaPlayer
 
+struct ITunesResponse: Codable {
+    let results: [ITunesTrack]
+}
+
+struct ITunesTrack: Codable {
+    let artworkUrl100: String
+}
+
+
 final class PresenceManager: ObservableObject {
     private enum PreferenceKeys {
         static let musicPresenceEnabled = "app.stossycord.presence.musicEnabled"
@@ -10,11 +19,16 @@ final class PresenceManager: ObservableObject {
         static let customDetails = "app.stossycord.presence.customDetails"
         static let customState = "app.stossycord.presence.customState"
     }
-
+    
+    private enum DiscordApplicationIDs {
+        static let appleMusic = "773825528921849856"
+    }
+    
     private let webSocketService: WebSocketService
+    private let userService: CurrentUserService = .shared
     private let musicPlayer = MPMusicPlayerController.systemMusicPlayer
     private let defaults: UserDefaults
-
+    
     @Published private(set) var authorizationStatus: MusicAuthorization.Status = .notDetermined
     @Published private(set) var isRequestingAuthorization: Bool = false
     @Published var musicPresenceEnabled: Bool {
@@ -45,7 +59,7 @@ final class PresenceManager: ObservableObject {
             handleCustomPresenceChange()
         }
     }
-
+    
     private var cancellables = Set<AnyCancellable>()
     private var updateTimer: Timer?
     private var lastTrackIdentifier: String?
@@ -54,7 +68,7 @@ final class PresenceManager: ObservableObject {
     private var presenceTask: Task<Void, Never>?
     private var artworkCache: [String: URL] = [:]
     private let cacheQueue = DispatchQueue(label: "app.stossycord.musicPresence.artworkCache", qos: .utility)
-
+    
     init(webSocketService: WebSocketService, defaults: UserDefaults = .standard) {
         self.webSocketService = webSocketService
         self.defaults = defaults
@@ -63,43 +77,43 @@ final class PresenceManager: ObservableObject {
         self.customPresenceDetails = defaults.string(forKey: PreferenceKeys.customDetails) ?? ""
         self.customPresenceState = defaults.string(forKey: PreferenceKeys.customState) ?? ""
         self.authorizationStatus = MusicAuthorization.currentStatus
-
+        
         observeConnection()
         observeUserSettings()
         observePlaybackChanges()
     }
-
+    
     func start() {
         refreshAuthorizationStatus()
     }
-
+    
     func requestAuthorization() {
         guard !isRequestingAuthorization else { return }
-
+        
         Task {
             await MainActor.run {
                 self.isRequestingAuthorization = true
             }
-
+            
             let status = await MusicAuthorization.request()
-
+            
             await MainActor.run {
                 self.isRequestingAuthorization = false
                 self.applyAuthorizationStatus(status, forceUpdate: true)
             }
         }
     }
-
+    
     func refreshAuthorizationStatus() {
         applyAuthorizationStatus(MusicAuthorization.currentStatus, forceUpdate: true)
     }
-
+    
     private func applyAuthorizationStatus(_ status: MusicAuthorization.Status, forceUpdate: Bool = false) {
         if !forceUpdate && authorizationStatus == status { return }
         authorizationStatus = status
         ensurePresenceMatchesMode()
     }
-
+    
     private func ensurePresenceMatchesMode() {
         if musicPresenceEnabled {
             guard authorizationStatus == .authorized else {
@@ -111,12 +125,12 @@ final class PresenceManager: ObservableObject {
             sendCustomPresencePayloadIfAvailable()
         }
     }
-
+    
     private func handleCustomPresenceChange() {
         guard !musicPresenceEnabled else { return }
         sendCustomPresencePayloadIfAvailable()
     }
-
+    
     private func observeConnection() {
         webSocketService.$isConnected
             .receive(on: DispatchQueue.main)
@@ -131,16 +145,16 @@ final class PresenceManager: ObservableObject {
             }
             .store(in: &cancellables)
     }
-
+    
     private func observeUserSettings() {
-        webSocketService.$userSettings
+        userService.$userSettings
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.ensurePresenceMatchesMode()
             }
             .store(in: &cancellables)
     }
-
+    
     private func observePlaybackChanges() {
         musicPlayer.beginGeneratingPlaybackNotifications()
         NotificationCenter.default.addObserver(
@@ -148,6 +162,7 @@ final class PresenceManager: ObservableObject {
             object: musicPlayer,
             queue: .main
         ) { [weak self] _ in
+            print("cool")
             self?.updatePresence()
         }
         NotificationCenter.default.addObserver(
@@ -155,40 +170,42 @@ final class PresenceManager: ObservableObject {
             object: musicPlayer,
             queue: .main
         ) { [weak self] _ in
+            print("wow")
             self?.updatePresence()
         }
     }
-
+    
     private func updatePresence() {
+        print("grand")
         guard isActive else { return }
-
+        
         guard musicPresenceEnabled else {
             sendCustomPresencePayloadIfAvailable()
             return
         }
-
+        
         guard authorizationStatus == .authorized else {
             clearPresence()
             return
         }
-
+        
         let state = musicPlayer.playbackState
         guard state == .playing, let item = musicPlayer.nowPlayingItem else {
             clearPresence()
             return
         }
-
+        
         let storeID = item.playbackStoreID
         guard !storeID.isEmpty else {
             clearPresence()
             return
         }
-
+        
         let elapsed = max(0, musicPlayer.currentPlaybackTime)
         let duration = item.playbackDuration
         presenceTask?.cancel()
         let storeIDCopy = storeID
-
+        
         presenceTask = Task { [weak self] in
             guard let self else { return }
             let metadata = await self.metadata(for: item, storeID: storeIDCopy)
@@ -207,37 +224,38 @@ final class PresenceManager: ObservableObject {
             }
         }
     }
-
+    
     private func clearPresence(force: Bool = false) {
         stopTimer()
         presenceTask?.cancel()
         presenceTask = nil
-
+        
         guard isActive else {
             lastTrackIdentifier = nil
             customPresenceActive = false
             return
         }
-
+        
         guard force || lastTrackIdentifier != nil || customPresenceActive else { return }
-
+        
         sendPresenceUpdate(with: baseActivities())
         lastTrackIdentifier = nil
         customPresenceActive = false
     }
-
+    
     private func sendMusicPresencePayload(metadata: SongMetadata, storeID: String, elapsed: TimeInterval, duration: TimeInterval) {
         let now = Date()
         var activities = baseActivities()
-
+        
         var activity: [String: Any] = [
             "name": "Apple Music",
             "type": 2,
+            "application_id": DiscordApplicationIDs.appleMusic,
             "details": metadata.title,
             "state": metadata.artist,
             "metadata": ["apple_music_track_id": storeID]
         ]
-
+        
         if duration > 0 {
             let clampedElapsed = min(max(0, elapsed), duration)
             let startDate = now.addingTimeInterval(-clampedElapsed)
@@ -247,10 +265,10 @@ final class PresenceManager: ObservableObject {
                 "end": Int(endDate.timeIntervalSince1970 * 1000)
             ]
         }
-
+        
         if let artwork = metadata.artworkURL {
             activity["assets"] = [
-                "large_image": "mp:external:\(artwork.absoluteString)",
+                "large_image": artwork.absoluteString,
                 "large_text": metadata.album.isEmpty ? metadata.title : metadata.album
             ]
         } else if !metadata.album.isEmpty {
@@ -258,24 +276,24 @@ final class PresenceManager: ObservableObject {
                 "large_text": metadata.album
             ]
         }
-
+        
         activities.insert(activity, at: 0)
-
+        
         sendPresenceUpdate(with: activities, timestamp: now)
         lastTrackIdentifier = storeID
         customPresenceActive = false
         startTimer()
     }
-
+    
     private func sendCustomPresencePayloadIfAvailable() {
         stopTimer()
         presenceTask?.cancel()
         presenceTask = nil
-
+        
         let trimmedName = customPresenceName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDetails = customPresenceDetails.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedState = customPresenceState.trimmingCharacters(in: .whitespacesAndNewlines)
-
+        
         if trimmedName.isEmpty {
             let wasCustom = customPresenceActive
             customPresenceActive = false
@@ -284,57 +302,59 @@ final class PresenceManager: ObservableObject {
             }
             return
         }
-
+        
         guard isActive else { return }
-
+        
         var activity: [String: Any] = [
             "name": trimmedName,
             "type": 0
         ]
-
+        
         if !trimmedDetails.isEmpty {
             activity["details"] = trimmedDetails
         }
-
+        
         if !trimmedState.isEmpty {
             activity["state"] = trimmedState
         }
-
+        
         var activities = baseActivities()
         activities.insert(activity, at: 0)
-
+        
         sendPresenceUpdate(with: activities)
         customPresenceActive = true
         lastTrackIdentifier = nil
     }
-
+    
     private func sendPresenceUpdate(with activities: [[String: Any]], timestamp: Date = Date()) {
         guard isActive else { return }
-
+        
         let payload: [String: Any] = [
             "op": 3,
             "d": [
                 "since": Int(timestamp.timeIntervalSince1970 * 1000),
                 "activities": activities,
-                "status": webSocketService.userSettings?.status ?? "online",
+                "status": userService.userSettings?.status ?? "online",
                 "afk": false
             ]
         ]
-
+        
+        print(payload)
+        
         webSocketService.sendJSON(payload)
     }
-
+    
     private func metadata(for item: MPMediaItem, storeID: String) async -> SongMetadata {
         var title = item.title ?? "Unknown Track"
         var artist = item.artist ?? item.albumArtist ?? "Unknown Artist"
         var album = item.albumTitle ?? ""
-
+        
         if let cached = cachedArtwork(for: storeID) {
             return SongMetadata(title: title, artist: artist, album: album, artworkURL: cached)
         }
-
+        
         var artworkURL: URL?
-
+        
         if MusicAuthorization.currentStatus == .authorized {
             do {
                 if let song = try await fetchSong(with: storeID) {
@@ -347,59 +367,92 @@ final class PresenceManager: ObservableObject {
                     if let albumTitle = song.albumTitle, !albumTitle.isEmpty {
                         album = albumTitle
                     }
+                    
                     if let url = song.artwork?.url(width: 512, height: 512) {
+                        artworkURL = url
+                    } else if let url = try? await fetchArtworkURL(trackID: Int(song.id.rawValue)!) {
                         artworkURL = url
                     }
                 }
             } catch {
                 if Task.isCancelled {
-                    return SongMetadata(title: title, artist: artist, album: album, artworkURL: nil)
+                    if let url = try? await fetchArtworkURL(trackID: Int(storeID)!) {
+                        return SongMetadata(title: title, artist: artist, album: album, artworkURL: url)
+                    } else {
+                        return SongMetadata(title: title, artist: artist, album: album, artworkURL: artworkURL)
+                    }
                 }
                 print("MusicPresenceManager: failed to retrieve catalog metadata - \(error.localizedDescription)")
             }
         }
-
+        
         if let artworkURL {
             storeArtwork(artworkURL, for: storeID)
+        } else {
+            if let url = try? await fetchArtworkURL(trackID: Int(storeID)!) {
+                artworkURL = url
+                storeArtwork(url, for: storeID)
+            }
         }
-
+        
+        
         return SongMetadata(title: title, artist: artist, album: album, artworkURL: artworkURL)
     }
-
+    
+    func fetchArtworkURL(trackID: Int) async throws -> URL {
+        
+        let url = URL(string: "https://itunes.apple.com/lookup?id=\(trackID)")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+        
+        let response = try JSONDecoder().decode(ITunesResponse.self, from: data)
+        guard let artwork = response.results.first?.artworkUrl100 else {
+            throw URLError(.badServerResponse)
+        }
+        
+        let highRes = artwork.replacingOccurrences(of: "100x100", with: "64x64")
+        guard let artworkURL = URL(string: highRes) else {
+            throw URLError(.badURL)
+        }
+        
+        
+        return artworkURL
+    }
+    
+    
     private func cachedArtwork(for storeID: String) -> URL? {
         cacheQueue.sync {
             artworkCache[storeID]
         }
     }
-
+    
     private func storeArtwork(_ url: URL, for storeID: String) {
         cacheQueue.async { [weak self] in
             self?.artworkCache[storeID] = url
         }
     }
-
+    
     private func fetchSong(with storeID: String) async throws -> Song? {
         let request = MusicCatalogResourceRequest<Song>(matching: \.id, equalTo: MusicItemID(storeID))
         let response = try await request.response()
         return response.items.first
     }
-
+    
     private func baseActivities() -> [[String: Any]] {
-        guard let customStatus = webSocketService.userSettings?.customStatus else {
+        guard let customStatus = userService.userSettings?.customStatus else {
             return []
         }
-
+        
         if (customStatus.text?.isEmpty ?? true) && customStatus.emojiName == nil {
             return []
         }
-
+        
         var activity: [String: Any] = [
             "type": 4,
             "state": customStatus.text ?? "",
             "name": "Custom Status",
             "id": "custom"
         ]
-
+        
         if let emojiName = customStatus.emojiName {
             var emoji: [String: Any] = ["name": emojiName]
             if let emojiId = customStatus.emojiId {
@@ -407,10 +460,10 @@ final class PresenceManager: ObservableObject {
             }
             activity["emoji"] = emoji
         }
-
+        
         return [activity]
     }
-
+    
     private func startTimer() {
         updateTimer?.invalidate()
         updateTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
@@ -418,19 +471,19 @@ final class PresenceManager: ObservableObject {
             self.refreshPlayback()
         }
     }
-
+    
     private func stopTimer() {
         updateTimer?.invalidate()
         updateTimer = nil
     }
-
+    
     private func refreshPlayback() {
         guard musicPresenceEnabled else { return }
         guard authorizationStatus == .authorized else { return }
         guard isActive else { return }
         updatePresence()
     }
-
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
         musicPlayer.endGeneratingPlaybackNotifications()

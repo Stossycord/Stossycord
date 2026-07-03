@@ -5,76 +5,128 @@
 //  Created by Stossy11 on 7/11/2024.
 //
 
-import SwiftUI
 import PhotosUI
+import SwiftUI
 import UniformTypeIdentifiers
 
-struct PhotoPickerView: View {
-    @State private var selectedItem: PhotosPickerItem?
-    @State private var savedImagePath: URL?
-    @State private var showAlert = false
-    @State private var alertMessage = ""
-    
+struct PhotoPickerView: UIViewControllerRepresentable {
     var onImageSaved: ((URL) -> Void)?
+    var onCancel: (() -> Void)?
     
-    var body: some View {
-        VStack(spacing: 20) {
-            PhotosPicker(selection: $selectedItem,
-                         matching: .any(of: [.images, .videos])) {
-                Text("Select Photo")
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-        }
-        .padding()
-        .onChange(of: selectedItem) { _ in
-            Task {
-                await loadTransferredMedia()
-                if let savedImagePath {
-                    onImageSaved?(savedImagePath)
-                }
-            }
-        }
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
+        configuration.filter = .any(of: [.images, .videos])
+        configuration.preferredAssetRepresentationMode = .current
+        configuration.selectionLimit = 1
+        
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = context.coordinator
+        return picker
     }
     
-    private func loadTransferredMedia() async {
-        do {
-            guard let selectedItem else { return }
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onImageSaved: onImageSaved, onCancel: onCancel)
+    }
+    
+    final class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        private let onImageSaved: ((URL) -> Void)?
+        private let onCancel: (() -> Void)?
+        
+        init(onImageSaved: ((URL) -> Void)?, onCancel: (() -> Void)?) {
+            self.onImageSaved = onImageSaved
+            self.onCancel = onCancel
+        }
+        
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            guard let result = results.first else {
+                picker.dismiss(animated: true)
+                onCancel?()
+                return
+            }
             
-            // Check if the selected item is a video or image using UTType
-            if let mediaData = try await selectedItem.loadTransferable(type: Data.self) {
-                let isVideos = selectedItem.supportedContentTypes
-                
-                print(isVideos.first!.identifier)
-                
-                let isVideo = isVideos.first!.identifier.contains("mpeg")
-                // Get temporary directory URL
-                let temporaryDirectory = FileManager.default.temporaryDirectory
-                let fileExtension = isVideo ? "mp4" : "jpg"
-                let fileName = UUID().uuidString + "." + fileExtension
-                let fileURL = temporaryDirectory.appendingPathComponent(fileName)
-                
-                // Write the media data to temporary directory
-                try mediaData.write(to: fileURL)
-                
-                // Update the saved media path
-                await MainActor.run {
-                    savedImagePath = fileURL
-                    alertMessage = ""
-                    showAlert = true
+            savePickedMedia(from: result.itemProvider) { [weak picker] url in
+                DispatchQueue.main.async {
+                    picker?.dismiss(animated: true)
+                    if let url {
+                        self.onImageSaved?(url)
+                    }
                 }
-            } else {
-                throw NSError(domain: "", code: -1,
-                              userInfo: [NSLocalizedDescriptionKey: "Failed to load media data"])
+            }
+        }
+        
+        private func savePickedMedia(from itemProvider: NSItemProvider, completion: @escaping (URL?) -> Void) {
+            guard let typeIdentifier = preferredTypeIdentifier(for: itemProvider) else {
+                completion(nil)
+                return
             }
             
-        } catch {
-            await MainActor.run {
-                alertMessage = "Failed to save media: \(error.localizedDescription)"
-                showAlert = true
+            itemProvider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { [weak self] url, error in
+                if let url, error == nil, let savedURL = self?.copyTemporaryMedia(from: url, typeIdentifier: typeIdentifier) {
+                    completion(savedURL)
+                    return
+                }
+                
+                itemProvider.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { [weak self] data, _ in
+                    guard let data, let savedURL = self?.writeTemporaryMedia(data, typeIdentifier: typeIdentifier) else {
+                        completion(nil)
+                        return
+                    }
+                    
+                    completion(savedURL)
+                }
             }
+        }
+        
+        private func preferredTypeIdentifier(for itemProvider: NSItemProvider) -> String? {
+            let types = itemProvider.registeredTypeIdentifiers.compactMap(UTType.init)
+            
+            if let movieType = types.first(where: { $0.conforms(to: .movie) }) {
+                return movieType.identifier
+            }
+            
+            if let imageType = types.first(where: { $0.conforms(to: .image) }) {
+                return imageType.identifier
+            }
+            
+            return itemProvider.registeredTypeIdentifiers.first
+        }
+        
+        private func copyTemporaryMedia(from sourceURL: URL, typeIdentifier: String) -> URL? {
+            do {
+                let destinationURL = try makeTemporaryMediaURL(typeIdentifier: typeIdentifier, sourceURL: sourceURL)
+                try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+                return destinationURL
+            } catch {
+                print("Failed to copy picked media: \(error.localizedDescription)")
+                return nil
+            }
+        }
+        
+        private func writeTemporaryMedia(_ data: Data, typeIdentifier: String) -> URL? {
+            do {
+                let destinationURL = try makeTemporaryMediaURL(typeIdentifier: typeIdentifier)
+                try data.write(to: destinationURL)
+                return destinationURL
+            } catch {
+                print("Failed to save picked media: \(error.localizedDescription)")
+                return nil
+            }
+        }
+        
+        private func makeTemporaryMediaURL(typeIdentifier: String, sourceURL: URL? = nil) throws -> URL {
+            let temporaryDirectory = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            
+            try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+            
+            let contentType = UTType(typeIdentifier)
+            let fileExtension = sourceURL?.pathExtension.isEmpty == false ? sourceURL?.pathExtension : contentType?.preferredFilenameExtension
+            
+            return temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension(fileExtension ?? "dat")
         }
     }
 }

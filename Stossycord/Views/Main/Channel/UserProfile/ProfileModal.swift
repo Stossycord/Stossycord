@@ -11,7 +11,8 @@ struct ProfileModal: View {
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
     @StateObject private var webSocketService = WebSocketService.shared
-    
+    @EnvironmentObject var userSession: CurrentUserService
+    @Environment(\.api) var discordAPI
     var body: some View {
         NavigationView {
             Group {
@@ -20,7 +21,7 @@ struct ProfileModal: View {
                         profile: profile,
                         author: author,
                         isLoading: isLoading,
-                        currentUserId: webSocketService.currentUser.id
+                        currentUserId: userSession.user?.id ?? ""
                     )
                 } else if isLoading {
                     VStack(spacing: 20) {
@@ -68,22 +69,22 @@ struct ProfileModal: View {
                     }
                 }
                 
-                if let profile = profile {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if let profile = profile {
                         Menu {
                             Button {
-                                #if os(iOS)
+#if os(iOS)
                                 UIPasteboard.general.string = profile.user.id
-                                #endif
+#endif
                             } label: {
                                 Label("Copy User ID", systemImage: "doc.on.doc")
                             }
                             
                             if let avatarUrl = profile.avatarUrl {
                                 Button {
-                                    #if os(iOS)
+#if os(iOS)
                                     UIPasteboard.general.string = avatarUrl
-                                    #endif
+#endif
                                 } label: {
                                     Label("Copy Avatar URL", systemImage: "photo")
                                 }
@@ -91,9 +92,9 @@ struct ProfileModal: View {
                             
                             if let bannerUrl = profile.bannerUrl {
                                 Button {
-                                    #if os(iOS)
+#if os(iOS)
                                     UIPasteboard.general.string = bannerUrl
-                                    #endif
+#endif
                                 } label: {
                                     Label("Copy Banner URL", systemImage: "rectangle")
                                 }
@@ -114,38 +115,38 @@ struct ProfileModal: View {
         isLoading = true
         showError = false
         
-        let keychain = KeychainSwift()
-        guard let token = keychain.get("token") else {
-            showError(message: "No authentication token found")
+        if let cachedProfile = CacheService.shared.getCachedUserProfile(userId: userId) {
+            self.profile = cachedProfile
             return
         }
         
-        getUserProfile(token: token, userId: userId) { fetchedProfile in
-            Task { @MainActor in 
-                isLoading = false
-                if let fetchedProfile = fetchedProfile {
+        Task {
+            let fetchedProfile = try? await discordAPI.makeRequest(.userProfile, args: [userId])
+            
+            isLoading = false
+            if let fetchedProfile = fetchedProfile {
+                Task { @MainActor in
                     profile = fetchedProfile
                     CacheService.shared.setCachedUserProfile(fetchedProfile, userId: userId)
-                } else {
-                    getBasicUserInfo(token: token, userId: userId) { basicUser in
-                        Task { @MainActor in 
-                            if let user = basicUser {
-                                let fallbackProfile = UserProfile(
-                                    user: user,
-                                    connectedAccounts: nil,
-                                    premiumSince: nil,
-                                    premiumType: nil,
-                                    premiumGuildSince: nil,
-                                    profileThemesExperimentBucket: nil,
-                                    mutualGuilds: nil,
-                                    mutualFriends: nil,
-                                    userProfile: nil
-                                )
-                                profile = fallbackProfile
-                            } else {
-                                showError(message: "Unable to fetch user information")
-                            }
-                        }
+                }
+            } else {
+                let basicUser = try? await discordAPI.makeRequest(.basicUser, args: [userId])
+                Task { @MainActor in
+                    if let user = basicUser {
+                        let fallbackProfile = UserProfile(
+                            user: user,
+                            connectedAccounts: nil,
+                            premiumSince: nil,
+                            premiumType: nil,
+                            premiumGuildSince: nil,
+                            profileThemesExperimentBucket: nil,
+                            mutualGuilds: nil,
+                            mutualFriends: nil,
+                            userProfile: nil
+                        )
+                        profile = fallbackProfile
+                    } else {
+                        showError(message: "Unable to fetch user information")
                     }
                 }
             }

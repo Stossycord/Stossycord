@@ -10,12 +10,15 @@ import AVFoundation
 import OggDecoder
 import SwiftUI
 import AVKit
+#if canImport(Giffy)
+import Giffy
+#endif
 
 struct MediaPreview: View {
     @State var file: URL
-    let videoExtensions = ["mp4", "mov", "avi", "mkv", "flv", "wmv"]
-    let audioExtensions = ["mp3", "m4a", "ogg"]
-    let imageExtensions = ["jpg", "jpeg", "png", "gif"]
+    let videoExtensions = ["mp4", "mov", "avi", "mkv", "flv", "wmv", "m4v", "webm"]
+    let audioExtensions = ["mp3", "m4a", "ogg", "wav", "aac", "flac"]
+    let imageExtensions = ["jpg", "jpeg", "png", "heic", "heif", "tiff", "tif", "bmp"]
     var body: some View {
         if videoExtensions.contains(file.pathExtension.lowercased()) {
             FSVideoPlayer(url: file)
@@ -26,6 +29,9 @@ struct MediaPreview: View {
             } placeholder: {
                 ProgressView()
             }
+        } else if file.pathExtension.lowercased() == "gif" || file.pathExtension.lowercased() == "webp"  {
+            AnimatedImageView(url: file)
+                .aspectRatio(contentMode: .fit)
         } else if audioExtensions.contains(file.pathExtension.lowercased()) {
             if file.pathExtension.lowercased() == "ogg" {
                 AudioPlayer(url: file)

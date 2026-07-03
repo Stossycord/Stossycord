@@ -7,20 +7,27 @@
 
 import Foundation
 
-struct AdvancedGuild: Codable {
-    struct Role: Codable, Equatable {
+struct AdvancedGuild: Codable, Equatable, Hashable, Identifiable {
+    struct Role: Codable, Equatable, Hashable, Identifiable {
         let id: String
         let name: String
         let description: String?
         let permissions: String
         let position: Int
         let color: Int
+        // let colors: RoleColor
         let hoist: Bool
         let managed: Bool
         let mentionable: Bool
         let icon: String?
         let unicodeEmoji: String?
         let flags: Int
+    }
+    
+    struct RoleColor: Codable, Equatable {
+        let primary_color: Int
+        let secondary_color: Int
+        let tertiary_color: Int
     }
 
     let id: String

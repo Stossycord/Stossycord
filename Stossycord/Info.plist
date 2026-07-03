@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Stossycord can use background location to keep notification delivery active while the app is in the background.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Stossycord can use background location to keep notification delivery active while the app is in the background.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Stossycord can use location while the app is open before enabling background location support.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -9,6 +15,10 @@
 		<string>processing</string>
 		<string>remote-notification</string>
 		<string>voip</string>
+		<string>push-to-talk</string>
+		<string>location</string>
+		<string>bluetooth-central</string>
+		<string>nearby-interaction</string>
 	</array>
 	<key>UIDesignRequiresCompatibility</key>
 	<false/>

@@ -7,86 +7,94 @@
 
 import Foundation
 
-
-func getDiscordMessages(token: String, webSocketService: WebSocketService, success: @escaping () -> Void) {
-    var messageLimit: Int? = nil
-    if #available(iOS 17, *)  {
-        messageLimit = 100
-    } else if #available(iOS 16, *)  {
-        messageLimit = 50
-    } else {
-        messageLimit = 25
-    }
+class GetMessages: DiscordRequest<[Message]>, APIRequest {
     
-    let url = URL(string: "https://discord.com/api/v10/channels/\(webSocketService.currentchannel)/messages?limit=\(messageLimit ?? 25)")!
+    typealias Response = [Message]
     
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
-    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
-    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
-    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
-    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
-    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
-    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
-    let Country: String = CurrentDeviceInfo.shared.Country
+    var endpoint: String = ""
+    var method: String = "GET"
+    var guildId: String? = nil
     
-    let currentTimeZone = CurrentDeviceInfo.shared.currentTimeZone
-    
-    let timeZoneIdentifier = currentTimeZone.identifier
-    
-    let deviceInfo = CurrentDeviceInfo.shared.deviceInfo
-    
-    request.addValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
-    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
-    request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
-    
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        guard let data = data else {
-            print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
-            success()
-            return
-        }
-        
-        do {
-            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
-                if json.isEmpty {
-                    success()
+    var responseHandler: ((Data, URLResponse) -> Response)? {
+        { data, _ in
+            print(String(data: data, encoding: .utf8)!)
+            
+            do {
+                var array = try JSONDecoder().decode(Response.self, from: data)
+                
+                for index in array.indices {
+                    guard array[index].guildId == nil else { continue }
+                    
+                    array[index].guildId = self.guildId
                 }
                 
-                for message in json {
-                    do {
-                        let jsonData = try JSONSerialization.data(withJSONObject: message, options: [])
-                        let decoder = JSONDecoder()
-                        let currentmessage = try decoder.decode(Message.self, from: jsonData)
+                
+                return array
+            } catch {
+                if let decodingError = error as? DecodingError {
+                    switch decodingError {
+                    case .keyNotFound(let key, let context):
+                        print("Missing key: \(key.stringValue)")
+                        print("Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
                         
-                        
-                        if !webSocketService.data.contains(where: { $0.messageId == currentmessage.messageId }) {
-                            Task { @MainActor in 
-                                
-                                webSocketService.data.append(currentmessage)
-                                
-                                webSocketService.data.sort(by: { $0.messageId < $1.messageId })
-                                
-                                if !webSocketService.data.isEmpty {
-                                    success()
-                                }
-                            }
-                        }
-                    } catch {
-                        print("Error decoding JSON:", error)
+                        print("Context: \(context.debugDescription)")
+                    case .typeMismatch(let type, let context):
+                        print("Type mismatch for type: \(type)")
+                        print("Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+                        print("Context: \(context.debugDescription)")
+                    case .valueNotFound(let type, let context):
+                        print("Value not found for type: \(type)")
+                        print("Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+                    case .dataCorrupted(let context):
+                        print("Data corrupted")
+                        print("Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+                    @unknown default:
+                        print("Unknown decoding error")
                     }
                 }
+                
+                return []
             }
-        } catch {
-            print("Error parsing JSON: \(error)")
         }
-        
     }
     
-    task.resume()
+    func handleArgs(_ args: [Any?]) throws -> URLRequest? {
+        guard let currentChannel = args.first as? String else {
+            return nil
+        }
+        
+        
+        self.guildId = args[safe: 1] as? String
+        
+        let messagesAfter = args[safe: 2] as? String
+        let messagesBefore = args[safe: 3] as? String
+        
+        var messageLimit: Int
+        if let requestedLimit = args[safe: 4] as? Int {
+            messageLimit = max(1, min(requestedLimit, 100))
+        } else if #available(iOS 17, *)  {
+            messageLimit = 100
+        } else if #available(iOS 16, *)  {
+            messageLimit = 50
+        } else {
+            messageLimit = 25
+        }
+        
+        var components = URLComponents(url: makeAPIUrl("channels/\(currentChannel)/messages"), resolvingAgainstBaseURL: false)
+        var queryItems = [URLQueryItem(name: "limit", value: String(messageLimit))]
+        if let messagesAfter, !messagesAfter.isEmpty {
+            queryItems.append(URLQueryItem(name: "after", value: messagesAfter))
+        }
+        if let messagesBefore, !messagesBefore.isEmpty {
+            queryItems.append(URLQueryItem(name: "before", value: messagesBefore))
+        }
+        components?.queryItems = queryItems
+        
+        guard let url = components?.url else { return nil }
+        return makeUrlRequest(url: url)
+    }
+}
+
+extension DiscordRequest {
+    static var messages: GetMessages { .init() }
 }

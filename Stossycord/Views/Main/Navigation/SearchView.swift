@@ -1,9 +1,34 @@
 // SearchView.swift
 
 import SwiftUI
+import NavigationStackBackport
+
+struct NavigationStack<Content: View>: View {
+    let content: () -> Content
+    
+    var body: some View {
+        if #available(iOS 16, *) {
+            SwiftUI.NavigationStack(root: content)
+        } else {
+            NavigationStackBackport.NavigationStack(root: content)
+        }
+    }
+}
+
+extension ScrollView {
+    @ViewBuilder
+    func scrollIndicatorsHidden() -> some View {
+        if #available(iOS 16, *) {
+            self.scrollIndicators(.hidden)
+        } else {
+            self
+        }
+    }
+}
 
 struct SearchView: View {
     @StateObject var webSocketService: WebSocketService
+    @StateObject var currentUserService: CurrentUserService
     @StateObject private var viewModel: SearchViewModel
     private static let relativeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
@@ -22,9 +47,10 @@ struct SearchView: View {
         return filters
     }
     
-    init(webSocketService: WebSocketService) {
+    init(webSocketService: WebSocketService, currentUserService: CurrentUserService = .shared) {
         _webSocketService = StateObject(wrappedValue: webSocketService)
-        _viewModel = StateObject(wrappedValue: SearchViewModel(webSocketService: webSocketService))
+        _currentUserService = StateObject(wrappedValue: currentUserService)
+        _viewModel = StateObject(wrappedValue: SearchViewModel(currentUserService: currentUserService))
     }
     
     var body: some View {
@@ -54,7 +80,7 @@ struct SearchView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 32)
             }
-            .scrollIndicators(.hidden)
+            .scrollIndicatorsHidden()
             .navigationTitle("Search")
             .searchable(
                 text: $viewModel.query,
@@ -306,6 +332,7 @@ struct SearchView: View {
                                 currentchannelname: "@" + (result.user.username),
                                 currentid: channelId
                             )
+                            .ignoresSafeArea(.container, edges: .bottom)
                         } label: {
                             UserResultRow(result: result)
                         }
@@ -346,6 +373,7 @@ struct SearchView: View {
             currentid: result.context.channelId,
             currentGuild: result.context.guild
         )
+        .ignoresSafeArea(.container, edges: .bottom)
 }
 
 private struct MessageResultRow: View {

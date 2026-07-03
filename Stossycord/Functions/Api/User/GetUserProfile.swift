@@ -1,83 +1,114 @@
 import Foundation
 
-func getUserProfile(token: String, userId: String, completion: @escaping (UserProfile?) -> Void) {
-    let url = URL(string: "https://discord.com/api/v10/users/\(userId)/profile?with_mutual_guilds=true&with_mutual_friends=true")!
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
-    request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
-    request.addValue("en-AU,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-    request.addValue("keep-alive", forHTTPHeaderField: "Connection")
-    request.addValue("https://discord.com", forHTTPHeaderField: "Origin")
-    request.addValue("empty", forHTTPHeaderField: "Sec-Fetch-Dest")
-    request.addValue("cors", forHTTPHeaderField: "Sec-Fetch-Mode")
-    request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
+class GetUserProfile: DiscordRequest<UserProfile>, APIRequest {
+    typealias Response = UserProfile
     
-    let Country: String = CurrentDeviceInfo.shared.Country
-    let currentTimeZone = CurrentDeviceInfo.shared.currentTimeZone
-    let timeZoneIdentifier = currentTimeZone.identifier
-    let deviceInfo = CurrentDeviceInfo.shared.deviceInfo
+    var endpoint: String = "users/@me"
+    var method: String = "GET"
     
-    request.addValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
-    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
-    request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
-
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let error = error {
-            print("Error fetching user profile: \(error)")
-            completion(nil)
-        } else if let data = data {
-            do {
-                let profileResponse = try JSONDecoder().decode(UserProfile.self, from: data)
-                completion(profileResponse)
-            } catch {
-                print("Failed to decode user profile: \(error)")
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("Response data: \(jsonString)")
-                }
-                completion(nil)
-            }
+    func handleArgs(_ args: [Any?]) throws -> URLRequest? {
+        guard let userId = args.first as? String else {
+            throw NSError(domain: "Invalid arguments", code: 0, userInfo: nil)
         }
+        
+        return DiscordAPI.makeUrlRequest(url: makeAPIUrl("users/\(userId)/profile?with_mutual_guilds=true&with_mutual_friends=true"))
     }
-
-    task.resume()
 }
 
-func getBasicUserInfo(token: String, userId: String, completion: @escaping (User?) -> Void) {
-    let url = URL(string: "https://discord.com/api/v10/users/\(userId)")!
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue(token, forHTTPHeaderField: "Authorization")
+class GetBasicUserInfo: DiscordRequest<User>, APIRequest {
+    typealias Response = User
     
-    let Country: String = CurrentDeviceInfo.shared.Country
-    let currentTimeZone = CurrentDeviceInfo.shared.currentTimeZone
-    let timeZoneIdentifier = currentTimeZone.identifier
-    let deviceInfo = CurrentDeviceInfo.shared.deviceInfo
+    var endpoint: String = "users/@me"
+    var method: String = "GET"
     
-    request.addValue(deviceInfo.browserUserAgent, forHTTPHeaderField: "User-Agent")
-    request.addValue("bugReporterEnabled", forHTTPHeaderField: "X-Debug-Options")
-    request.addValue("\(currentTimeZone)-\(Country)", forHTTPHeaderField: "X-Discord-Locale")
-    request.addValue(timeZoneIdentifier, forHTTPHeaderField: "X-Discord-Timezone")
-    request.addValue(deviceInfo.toBase64() ?? "base64", forHTTPHeaderField: "X-Super-Properties")
+    func handleArgs(_ args: [Any?]) throws -> URLRequest? {
+        guard let userId = args.first as? String else {
+            throw NSError(domain: "Invalid arguments", code: 0, userInfo: nil)
+        }
+        
+        return makeUrlRequest(url: makeAPIUrl("users/\(userId)"))
+    }
+}
 
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let error = error {
-            print("Error fetching basic user info: \(error)")
-            completion(nil)
-        } else if let data = data {
-            do {
-                let user = try JSONDecoder().decode(User.self, from: data)
-                completion(user)
-            } catch {
-                print("Failed to decode basic user info: \(error)")
-                completion(nil)
-            }
+class UpdateUserProfile: DiscordRequest<String>, APIRequest {
+    typealias Response = String
+    
+    var endpoint: String = "users/@me/profile"
+    var method: String = "PATCH"
+    
+    var responseHandler: ((Data, URLResponse) -> String)? {
+        { data, _ in String(data: data, encoding: .utf8) ?? "" }
+    }
+    
+    func handleArgs(_ args: [Any?]) throws -> URLRequest? {
+        let bio = args[safe: 0] as? String
+        let pronouns = args[safe: 1] as? String
+        
+        var payload: [String: Any] = [:]
+        payload["bio"] = bio ?? ""
+        payload["pronouns"] = pronouns ?? ""
+        
+        var request = makeUrlRequest(url: makeAPIUrl(endpoint))
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        return request
+    }
+}
+
+class UpdateCurrentUserInfo: DiscordRequest<String>, APIRequest {
+    typealias Response = String
+    
+    var endpoint: String = "users/@me"
+    var method: String = "PATCH"
+    
+    var responseHandler: ((Data, URLResponse) -> String)? {
+        { data, _ in String(data: data, encoding: .utf8) ?? "" }
+    }
+    
+    func handleArgs(_ args: [Any?]) throws -> URLRequest? {
+        let displayName = args.first as? String
+        let trimmedName = displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        
+        var request = makeUrlRequest(url: makeAPIUrl(endpoint))
+        if trimmedName.isEmpty {
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
+                "global_name": NSNull()
+            ])
+        } else {
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
+                "global_name": trimmedName
+            ])
+        }
+        return request
+    }
+}
+
+class UpdateUserSettings: DiscordRequest<UserSettings>, APIRequest {
+    typealias Response = UserSettings
+    
+    var endpoint: String = "users/@me/settings"
+    var method: String = "PATCH"
+    
+    var responseHandler: ((Data, URLResponse) -> UserSettings)? {
+        { data, _ in
+            (try? JSONDecoder().decode(UserSettings.self, from: data)) ?? UserSettings()
         }
     }
+    
+    func handleArgs(_ args: [Any?]) throws -> URLRequest? {
+        guard let payload = args.first as? [String: Any] else {
+            throw NSError(domain: "Invalid arguments", code: 0, userInfo: nil)
+        }
+        
+        var request = makeUrlRequest(url: makeAPIUrl(endpoint))
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        return request
+    }
+}
 
-    task.resume()
+extension DiscordRequest {
+    static var userProfile: GetUserProfile { .init() }
+    static var basicUser: GetBasicUserInfo { .init() }
+    static var updateUserProfile: UpdateUserProfile { .init() }
+    static var updateCurrentUserInfo: UpdateCurrentUserInfo { .init() }
+    static var updateUserSettings: UpdateUserSettings { .init() }
 }

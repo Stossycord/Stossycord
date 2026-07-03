@@ -42,7 +42,6 @@ struct VideoPlayerMac: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: AVPlayerView, context: Context) {
-        // Update the view if needed, e.g., changing the player or its properties.
         nsView.player?.replaceCurrentItem(with: AVPlayerItem(url: url))
     }
 }

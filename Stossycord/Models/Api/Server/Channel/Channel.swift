@@ -107,6 +107,10 @@ extension Channel {
         type == 10 || type == 11 || type == 12
     }
 
+    var isForumLike: Bool {
+        type == 15 || type == 16
+    }
+
     var isTextLike: Bool {
         [0, 5, 10, 11, 12, 15, 16].contains(type)
     }
@@ -130,7 +134,7 @@ struct Category: Codable, Hashable {
     let type: Int
     let position: Int?
     let permissionOverwrites: [PermissionOverwrite]?
-    var channels: [Channel]
+    var channelIds: [String]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -138,7 +142,6 @@ struct Category: Codable, Hashable {
         case type
         case position
         case permissionOverwrites = "permission_overwrites"
-        case channels
+        case channelIds = "channel_ids"
     }
 }
-

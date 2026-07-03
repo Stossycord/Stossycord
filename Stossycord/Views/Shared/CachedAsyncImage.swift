@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import ImageIO
 
 #if os(iOS)
 import UIKit
@@ -35,7 +36,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         let urlString = url.absoluteString
         
         if let cachedData = CacheService.shared.getCachedProfilePicture(url: urlString) {
-            if let cachedImage = UIImage(data: cachedData) {
+            if let cachedImage = downsampleCachedUIImage(data: cachedData) {
                 self.image = cachedImage
                 return
             }
@@ -45,16 +46,32 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         isLoading = true
         
         URLSession.shared.dataTask(with: url) { data, response, error in
+            let decodedImage = data.flatMap(downsampleCachedUIImage)
             Task { @MainActor in 
                 isLoading = false
                 
-                if let data = data, let downloadedImage = UIImage(data: data) {
+                if let data = data, let decodedImage {
                     CacheService.shared.setCachedProfilePicture(data, url: urlString)
-                    self.image = downloadedImage
+                    self.image = decodedImage
                 }
             }
         }.resume()
     }
+}
+
+private func downsampleCachedUIImage(data: Data) -> UIImage? {
+    let options = [kCGImageSourceShouldCache: false] as CFDictionary
+    guard let source = CGImageSourceCreateWithData(data as CFData, options) else { return nil }
+    
+    let thumbnailOptions = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceShouldCacheImmediately: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceThumbnailMaxPixelSize: 900
+    ] as CFDictionary
+    
+    guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions) else { return nil }
+    return UIImage(cgImage: cgImage)
 }
 
 #elseif os(macOS)
@@ -101,12 +118,13 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         isLoading = true
         
         URLSession.shared.dataTask(with: url) { data, response, error in
+            let decodedImage = data.flatMap(NSImage.init(data:))
             Task { @MainActor in 
                 isLoading = false
                 
-                if let data = data, let downloadedImage = NSImage(data: data) {
+                if let data = data, let decodedImage {
                     CacheService.shared.setCachedProfilePicture(data, url: urlString)
-                    self.image = downloadedImage
+                    self.image = decodedImage
                 }
             }
         }.resume()

@@ -7,10 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4E099B762C9BD7BF00C2D383 /* CocoaAsyncSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B752C9BD7BF00C2D383 /* CocoaAsyncSocket */; };
 		4E099B792C9BD7C800C2D383 /* Giffy in Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; productRef = 4E099B782C9BD7C800C2D383 /* Giffy */; };
 		4E099B7C2C9BD7D100C2D383 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B7B2C9BD7D100C2D383 /* KeychainSwift */; };
 		4E099B7F2C9BD7DB00C2D383 /* OggDecoder in Frameworks */ = {isa = PBXBuildFile; productRef = 4E099B7E2C9BD7DB00C2D383 /* OggDecoder */; };
+		4E1B47092F1AFCC900718273 /* EmojiText in Frameworks */ = {isa = PBXBuildFile; productRef = 4E1B47082F1AFCC900718273 /* EmojiText */; };
+		4E9576572FF7834100D47997 /* NavigationStackBackport in Frameworks */ = {isa = PBXBuildFile; productRef = 4E9576562FF7834100D47997 /* NavigationStackBackport */; };
+		4ED2511D2FB88215004304B8 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 4ED2511C2FB88215004304B8 /* SwiftUIIntrospect */; };
+		4ED2511F2FB88215004304B8 /* SwiftUIIntrospect-Static in Frameworks */ = {isa = PBXBuildFile; productRef = 4ED2511E2FB88215004304B8 /* SwiftUIIntrospect-Static */; };
 		8D1E628F2D6DD93200706060 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8D1E628E2D6DD93200706060 /* MarkdownUI */; };
 /* End PBXBuildFile section */
 
@@ -19,7 +22,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4E4F31562C9E7ADB00C545DD /* Exceptions for "Stossycord" folder in "Stossycord" target */ = {
+		4EFF53172FB2D03D0097D1BD /* Exceptions for "Stossycord" folder in "Stossycord" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -32,7 +35,7 @@
 		4E099B652C9BD76C00C2D383 /* Stossycord */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				4E4F31562C9E7ADB00C545DD /* Exceptions for "Stossycord" folder in "Stossycord" target */,
+				4EFF53172FB2D03D0097D1BD /* Exceptions for "Stossycord" folder in "Stossycord" target */,
 			);
 			path = Stossycord;
 			sourceTree = "<group>";
@@ -44,11 +47,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E1B47092F1AFCC900718273 /* EmojiText in Frameworks */,
 				4E099B7C2C9BD7D100C2D383 /* KeychainSwift in Frameworks */,
 				4E099B7F2C9BD7DB00C2D383 /* OggDecoder in Frameworks */,
 				4E099B792C9BD7C800C2D383 /* Giffy in Frameworks */,
 				8D1E628F2D6DD93200706060 /* MarkdownUI in Frameworks */,
-				4E099B762C9BD7BF00C2D383 /* CocoaAsyncSocket in Frameworks */,
+				4E9576572FF7834100D47997 /* NavigationStackBackport in Frameworks */,
+				4ED2511D2FB88215004304B8 /* SwiftUIIntrospect in Frameworks */,
+				4ED2511F2FB88215004304B8 /* SwiftUIIntrospect-Static in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -91,11 +97,14 @@
 			);
 			name = Stossycord;
 			packageProductDependencies = (
-				4E099B752C9BD7BF00C2D383 /* CocoaAsyncSocket */,
 				4E099B782C9BD7C800C2D383 /* Giffy */,
 				4E099B7B2C9BD7D100C2D383 /* KeychainSwift */,
 				4E099B7E2C9BD7DB00C2D383 /* OggDecoder */,
 				8D1E628E2D6DD93200706060 /* MarkdownUI */,
+				4E1B47082F1AFCC900718273 /* EmojiText */,
+				4ED2511C2FB88215004304B8 /* SwiftUIIntrospect */,
+				4ED2511E2FB88215004304B8 /* SwiftUIIntrospect-Static */,
+				4E9576562FF7834100D47997 /* NavigationStackBackport */,
 			);
 			productName = Stossycord;
 			productReference = 4E099B632C9BD76C00C2D383 /* Stossycord.app */;
@@ -126,11 +135,13 @@
 			mainGroup = 4E099B5A2C9BD76C00C2D383;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				4E099B742C9BD7BF00C2D383 /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */,
 				4E099B772C9BD7C800C2D383 /* XCRemoteSwiftPackageReference "giffy" */,
 				4E099B7A2C9BD7D100C2D383 /* XCRemoteSwiftPackageReference "keychain-swift" */,
 				4E099B7D2C9BD7DB00C2D383 /* XCRemoteSwiftPackageReference "OggDecoder" */,
 				8D1E628D2D6DD93200706060 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				4E1B47072F1AFCC900718273 /* XCRemoteSwiftPackageReference "EmojiText" */,
+				4ED2511B2FB88215004304B8 /* XCRemoteSwiftPackageReference "swiftui-introspect" */,
+				4E9576552FF7834100D47997 /* XCRemoteSwiftPackageReference "navigation-stack-backport" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4E099B642C9BD76C00C2D383 /* Products */;
@@ -302,28 +313,31 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "This will show your currently playing Music as your presence.";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token safe";
 				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Stossycord can use background location to keep notification delivery active while the app is in the background.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Stossycord can use background location to keep notification delivery active while the app is in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Stossycord can use location while the app is open before enabling background location support.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Stossycord needs access to your Photo library to upload photos and videos to Discord";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Stossycord needs access to your Photo library to upload photos and videos to Discord";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13;
-				MARKETING_VERSION = 0.7;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.personal.Stossycord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
@@ -350,28 +364,31 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "This will show your currently playing Music as your presence.";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "We need access to your documents folder to import files.";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token Safe";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Stossycord needs Face ID to keep your Token safe";
 				INFOPLIST_KEY_NSFileProviderPresenceUsageDescription = "We need access to your file provider to import files.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Stossycord can use background location to keep notification delivery active while the app is in the background.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Stossycord can use background location to keep notification delivery active while the app is in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Stossycord can use location while the app is open before enabling background location support.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Stossycord needs access to your Photo library to upload photos and videos to Discord";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Stossycord needs access to your Photo library to upload photos and videos to Discord";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13;
-				MARKETING_VERSION = 0.7;
-				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.Stossycord;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stossy11.personal.Stossycord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
@@ -402,14 +419,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		4E099B742C9BD7BF00C2D383 /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/robbiehanson/CocoaAsyncSocket";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.6.5;
-			};
-		};
 		4E099B772C9BD7C800C2D383 /* XCRemoteSwiftPackageReference "giffy" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tfmart/giffy";
@@ -434,6 +443,30 @@
 				kind = branch;
 			};
 		};
+		4E1B47072F1AFCC900718273 /* XCRemoteSwiftPackageReference "EmojiText" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stossy11/EmojiText.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		4E9576552FF7834100D47997 /* XCRemoteSwiftPackageReference "navigation-stack-backport" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lm/navigation-stack-backport";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
+		4ED2511B2FB88215004304B8 /* XCRemoteSwiftPackageReference "swiftui-introspect" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/siteline/swiftui-introspect";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 26.0.1;
+			};
+		};
 		8D1E628D2D6DD93200706060 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
@@ -445,11 +478,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4E099B752C9BD7BF00C2D383 /* CocoaAsyncSocket */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4E099B742C9BD7BF00C2D383 /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */;
-			productName = CocoaAsyncSocket;
-		};
 		4E099B782C9BD7C800C2D383 /* Giffy */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4E099B772C9BD7C800C2D383 /* XCRemoteSwiftPackageReference "giffy" */;
@@ -464,6 +492,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E099B7D2C9BD7DB00C2D383 /* XCRemoteSwiftPackageReference "OggDecoder" */;
 			productName = OggDecoder;
+		};
+		4E1B47082F1AFCC900718273 /* EmojiText */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E1B47072F1AFCC900718273 /* XCRemoteSwiftPackageReference "EmojiText" */;
+			productName = EmojiText;
+		};
+		4E9576562FF7834100D47997 /* NavigationStackBackport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E9576552FF7834100D47997 /* XCRemoteSwiftPackageReference "navigation-stack-backport" */;
+			productName = NavigationStackBackport;
+		};
+		4ED2511C2FB88215004304B8 /* SwiftUIIntrospect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4ED2511B2FB88215004304B8 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
+			productName = SwiftUIIntrospect;
+		};
+		4ED2511E2FB88215004304B8 /* SwiftUIIntrospect-Static */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4ED2511B2FB88215004304B8 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
+			productName = "SwiftUIIntrospect-Static";
 		};
 		8D1E628E2D6DD93200706060 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;

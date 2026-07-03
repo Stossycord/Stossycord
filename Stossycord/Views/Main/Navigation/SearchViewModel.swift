@@ -24,7 +24,7 @@ final class SearchViewModel: ObservableObject {
     @Published private(set) var loadingTabs: Set<UnifiedSearchTab> = []
     
     private let minimumQueryLength = 2
-    private let webSocketService: WebSocketService
+    private let userService: CurrentUserService
     private let searchService: SearchService
     private var cancellables = Set<AnyCancellable>()
     private let isoFormatter = ISO8601DateFormatter()
@@ -39,8 +39,8 @@ final class SearchViewModel: ObservableObject {
         var totalResults: Int?
     }
     
-    init(webSocketService: WebSocketService, searchService: SearchService = SearchService()) {
-        self.webSocketService = webSocketService
+    init(currentUserService: CurrentUserService, searchService: SearchService = SearchService()) {
+        self.userService = currentUserService
         self.searchService = searchService
         bind()
         refreshDefaults()
@@ -75,22 +75,18 @@ final class SearchViewModel: ObservableObject {
             }
             .store(in: &cancellables)
         
-        webSocketService.$dms
+        userService.$channelStore
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.handleDataRefresh() }
             .store(in: &cancellables)
         
-        webSocketService.$channels
+        userService.guildManager.$members
+            .debounce(for: .milliseconds(600), scheduler: DispatchQueue.main)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.handleDataRefresh() }
             .store(in: &cancellables)
         
-        webSocketService.$currentMembers
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.handleDataRefresh() }
-            .store(in: &cancellables)
-        
-        webSocketService.$data
+        userService.$data
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.handleDataRefresh() }
             .store(in: &cancellables)
@@ -159,7 +155,7 @@ final class SearchViewModel: ObservableObject {
     results = local
         activeQuery = trimmedQuery
         
-        let token = webSocketService.token
+        let token = userService.token
         guard !token.isEmpty else {
             isLoading = false
             return
@@ -278,7 +274,7 @@ final class SearchViewModel: ObservableObject {
         guard let cursor = remoteTabStates[tab]?.cursor else { return }
         guard let query = activeQuery, !query.isEmpty else { return }
         guard !loadingTabs.contains(tab) else { return }
-        let token = webSocketService.token
+        let token = userService.token
         guard !token.isEmpty else { return }
         loadingTabs.insert(tab)
         searchService.searchMessages(token: token,
@@ -324,15 +320,16 @@ final class SearchViewModel: ObservableObject {
     }
     
     private func localMessagesMatching(query: String?, limit: Int) -> [MessageResult] {
+        let allMessages = userService.data.flatMap { $0.messages }
+        
         let sourceMessages: [Message]
         if let query = query, !query.isEmpty {
             let lowered = query.lowercased()
-            sourceMessages = webSocketService.data.filter { message in
-                message.content.lowercased().contains(lowered)
-            }
+            sourceMessages = allMessages.filter { $0.content.lowercased().contains(lowered) }
         } else {
-            sourceMessages = Array(webSocketService.data.suffix(limit).reversed())
+            sourceMessages = Array(allMessages.suffix(limit).reversed())
         }
+        
         return Array(makeMessageResults(from: sourceMessages, query: query ?? "", origin: .local).prefix(limit))
     }
     
@@ -364,7 +361,7 @@ final class SearchViewModel: ObservableObject {
     
     private func suggestedPeople(limit: Int, query: String? = nil) -> [UserResult] {
         var map: [String: UserResult] = [:]
-        for dm in webSocketService.dms {
+        for dm in userService.dms {
             let context: UserResult.Context = dm.type == 3 ? .groupDM : .directMessage
             for user in dm.recipients ?? [] {
                 let result = UserResult(user: user,
@@ -449,14 +446,15 @@ final class SearchViewModel: ObservableObject {
     }
     
     private var dmDictionary: [String: DMs] {
-        Dictionary(uniqueKeysWithValues: webSocketService.dms.map { ($0.id, $0) })
+        Dictionary(uniqueKeysWithValues: userService.dms.map { ($0.id, $0) })
     }
     
     private var channelDictionary: [String: ChannelContext] {
-        let guildLookup = Dictionary(uniqueKeysWithValues: webSocketService.Guilds.map { ($0.id, $0) })
+        let guildLookup = Dictionary(uniqueKeysWithValues: userService.Guilds.map { ($0.id, $0) })
         var map: [String: ChannelContext] = [:]
-        for category in webSocketService.channels {
-            for channel in category.channels {
+        for category in userService.guildManager.channels.flatMap(\.value) {
+            for channelId in category.channelIds {
+                guard let channel = userService.channel(withId: channelId) else { continue }
                 let guild = channel.guildId.flatMap { guildLookup[$0] }
                 let subtitle: String?
                 if let categoryName = category.name, !categoryName.isEmpty {
@@ -467,6 +465,17 @@ final class SearchViewModel: ObservableObject {
                 map[channel.id] = ChannelContext(channel: channel, subtitle: subtitle, guild: guild)
             }
         }
+
+        for channel in userService.channelStore.guildChannels where map[channel.id] == nil {
+            let guildId = channel.guildId ?? userService.guildId(containing: channel.id)
+            let guild = guildId.flatMap { guildLookup[$0] }
+            map[channel.id] = ChannelContext(
+                channel: channel,
+                subtitle: guild?.name,
+                guild: guild
+            )
+        }
+
         return map
     }
 }

@@ -2,6 +2,7 @@ import Foundation
 
 struct DiscordPermissions {
     static let SEND_MESSAGES: UInt64 = 1 << 11
+    static let SEND_MESSAGES_IN_THREADS: UInt64 = UInt64(1) << 38
     static let VIEW_CHANNEL: UInt64 = 1 << 10
     static let READ_MESSAGE_HISTORY: UInt64 = 1 << 16
     static let ATTACH_FILES: UInt64 = 1 << 15
@@ -17,14 +18,14 @@ class PermissionManager {
     
     static func calculateChannelPermissions(
         currentUser: User,
-        members: [GuildMember],
+        members: Set<GuildMember>,
         roles: [AdvancedGuild.Role],
         channel: Channel?,
         guildId: String,
         categoryOverwrites: [PermissionOverwrite]? = nil
     ) -> UInt64 {
 
-        let member: GuildMember = members.first { $0.user.id == currentUser.id } ??
+        let member: GuildMember = members.first { $0.user?.id == currentUser.id || $0.userId == currentUser.id } ??
             GuildMember(
                 user: currentUser,
                 roles: [guildId],
@@ -82,7 +83,7 @@ class PermissionManager {
             }
 
             if let overwrite = overwrites.first(where: {
-                $0.type == 1 && $0.id == member.user.id
+                $0.type == 1 && ($0.id == member.user?.id || $0.id == member.userId)
             }) {
                 if let deny = UInt64(overwrite.deny) {
                     permissions &= ~deny
@@ -110,12 +111,13 @@ class PermissionManager {
     
     static func canSendMessages(
         currentUser: User,
-        members: [GuildMember],
+        members: Set<GuildMember>,
         roles: [AdvancedGuild.Role],
         channel: Channel?,
-        guildId: String
+        guildId: String,
+        categoryOverwrites: [PermissionOverwrite]? = nil
     ) -> Bool {
-        if let currentMember = members.first(where: { $0.user.id == currentUser.id }),
+        if let currentMember = members.first(where: { $0.user?.id == currentUser.id || $0.userId == currentUser.id }),
            let disabledUntil = currentMember.communicationDisabledUntil,
            let disabledDate = parseISO8601Date(disabledUntil),
            disabledDate > Date() {
@@ -128,27 +130,36 @@ class PermissionManager {
             members: members,
             roles: roles,
             channel: channel,
-            guildId: guildId
+            guildId: guildId,
+            categoryOverwrites: categoryOverwrites
         )
         
-        let canSend = hasPermission(finalPermissions, DiscordPermissions.SEND_MESSAGES)
+        let canSend: Bool
+        if channel?.isThread == true {
+            canSend = hasPermission(finalPermissions, DiscordPermissions.SEND_MESSAGES_IN_THREADS) ||
+            hasPermission(finalPermissions, DiscordPermissions.SEND_MESSAGES)
+        } else {
+            canSend = hasPermission(finalPermissions, DiscordPermissions.SEND_MESSAGES)
+        }
         print("can send messages: \(canSend)")
         return canSend
     }
     
     static func canAttachFiles(
         currentUser: User,
-        members: [GuildMember],
+        members: Set<GuildMember>,
         roles: [AdvancedGuild.Role],
         channel: Channel?,
-        guildId: String
+        guildId: String,
+        categoryOverwrites: [PermissionOverwrite]? = nil
     ) -> Bool {
         let finalPermissions = calculateChannelPermissions(
             currentUser: currentUser,
             members: members,
             roles: roles,
             channel: channel,
-            guildId: guildId
+            guildId: guildId,
+            categoryOverwrites: categoryOverwrites
         )
         
         let canAttach = hasPermission(finalPermissions, DiscordPermissions.ATTACH_FILES)
@@ -158,7 +169,7 @@ class PermissionManager {
     
     static func canViewChannel(
         currentUser: User,
-        members: [GuildMember],
+        members: Set<GuildMember>,
         roles: [AdvancedGuild.Role],
         channel: Channel,
         guildId: String,
@@ -179,14 +190,23 @@ class PermissionManager {
     
     static func getPermissionStatus(
         currentUser: User,
-        members: [GuildMember],
+        members: Set<GuildMember>,
         roles: [AdvancedGuild.Role],
         channel: Channel?,
-        guildId: String
+        guildId: String,
+        categoryOverwrites: [PermissionOverwrite]? = nil
     ) -> ChannelPermissionStatus {
         
         if roles.isEmpty {
             return ChannelPermissionStatus(canSendMessages: true, canAttachFiles: true, restrictionReason: nil)
+        }
+
+        if channel?.threadMetadata?.archived == true {
+            return ChannelPermissionStatus(
+                canSendMessages: false,
+                canAttachFiles: false,
+                restrictionReason: "This post is archived"
+            )
         }
         
         let canSend = canSendMessages(
@@ -194,7 +214,8 @@ class PermissionManager {
             members: members,
             roles: roles,
             channel: channel,
-            guildId: guildId
+            guildId: guildId,
+            categoryOverwrites: categoryOverwrites
         )
         
         let canAttach = canAttachFiles(
@@ -202,14 +223,15 @@ class PermissionManager {
             members: members,
             roles: roles,
             channel: channel,
-            guildId: guildId
+            guildId: guildId,
+            categoryOverwrites: categoryOverwrites
         )
         
         
         var reasonMessage: String?
         
         if !canSend {
-            if let currentMember = members.first(where: { $0.user.id == currentUser.id }),
+            if let currentMember = members.first(where: { $0.user?.id == currentUser.id || $0.userId == currentUser.id }),
                let disabledUntil = currentMember.communicationDisabledUntil,
                let disabledDate = parseISO8601Date(disabledUntil),
                disabledDate > Date() {
@@ -276,7 +298,7 @@ private extension PermissionManager {
             }
         }
 
-        if let memberOverwrite = overwrites.first(where: { $0.id == currentMember.user.id && $0.type == 1 }) {
+        if let memberOverwrite = overwrites.first(where: { ($0.id == currentMember.user?.id || $0.id == currentMember.userId) && $0.type == 1 }) {
             if let denyBits = UInt64(memberOverwrite.deny) {
                 finalPermissions &= ~denyBits
             }
