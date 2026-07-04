@@ -20,6 +20,9 @@ Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift a
 - User Profiles
 - Basic channel list and navigation
 - Basic account/session management (login/logout)
+- Showing Typing Indicators
+- Notifications
+- Custom emojis
 
 
 ## Unsupported / Coming Soon
@@ -28,9 +31,6 @@ Stossycord is a Discord Client Native to iOS Devices. It is made in 100% Swift a
 - Adding Friends and Friend requests
 - Joining Servers
 - Reactions (view/add/remove)
-- Showing Typing Indicators
-- Notifications
-- Custom emojis
 - Animated banners
 - View other users' presence
 
